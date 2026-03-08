@@ -1,15 +1,25 @@
 import { Response } from "express";
 import { AuthedRequest } from "../common/middlewares/authRequired";
 import * as ordersService from "../services/orders.service";
-import { getMyOrders } from "../services/orders.service";
-
 
 export async function create(req: AuthedRequest, res: Response) {
-  const order = await ordersService.createOrder(req.user!.id, req.body.items);
-  res.status(201).json({ ok: true, order });
+  const userId = req.user?.id || req.user?.sub;
+
+  if (!userId) {
+    return res.status(401).json({ ok: false, message: "Usuario no autenticado" });
+  }
+
+  const order = await ordersService.createOrder(userId, req.body.items);
+  return res.status(201).json({ ok: true, order });
 }
 
 export async function myOrders(req: AuthedRequest, res: Response) {
-  const orders = await ordersService.getMyOrders(req.user!.id);
-  res.json({ ok: true, orders });
+  const userId = req.user?.id || req.user?.sub;
+
+  if (!userId) {
+    return res.status(401).json({ ok: false, message: "Usuario no autenticado" });
+  }
+
+  const orders = await ordersService.getMyOrders(userId);
+  return res.json({ ok: true, orders });
 }
