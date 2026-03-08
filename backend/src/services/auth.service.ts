@@ -1,7 +1,7 @@
 import { prisma } from "../prisma/client";
 import { ApiError } from "../common/errors/ApiError";
 import { comparePassword, hashPassword } from "../common/utils/password";
-import { signJwt } from "../common/utils/jwt";
+import { signToken } from "../common/utils/jwt";
 
 export async function register(data: {
   email: string;
@@ -33,7 +33,7 @@ export async function register(data: {
     },
   });
 
-  const token = signJwt({ sub: user.id, role: user.role });
+  const token = signToken({ sub: user.id, role: user.role });
 
   return { user, token };
 }
@@ -45,7 +45,7 @@ export async function login(data: { email: string; password: string }) {
   const ok = await comparePassword(data.password, user.passwordHash);
   if (!ok) throw new ApiError(401, "Invalid credentials");
 
-  const token = signJwt({ sub: user.id, role: user.role });
+  const token = signToken({ sub: user.id, role: user.role });
 
   return {
     user: {
