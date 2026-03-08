@@ -1,12 +1,17 @@
 import jwt from "jsonwebtoken";
-import { env } from "../../config/env";
 
-export type JwtPayload = { sub: string; role: "ADMIN" | "USER" };
+const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
-export function signJwt(payload: JwtPayload) {
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
+export function signToken(payload: object) {
+  return jwt.sign(
+    payload,
+    JWT_SECRET,
+    {
+      expiresIn: "7d",
+    } as jwt.SignOptions
+  );
 }
 
-export function verifyJwt(token: string) {
-  return jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+export function verifyToken(token: string) {
+  return jwt.verify(token, JWT_SECRET);
 }

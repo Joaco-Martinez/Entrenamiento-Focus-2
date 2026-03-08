@@ -3,16 +3,32 @@ import { AuthedRequest } from "../common/middlewares/authRequired";
 import * as subsService from "../services/subscriptions.service";
 
 export async function me(req: AuthedRequest, res: Response) {
-  const subscription = await subsService.getMe(req.user!.id);
-  res.json({ ok: true, subscription });
+  const userId = req.user?.id || req.user?.sub;
+
+  if (!userId) {
+    return res.status(401).json({ ok: false, message: "No autenticado" });
+  }
+
+  const subscription = await subsService.getMe(userId);
+  return res.json({ ok: true, subscription });
 }
 
 export async function cancel(req: AuthedRequest, res: Response) {
-  const subscription = await subsService.cancelByUser(req.user!.id, req.body.cancelAtPeriodEnd);
-  res.json({ ok: true, subscription });
+  const userId = req.user?.id || req.user?.sub;
+
+  if (!userId) {
+    return res.status(401).json({ ok: false, message: "No autenticado" });
+  }
+
+  const subscription = await subsService.cancelByUser(
+    userId,
+    req.body.cancelAtPeriodEnd
+  );
+
+  return res.json({ ok: true, subscription });
 }
 
 export async function adminCancel(req: AuthedRequest, res: Response) {
   const subscription = await subsService.adminCancel(req.params.userId);
-  res.json({ ok: true, subscription });
+  return res.json({ ok: true, subscription });
 }
