@@ -1,7 +1,8 @@
 import { app } from "./app";
-import { env } from "./config/env";
 
-app.listen(env.PORT, () => {
-  console.log(`✅ API running on http://localhost:${env.PORT}`);
-  console.log(`📚 Swagger: http://localhost:${env.PORT}/docs`);
+const port = Number(process.env.PORT) || 3000;
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`✅ API running on port ${port}`);
+  console.log(`📚 Swagger: /docs`);
 });
