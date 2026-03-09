@@ -64,8 +64,8 @@ export default function CheckoutPaymentSection({
               items={cart.map((item) => ({
                 id: item.id,
                 title: item.title,
-                quantity: item.quantity,
-                unit_price: item.arPrice,
+                quantity: Number(item.quantity),
+                unit_price: Number(item.arPrice ?? 0),
                 currency_id: "ARS" as const,
                 description: item.description || item.title,
               }))}
@@ -110,7 +110,7 @@ export default function CheckoutPaymentSection({
             PayPal todavía no está integrado en este proyecto.
           </p>
           <p className="mt-2 text-sm text-zinc-500">
-            Después conectamos este bloque con el checkout internacional.
+            Dejé preparado el flujo para que no pegue a Mercado Pago cuando el país no sea Argentina.
           </p>
         </div>
       </div>

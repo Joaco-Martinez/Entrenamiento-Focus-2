@@ -9,6 +9,8 @@ export const createPreference = async (req: Request, res: Response) => {
       return res.status(401).json({ ok: false, message: "Unauthorized" });
     }
 
+    console.log("MP createPreference body:", req.body);
+
     const { items, currency } = req.body;
 
     const { orderId, preferenceId } = await createOrderAndPreference({
@@ -20,6 +22,9 @@ export const createPreference = async (req: Request, res: Response) => {
     return res.json({ ok: true, orderId, preferenceId });
   } catch (error: any) {
     console.error("MP createPreference error:", error?.message || error);
-    return res.status(400).json({ ok: false, message: error?.message || "MP error" });
+    return res.status(400).json({
+      ok: false,
+      message: error?.message || "MP error",
+    });
   }
 };

@@ -1,10 +1,9 @@
-// payments/MPCheckout/mpCheckout.types.ts
 export type CheckoutItem = {
   id: string;              // productId
   title: string;
   quantity: number;
-  unit_price: number;      // en la misma unidad que uses (recomendado: pesos, no centavos)
-  currency_id?: string;    // "ARS" | "USD"
+  unit_price: number;      // usar pesos o dólares según currency_id
+  currency_id?: "ARS" | "USD";
   description?: string;
 };
 
@@ -13,4 +12,4 @@ export type CreatePreferenceBody = {
   currency?: "ARS" | "USD";
 };
 
-export type ProcessPaymentBody = any; // el body que pide MP Bricks
+export type ProcessPaymentBody = any;

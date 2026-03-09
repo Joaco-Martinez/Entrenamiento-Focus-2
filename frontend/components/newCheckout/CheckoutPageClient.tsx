@@ -43,31 +43,68 @@ export default function CheckoutPageClient() {
     const createPreference = async () => {
       if (!hasHydrated) return;
       if (!cart.length) return;
-      if (resolvedCountry !== "arg") return;
+      if (!resolvedCountry) return;
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+      if (resolvedCountry === "other") {
+        setPreferenceId("");
+        setCreatingPreference(false);
+
+        console.log("Checkout internacional pendiente de PayPal:", {
+          currency: "USD",
+          items: cart.map((item) => ({
+            id: item.id,
+            title: item.title,
+            quantity: Number(item.quantity),
+            unit_price: Number(item.usdPrice ?? 0),
+            currency_id: "USD",
+            description: item.description || item.title,
+          })),
+        });
+
+        return;
+      }
 
       try {
         setCreatingPreference(true);
+        setPreferenceId("");
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+        const items = cart.map((item) => {
+          const unitPrice = Number(item.arPrice);
 
-        const res = await fetch(`${apiUrl}/mp_checkout/create_preference`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            items: cart.map((item) => ({
-              id: item.id,
-              title: item.title,
-              quantity: item.quantity,
-              unit_price: item.arPrice,
-              currency_id: "ARS",
-              description: item.description || item.title,
-            })),
-            currency: "ARS",
-          }),
+          if (!item.id) {
+            throw new Error(`Producto inválido sin id: ${item.title}`);
+          }
+
+          if (Number.isNaN(unitPrice) || unitPrice <= 0) {
+            throw new Error(`Precio ARS inválido para ${item.title}`);
+          }
+
+          return {
+            id: item.id,
+            title: item.title,
+            quantity: Number(item.quantity),
+            unit_price: unitPrice,
+            currency_id: "ARS",
+            description: item.description || item.title,
+          };
         });
+
+        const res = await fetch(
+          `${apiUrl}/payments/mp/checkout/create_preference`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              items,
+              currency: "ARS",
+            }),
+          }
+        );
 
         const data = await res.json();
 
@@ -108,7 +145,10 @@ export default function CheckoutPageClient() {
                 cart={cart}
                 userEmail={user?.email}
                 creatingPreference={creatingPreference}
-                onChangeCountry={() => setSelectedCountry(null)}
+                onChangeCountry={() => {
+                  setSelectedCountry(null);
+                  setPreferenceId("");
+                }}
               />
             )}
           </div>

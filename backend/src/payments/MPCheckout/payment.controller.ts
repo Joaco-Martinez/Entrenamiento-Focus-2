@@ -9,6 +9,8 @@ export const processPayment = async (req: Request, res: Response) => {
       return res.status(401).json({ ok: false, message: "Unauthorized" });
     }
 
+    console.log("MP processPayment body:", req.body);
+
     const result = await createPaymentAndSyncOrder({
       userId,
       body: req.body,
@@ -17,6 +19,9 @@ export const processPayment = async (req: Request, res: Response) => {
     return res.json({ ok: true, ...result });
   } catch (error: any) {
     console.error("MP processPayment error:", error?.message || error);
-    return res.status(400).json({ ok: false, message: error?.message || "MP error" });
+    return res.status(400).json({
+      ok: false,
+      message: error?.message || "MP error",
+    });
   }
 };
