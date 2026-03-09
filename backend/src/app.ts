@@ -22,14 +22,19 @@ import { webhooksRoutes } from "./routes/webhooks.routes";
 export const app = express();
 
 const corsOptions = {
-  origin: ["https://www.entrenamientofocus.com.ar", "http://localhost:3000"],
+  origin: [
+    "https://www.entrenamientofocus.com.ar",
+    "https://entrenamientofocus.com.ar",
+    "http://localhost:3000",
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
+
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 app.use(helmet());
 app.use(cookieParser());
