@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-
+import { z } from "zod";
 function required(name: string) {
   const v = process.env[name];
   if (!v) throw new Error(`Missing env: ${name}`);
@@ -9,7 +9,7 @@ function required(name: string) {
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
-  PORT: Number(process.env.PORT ?? 3000),
+  PORT: z.coerce.number().default(3000),
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? "*",
 
   JWT_SECRET: required("JWT_SECRET"),
