@@ -5,10 +5,11 @@ const isProd = process.env.NODE_ENV === "production";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: isProd,
-  sameSite: isProd ? ("none" as const) : ("lax" as const),
+  secure: true,
+  sameSite: "none" as const,
+  domain: ".entrenamientofocus.com.ar",
   path: "/",
-  maxAge: 1000 * 60 * 60 * 24 * 7, // 7 días
+  maxAge: 1000 * 60 * 60 * 24 * 7,
 };
 
 export async function register(req: Request, res: Response) {
