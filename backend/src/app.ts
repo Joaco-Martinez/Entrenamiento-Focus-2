@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
+import cookieParser from "cookie-parser";
 
 import { env } from "./config/env";
 import { swaggerSpec } from "./config/swagger";
@@ -17,19 +18,20 @@ import { ordersRoutes } from "./routes/orders.routes";
 import { paymentsRoutes } from "./routes/payments.routes";
 import { subscriptionsRoutes } from "./routes/subscriptions.routes";
 import { webhooksRoutes } from "./routes/webhooks.routes";
-import cookieParser from "cookie-parser";
+
 export const app = express();
 
+const corsOptions = {
+  origin: ["https://www.entrenamientofocus.com.ar", "http://localhost:3000"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 app.use(helmet());
-app.use(
-  cors({
-    origin: "https://www.entrenamientofocus.com.ar",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    
-  })
-);
 app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
