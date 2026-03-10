@@ -21,6 +21,9 @@ export function authRequired(
   res: Response,
   next: NextFunction
 ) {
+  console.log("req.headers.cookie:", req.headers.cookie);
+  console.log("req.cookies:", req.cookies);
+
   const token = req.cookies?.token;
   console.log("authRequired token:", token);
 
