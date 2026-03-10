@@ -4,6 +4,7 @@ import { authLimiter } from "../common/middlewares/rateLimit";
 import { validateBody } from "../common/middlewares/validate";
 import { registerSchema, loginSchema } from "../schemas/auth.schemas";
 import * as authController from "../controllers/auth.controller";
+import { authRequired } from "../common/middlewares/authRequired";
 
 export const authRoutes = Router();
 
@@ -28,11 +29,21 @@ export const authRoutes = Router();
  *             type: object
  *             required: [email, password]
  *             properties:
- *               email: { type: string, example: "user@mail.com" }
- *               password: { type: string, example: "123456" }
- *               firstName: { type: string, example: "Joaco" }
- *               lastName: { type: string, example: "Martinez" }
- *               country: { type: string, example: "AR" }
+ *               email:
+ *                 type: string
+ *                 example: "user@mail.com"
+ *               password:
+ *                 type: string
+ *                 example: "123456"
+ *               firstName:
+ *                 type: string
+ *                 example: "Joaco"
+ *               lastName:
+ *                 type: string
+ *                 example: "Martinez"
+ *               country:
+ *                 type: string
+ *                 example: "AR"
  *     responses:
  *       201:
  *         description: Created
@@ -60,8 +71,12 @@ authRoutes.post(
  *             type: object
  *             required: [email, password]
  *             properties:
- *               email: { type: string, example: "user@mail.com" }
- *               password: { type: string, example: "123456" }
+ *               email:
+ *                 type: string
+ *                 example: "user@mail.com"
+ *               password:
+ *                 type: string
+ *                 example: "123456"
  *     responses:
  *       200:
  *         description: OK
@@ -74,3 +89,33 @@ authRoutes.post(
   validateBody(loginSchema),
   asyncHandler(authController.login)
 );
+
+/**
+ * @openapi
+ * /auth/me:
+ *   get:
+ *     summary: Get current authenticated user
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user
+ *       401:
+ *         description: Unauthorized
+ */
+authRoutes.get("/me", authRequired, asyncHandler(authController.me));
+
+/**
+ * @openapi
+ * /auth/logout:
+ *   post:
+ *     summary: Logout
+ *     tags: [Auth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ */
+authRoutes.post("/logout", asyncHandler(authController.logout));

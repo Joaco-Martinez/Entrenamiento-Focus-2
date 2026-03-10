@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { authService, LoginResponse } from "@/services/auth.service";
 
 type Role = "USER" | "ADMIN" | "user" | "admin";
@@ -9,24 +15,21 @@ export type AuthUser = {
   id: string;
   email: string;
   role: Role;
-
   firstName: string | null;
   lastName: string | null;
   country: string | null;
-
-  // opcionales por compatibilidad con backend actual
   isPremium?: boolean;
   subscriptionId?: string | null;
 };
 
 type AuthContextValue = {
   user: AuthUser | null;
-  accessToken: string | null;
   isAuth: boolean;
   loading: boolean;
 
   login: (email: string, password: string) => Promise<LoginResponse>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 
   isAdmin: boolean;
   isPremium: boolean;
@@ -37,90 +40,66 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const decodeJwtPayload = (token: string) => {
-  try {
-    const payload = token.split(".")[1];
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(base64);
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-};
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const mapUser = (raw: any): AuthUser => ({
+    id: raw.id,
+    email: raw.email,
+    role: raw.role,
+    firstName: raw.firstName ?? null,
+    lastName: raw.lastName ?? null,
+    country: raw.country ?? "arg",
+    isPremium: raw.isPremium ?? false,
+    subscriptionId: raw.subscriptionId ?? null,
+  });
+
+  const refreshUser = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const userRaw = localStorage.getItem("user");
-
-      if (token) setAccessToken(token);
-
-      if (userRaw) {
-        const parsed = JSON.parse(userRaw);
-
-        setUser({
-          id: parsed.id,
-          email: parsed.email,
-          role: parsed.role,
-          firstName: parsed.firstName ?? null,
-          lastName: parsed.lastName ?? null,
-          country: parsed.country ?? "arg",
-          isPremium: parsed.isPremium ?? false,
-          subscriptionId: parsed.subscriptionId ?? null,
-        });
-      } else if (token) {
-        const payload = decodeJwtPayload(token);
-
-        if (payload?.email) {
-          setUser({
-            id: payload.id,
-            email: payload.email,
-            role: payload.role,
-            firstName: payload.firstName ?? null,
-            lastName: payload.lastName ?? null,
-            country: payload.country ?? "arg",
-            isPremium: payload.isPremium ?? false,
-            subscriptionId: payload.subscriptionId ?? null,
-          });
-        }
-      }
-    } finally {
-      setLoading(false);
+      const me = await authService.me();
+      setUser(mapUser(me));
+    } catch {
+      setUser(null);
     }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await refreshUser();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    init();
   }, []);
 
   const login = async (email: string, password: string) => {
     const data = await authService.login(email, password);
 
-    setAccessToken(data.access_token);
-
-    setUser({
-      id: (data.user as any).id,
-      email: data.user.email,
-      role: data.user.role,
-      firstName: (data.user as any).firstName ?? null,
-      lastName: (data.user as any).lastName ?? null,
-      country: (data.user as any).country ?? "arg",
-      isPremium: (data.user as any).isPremium ?? false,
-      subscriptionId: (data.user as any).subscriptionId ?? null,
-    });
+    // Si el backend ya devuelve el user, lo usamos directo
+    if (data.user) {
+      setUser(mapUser(data.user));
+    } else {
+      // Si no lo devuelve, reconstruimos sesión desde /auth/me
+      await refreshUser();
+    }
 
     return data;
   };
 
-  const logout = () => {
-    authService.logout();
-    setAccessToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+    }
   };
 
   const value = useMemo<AuthContextValue>(() => {
-    const isAuth = !!accessToken && !!user;
+    const isAuth = !!user;
 
     const normalizedRole = String(user?.role ?? "").toLowerCase();
     const isAdmin = normalizedRole === "admin";
@@ -141,18 +120,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return {
       user,
-      accessToken,
       isAuth,
       loading,
       login,
       logout,
+      refreshUser,
       isAdmin,
       isPremium,
       subscriptionId,
       fullName,
       country,
     };
-  }, [user, accessToken, loading]);
+  }, [user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

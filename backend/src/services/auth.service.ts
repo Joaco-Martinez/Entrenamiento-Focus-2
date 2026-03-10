@@ -33,7 +33,11 @@ export async function register(data: {
     },
   });
 
-  const token = signToken({ sub: user.id, role: user.role });
+  const token = signToken({
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+  });
 
   return { user, token };
 }
@@ -45,7 +49,11 @@ export async function login(data: { email: string; password: string }) {
   const ok = await comparePassword(data.password, user.passwordHash);
   if (!ok) throw new ApiError(401, "Invalid credentials");
 
-  const token = signToken({ sub: user.id, role: user.role });
+  const token = signToken({
+    sub: user.id,
+    email: user.email,
+    role: user.role,
+  });
 
   return {
     user: {
