@@ -15,7 +15,6 @@ export default function RecursosPage() {
   const [error, setError] = useState<string | null>(null)
   const { addToCart, isInCart } = useCart()
 
-  
   useEffect(() => {
     const run = async () => {
       setError(null)
@@ -24,7 +23,6 @@ export default function RecursosPage() {
       try {
         const data = await productsService.getAll()
 
-        // por si la API devuelve array directo o { products: [...] }
         if (Array.isArray(data)) {
           setItems(data)
         } else {
@@ -149,15 +147,20 @@ export default function RecursosPage() {
                     <div className="relative mt-5 grid gap-3 sm:grid-cols-2">
                       <button
                         type="button"
-                        onClick={() =>
-                          addToCart({
+                        onClick={() => {
+                          const cartItem = {
                             id: String(item.id),
-                            name: item.title,
-                            price: Number(item.usdPrice ?? 0),
+                            title: item.title ?? "",
+                            arPrice: Number(item.arPrice ?? 0),
+                            usdPrice: Number(item.usdPrice ?? 0),
                             coverImageUrl: item.coverImageUrl || undefined,
+                            description: item.description || undefined,
                             quantity: 1,
-                          })
-                        }
+                          }
+
+                          console.log("Producto agregado al carrito:", cartItem)
+                          addToCart(cartItem)
+                        }}
                         className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/15"
                       >
                         <ShoppingCart className="h-4 w-4" />
