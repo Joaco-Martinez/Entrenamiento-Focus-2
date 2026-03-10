@@ -195,6 +195,7 @@ export default function MercadoPagoPaymentBrick({
             paymentMethods: {
               creditCard: "all",
               debitCard: "all",
+              prepaidCard: "all",
               maxInstallments: 1,
             },
           },
