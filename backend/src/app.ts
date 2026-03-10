@@ -21,6 +21,8 @@ import { webhooksRoutes } from "./routes/webhooks.routes";
 
 export const app = express();
 
+app.set("trust proxy", 1);
+
 const corsOptions = {
   origin: [
     "https://www.entrenamientofocus.com.ar",
@@ -31,7 +33,6 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
-
 
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
