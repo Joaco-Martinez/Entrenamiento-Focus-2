@@ -51,6 +51,45 @@ function calcTotal(items: CheckoutItem[]) {
   }, 0);
 }
 
+function buildDebugError(prefix: string, error: any) {
+  const enriched = new Error(error?.message || `${prefix} failed`);
+
+  (enriched as any).status =
+    error?.status ||
+    error?.statusCode ||
+    error?.cause?.status ||
+    error?.response?.status ||
+    400;
+
+  (enriched as any).name = error?.name || "MercadoPagoError";
+  (enriched as any).cause = error?.cause || null;
+  (enriched as any).response = error?.response || null;
+  (enriched as any).details =
+    error?.response?.data ||
+    error?.cause ||
+    error?.body ||
+    error ||
+    null;
+
+  console.error(`${prefix} FULL ERROR:`, {
+    message: error?.message,
+    name: error?.name,
+    status:
+      error?.status ||
+      error?.statusCode ||
+      error?.cause?.status ||
+      error?.response?.status,
+    cause: error?.cause,
+    response: error?.response,
+    responseData: error?.response?.data,
+    body: error?.body,
+    stack: error?.stack,
+    raw: error,
+  });
+
+  return enriched;
+}
+
 export async function createOrderAndPreference(opts: {
   userId: string;
   items: CheckoutItem[];
@@ -90,32 +129,36 @@ export async function createOrderAndPreference(opts: {
     include: { items: true },
   });
 
-  const preference = new Preference(mpClient);
+  try {
+    const preference = new Preference(mpClient);
 
-  const result = await preference.create({
-    body: {
-      items: normalizedItems.map((i) => ({
-        title: i.title,
-        quantity: i.quantity,
-        unit_price: i.unit_price,
-        currency_id: i.currency_id || currency,
-        description: i.description,
-        id: i.id,
-      })),
-      purpose: "wallet_purchase",
-      external_reference: order.id,
-      metadata: { orderId: order.id, userId },
-    },
-  });
+    const result = await preference.create({
+      body: {
+        items: normalizedItems.map((i) => ({
+          title: i.title,
+          quantity: i.quantity,
+          unit_price: i.unit_price,
+          currency_id: i.currency_id || currency,
+          description: i.description,
+          id: i.id,
+        })),
+        purpose: "wallet_purchase",
+        external_reference: order.id,
+        metadata: { orderId: order.id, userId },
+      },
+    });
 
-  const preferenceId = result.id;
+    const preferenceId = result.id;
 
-  await prisma.order.update({
-    where: { id: order.id },
-    data: { providerRef: preferenceId },
-  });
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { providerRef: preferenceId },
+    });
 
-  return { orderId: order.id, preferenceId };
+    return { orderId: order.id, preferenceId };
+  } catch (error: any) {
+    throw buildDebugError("MP create preference", error);
+  }
 }
 
 export async function createPaymentAndSyncOrder(opts: {
@@ -124,15 +167,21 @@ export async function createPaymentAndSyncOrder(opts: {
 }) {
   const { userId, body } = opts;
 
-  const payment = new Payment(mpClient);
-  const mpResult = await payment.create({ body });
+  let mpResult: any;
+
+  try {
+    const payment = new Payment(mpClient);
+    mpResult = await payment.create({ body });
+  } catch (error: any) {
+    throw buildDebugError("MP create payment", error);
+  }
 
   const mpPaymentId = String(mpResult.id ?? "");
   const mpStatus = String(mpResult.status ?? "");
   const statusDetail = String(mpResult.status_detail ?? "");
   const preferenceId =
     String(
-      (mpResult as any).order?.id ??
+      mpResult?.order?.id ??
         body?.preference_id ??
         body?.preferenceId ??
         ""
@@ -140,7 +189,7 @@ export async function createPaymentAndSyncOrder(opts: {
 
   const orderIdFromRef =
     String(
-      (mpResult as any).external_reference ??
+      mpResult?.external_reference ??
         body?.external_reference ??
         body?.externalReference ??
         ""
@@ -150,15 +199,29 @@ export async function createPaymentAndSyncOrder(opts: {
     where: {
       userId,
       OR: [
-        orderIdFromRef ? { id: orderIdFromRef } : undefined,
-        preferenceId ? { providerRef: preferenceId } : undefined,
-      ].filter(Boolean) as any,
+        ...(orderIdFromRef ? [{ id: orderIdFromRef }] : []),
+        ...(preferenceId ? [{ providerRef: preferenceId }] : []),
+      ],
     },
     include: { items: { include: { product: true } } },
   });
 
   if (!order) {
-    throw new Error("Order not found for this payment (external_reference/providerRef mismatch).");
+    const debug = new Error(
+      "Order not found for this payment (external_reference/providerRef mismatch)."
+    );
+
+    (debug as any).details = {
+      userId,
+      orderIdFromRef,
+      preferenceId,
+      mpPaymentId,
+      mpStatus,
+      body,
+      mpResult,
+    };
+
+    throw debug;
   }
 
   const saved = await prisma.payment.create({
@@ -174,10 +237,10 @@ export async function createPaymentAndSyncOrder(opts: {
       externalId: mpPaymentId || null,
       preferenceId: preferenceId || order.providerRef || null,
       statusDetail,
-      paymentMethod: String((mpResult as any).payment_method_id ?? ""),
-      installments: Number((mpResult as any).installments ?? 0) || null,
-      amount: Number((mpResult as any).transaction_amount ?? order.totalAmount) || null,
-      currency: String((mpResult as any).currency_id ?? order.currency ?? "ARS"),
+      paymentMethod: String(mpResult?.payment_method_id ?? ""),
+      installments: Number(mpResult?.installments ?? 0) || null,
+      amount: Number(mpResult?.transaction_amount ?? order.totalAmount) || null,
+      currency: String(mpResult?.currency_id ?? order.currency ?? "ARS"),
       raw: mpResult as any,
     },
   });
@@ -189,7 +252,9 @@ export async function createPaymentAndSyncOrder(opts: {
         data: { status: OrderStatus.PAID, paidAt: new Date() },
       });
 
-      const grantables = order.items.filter((it) => it.product.requiresPremium === true);
+      const grantables = order.items.filter(
+        (it) => it.product.requiresPremium === true
+      );
 
       for (const it of grantables) {
         await tx.accessGrant.upsert({
