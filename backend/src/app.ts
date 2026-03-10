@@ -9,7 +9,7 @@ import { env } from "./config/env";
 import { swaggerSpec } from "./config/swagger";
 import { notFound } from "./common/errors/notFound";
 import { errorHandler } from "./common/errors/errorHandler";
-import { MPCheckoutRoutes } from "./payments/MPCheckout/mpCheckout.routes";
+import { MpRoutes } from "./payments/MPCheckout/mercadoPago.Routes";
 import { healthRoutes } from "./routes/health.routes";
 import { authRoutes } from "./routes/auth.routes";
 import { usersRoutes } from "./routes/users.routes";
@@ -44,7 +44,7 @@ app.use(morgan("dev"));
 
 app.get("/", (_req, res) => res.json({ ok: true, name: "back-2" }));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use("/mp_checkout", MPCheckoutRoutes);
+app.use("/mercadopago_checkout", MpRoutes);
 app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);

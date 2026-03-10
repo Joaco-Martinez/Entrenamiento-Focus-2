@@ -218,7 +218,7 @@ export default function MercadoPagoCheckout({
               return new Promise<void>(async (resolve, reject) => {
                 try {
                   const response = await fetch(
-                    `${apiBaseUrl}/mercadopago/process-payment`,
+                    `${apiBaseUrl}/mercadopago_checkouts/process-payment`,
                     {
                       method: "POST",
                       headers: {
@@ -260,7 +260,7 @@ export default function MercadoPagoCheckout({
 
       try {
         const response = await fetch(
-          `${apiBaseUrl}/mercadopago/create-preference`,
+          `${apiBaseUrl}/mercadopago_checkout/create-preference`,
           {
             method: "POST",
             headers: {

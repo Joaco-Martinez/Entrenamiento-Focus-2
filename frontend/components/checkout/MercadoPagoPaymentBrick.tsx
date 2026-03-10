@@ -196,7 +196,7 @@ export default function MercadoPagoPaymentBrick({
               return new Promise<void>(async (resolve, reject) => {
                 try {
                   const response = await fetch(
-                    `${apiUrl}/mercadopago/process-payment`,
+                    `${apiUrl}/mercadopago_checkout/process-payment`,
                     {
                       method: "POST",
                       credentials: "include",

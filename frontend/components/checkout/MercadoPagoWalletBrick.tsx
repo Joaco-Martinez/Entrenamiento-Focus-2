@@ -59,11 +59,11 @@ export default function MercadoPagoWalletBrick({ items, payer }: Props) {
     if (!window.MercadoPago) return;
     if (!items.length) return;
 
-    const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+    const publicKey = process.env.NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY;
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (!publicKey || !apiUrl) {
-      console.error("Faltan NEXT_PUBLIC_MP_PUBLIC_KEY o NEXT_PUBLIC_API_URL");
+      console.error("Faltan NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY o NEXT_PUBLIC_API_URL");
       return;
     }
 
@@ -80,7 +80,7 @@ export default function MercadoPagoWalletBrick({ items, payer }: Props) {
         await window.walletBrickController?.unmount?.();
 
         const response = await fetch(
-          `${apiUrl}/mercadopago/create-preference`,
+          `${apiUrl}/mercadopago_checkout/create-preference`,
           {
             method: "POST",
             credentials: "include",

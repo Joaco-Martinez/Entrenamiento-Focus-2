@@ -2,18 +2,17 @@ import { Router } from "express";
 import * as mercadoPagoController from "./mercadoPago.controller";
 import { requireArgentinaForMercadoPago } from "./requireArgentinaForMercadoPago";
 
-const router = Router();
+export const MpRoutes = Router();
 
-router.post(
+MpRoutes.post(
   "/process-payment",
   requireArgentinaForMercadoPago,
   mercadoPagoController.processPayment
 );
 
-router.post(
+MpRoutes.post(
   "/create-preference",
   requireArgentinaForMercadoPago,
   mercadoPagoController.createPreference
 );
 
-export default router;

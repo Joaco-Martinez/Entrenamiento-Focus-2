@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-
+import MercadoPagoPaymentBrick from "./MercadoPagoPaymentBrick";
+import MercadoPagoWalletBrick from "./MercadoPagoWalletBrick";
+import PaypalCheckout from "./PaypalCheckout";
 type PaymentProvider = "mercadopago" | "paypal";
 type MercadoPagoMethod = "card" | "wallet";
 
@@ -144,11 +146,11 @@ export default function CheckoutPaymentSelector() {
                   Pagás con tarjeta dentro de la web.
                 </p>
 
-                {/* <MercadoPagoPaymentBrick
+                <MercadoPagoPaymentBrick
                   amount={amount}
                   items={mpItems}
                   payer={payer}
-                /> */}
+                />
               </div>
             )}
 
@@ -158,10 +160,10 @@ export default function CheckoutPaymentSelector() {
                   Vas al checkout de Mercado Pago.
                 </p>
 
-                {/* <MercadoPagoWalletBrick
+                <MercadoPagoWalletBrick
                   items={mpItems}
                   payer={payer}
-                /> */}
+                />
               </div>
             )}
           </div>
