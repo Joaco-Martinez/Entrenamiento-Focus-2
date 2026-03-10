@@ -135,20 +135,27 @@ export async function createOrderAndPreference(opts: {
     const preference = new Preference(mpClient);
 
     const result = await preference.create({
-      body: {
-        items: normalizedItems.map((i) => ({
-          title: i.title,
-          quantity: i.quantity,
-          unit_price: i.unit_price,
-          currency_id: i.currency_id || currency,
-          description: i.description,
-          id: i.id,
-        })),
-        purpose: "wallet_purchase",
-        external_reference: order.id,
-        metadata: { orderId: order.id, userId },
-      },
-    });
+  body: {
+    items: normalizedItems.map((i) => ({
+      title: i.title,
+      quantity: i.quantity,
+      unit_price: i.unit_price,
+      currency_id: i.currency_id || currency,
+      description: i.description,
+      id: i.id,
+    })),
+
+    payment_methods: {
+      excluded_payment_types: [],
+      excluded_payment_methods: [],
+      installments: 12,
+    },
+
+    purpose: "wallet_purchase",
+    external_reference: order.id,
+    metadata: { orderId: order.id, userId },
+  },
+});
 
     const preferenceId = result.id;
 
