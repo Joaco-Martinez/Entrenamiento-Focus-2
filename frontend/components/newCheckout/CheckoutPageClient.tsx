@@ -92,7 +92,7 @@ export default function CheckoutPageClient() {
         });
 
         const res = await fetch(
-          `${apiUrl}/payments/mp/checkout/create_preference`,
+          `${apiUrl}/mp_checkout/create_preference`,
           {
             method: "POST",
             credentials: "include",
