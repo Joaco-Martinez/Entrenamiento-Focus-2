@@ -15,4 +15,3 @@ MpRoutes.post(
   requireArgentinaForMercadoPago,
   mercadoPagoController.createPreference
 );
-

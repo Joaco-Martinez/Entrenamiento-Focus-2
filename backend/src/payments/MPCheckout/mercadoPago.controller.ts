@@ -78,20 +78,31 @@ export async function processPayment(req: RequestWithUser, res: Response) {
       issuer_id: parsedIssuerId,
       payer: {
         email: payer.email,
-        identification: payer.identification
-          ? {
-              type: payer.identification.type || "DNI",
-              number: payer.identification.number || "",
-            }
-          : undefined,
       },
     });
 
-    return res.status(201).json({
-      message: "Pago procesado correctamente",
+    const status = result.status;
+    const statusDetail = result.status_detail;
+
+    if (
+      status === "approved" ||
+      status === "pending" ||
+      status === "in_process"
+    ) {
+      return res.status(201).json({
+        message: "Pago procesado correctamente",
+        paymentId: result.id,
+        status,
+        statusDetail,
+        raw: result,
+      });
+    }
+
+    return res.status(400).json({
+      message: "El pago fue rechazado",
       paymentId: result.id,
-      status: result.status,
-      statusDetail: result.status_detail,
+      status,
+      statusDetail,
       raw: result,
     });
   } catch (error: any) {

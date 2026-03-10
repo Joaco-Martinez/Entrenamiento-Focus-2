@@ -26,10 +26,6 @@ type Payer = {
   lastName?: string;
   email?: string;
   fullName?: string;
-  identification?: {
-    type?: string;
-    number?: string;
-  };
 };
 
 type Props = {
@@ -46,6 +42,7 @@ export default function MercadoPagoPaymentBrick({
   payer,
 }: Props) {
   const [sdkReady, setSdkReady] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const containerId = useMemo(() => "paymentBrick_container", []);
 
   useEffect(() => {
@@ -66,12 +63,31 @@ export default function MercadoPagoPaymentBrick({
     if (!sdkReady) return;
     if (!window.MercadoPago) return;
     if (!amount || amount <= 0) return;
+    if (!Array.isArray(items) || items.length === 0) return;
 
     const publicKey = process.env.NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY;
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (!publicKey || !apiUrl) {
       console.error("Faltan NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY o NEXT_PUBLIC_API_URL");
+      return;
+    }
+
+    const normalizedItems = items.filter(
+      (item) =>
+        item &&
+        typeof item.id === "string" &&
+        item.id.trim() !== "" &&
+        typeof item.title === "string" &&
+        item.title.trim() !== "" &&
+        Number.isFinite(Number(item.quantity)) &&
+        Number(item.quantity) > 0 &&
+        Number.isFinite(Number(item.unit_price)) &&
+        Number(item.unit_price) > 0
+    );
+
+    if (!normalizedItems.length) {
+      console.error("No hay items válidos para Mercado Pago");
       return;
     }
 
@@ -91,15 +107,11 @@ export default function MercadoPagoPaymentBrick({
         containerId,
         {
           initialization: {
-            amount,
+            amount: Number(amount),
             payer: {
               firstName: payer.firstName || "",
               lastName: payer.lastName || "",
               email: payer.email || "",
-              identification: {
-                type: payer.identification?.type || "DNI",
-                number: payer.identification?.number || "",
-              },
             },
           },
           customization: {
@@ -167,14 +179,6 @@ export default function MercadoPagoPaymentBrick({
                   label: "Código de seguridad",
                   placeholder: "123",
                 },
-                entityType: {
-                  placeholder: "Seleccioná un tipo",
-                  label: "Tipo de documento",
-                },
-                financialInstitution: {
-                  placeholder: "Seleccioná un banco",
-                  label: "Entidad financiera",
-                },
                 selectInstallments: "Seleccioná cuotas",
                 selectIssuerBank: "Seleccioná banco emisor",
                 formSubmit: "Pagar ahora",
@@ -183,8 +187,6 @@ export default function MercadoPagoPaymentBrick({
             paymentMethods: {
               creditCard: "all",
               debitCard: "all",
-              bankTransfer: "all",
-              ticket: "all",
               maxInstallments: 1,
             },
           },
@@ -195,6 +197,17 @@ export default function MercadoPagoPaymentBrick({
             onSubmit: ({ formData }: { formData: any }) => {
               return new Promise<void>(async (resolve, reject) => {
                 try {
+                  setSubmitting(true);
+
+                  const payload = {
+                    ...formData,
+                    items: normalizedItems,
+                    amount: Number(amount),
+                    description: normalizedItems.map((item) => item.title).join(", "),
+                  };
+
+                  console.log("Payload enviado a process-payment:", payload);
+
                   const response = await fetch(
                     `${apiUrl}/mercadopago_checkout/process-payment`,
                     {
@@ -203,12 +216,7 @@ export default function MercadoPagoPaymentBrick({
                       headers: {
                         "Content-Type": "application/json",
                       },
-                      body: JSON.stringify({
-                        ...formData,
-                        items,
-                        amount,
-                        description: items.map((item) => item.title).join(", "),
-                      }),
+                      body: JSON.stringify(payload),
                     }
                   );
 
@@ -220,11 +228,23 @@ export default function MercadoPagoPaymentBrick({
                     return;
                   }
 
+                  if (
+                    data.status !== "approved" &&
+                    data.status !== "pending" &&
+                    data.status !== "in_process"
+                  ) {
+                    console.error("Pago rechazado:", data);
+                    reject(data);
+                    return;
+                  }
+
                   console.log("Pago creado:", data);
                   resolve();
                 } catch (error) {
                   console.error(error);
                   reject(error);
+                } finally {
+                  setSubmitting(false);
                 }
               });
             },
@@ -250,6 +270,13 @@ export default function MercadoPagoPaymentBrick({
       <p className="mb-3 text-sm text-zinc-400">
         Pagás con tarjeta dentro de la web.
       </p>
+
+      {submitting && (
+        <p className="mb-3 text-sm text-zinc-500">
+          Procesando pago...
+        </p>
+      )}
+
       <div id={containerId} />
     </div>
   );

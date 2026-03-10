@@ -27,10 +27,6 @@ export type MpPayerInput = {
   firstName?: string;
   lastName?: string;
   email?: string;
-  identification?: {
-    type?: string;
-    number?: string;
-  };
 };
 
 export type ProcessPaymentInput = {
@@ -42,10 +38,6 @@ export type ProcessPaymentInput = {
   issuer_id?: number;
   payer: {
     email: string;
-    identification?: {
-      type?: string;
-      number?: string;
-    };
   };
 };
 
@@ -66,12 +58,6 @@ export async function processPayment(data: ProcessPaymentInput) {
       issuer_id: data.issuer_id,
       payer: {
         email: data.payer.email,
-        identification: data.payer.identification
-          ? {
-              type: data.payer.identification.type,
-              number: data.payer.identification.number,
-            }
-          : undefined,
       },
     },
   });
