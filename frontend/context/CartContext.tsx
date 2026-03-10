@@ -55,6 +55,41 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function normalizePrice(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function normalizeQuantity(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
+}
+
+function normalizeCartItem(item: any): CartItem | null {
+  if (!item || typeof item !== "object") return null;
+
+  const id = typeof item.id === "string" ? item.id.trim() : "";
+  const title = typeof item.title === "string" ? item.title.trim() : "";
+
+  if (!id || !title) return null;
+
+  const arPrice = normalizePrice(item.arPrice);
+  const usdPrice = normalizePrice(item.usdPrice);
+  const quantity = normalizeQuantity(item.quantity);
+
+  return {
+    id,
+    title,
+    arPrice,
+    usdPrice,
+    quantity,
+    coverImageUrl:
+      typeof item.coverImageUrl === "string" ? item.coverImageUrl : undefined,
+    description:
+      typeof item.description === "string" ? item.description : undefined,
+  };
+}
+
 function saveCartToCookie(cart: CartItem[]) {
   Cookies.set(CART_COOKIE_KEY, JSON.stringify(cart), {
     expires: 7,
@@ -70,20 +105,9 @@ function getCartFromCookie(): CartItem[] {
     const parsed = JSON.parse(cookie);
     if (!Array.isArray(parsed)) return [];
 
-    return parsed.filter((item) => {
-      return (
-        item &&
-        typeof item.id === "string" &&
-        typeof item.title === "string" &&
-        typeof item.arPrice === "number" &&
-        !Number.isNaN(item.arPrice) &&
-        typeof item.usdPrice === "number" &&
-        !Number.isNaN(item.usdPrice) &&
-        typeof item.quantity === "number" &&
-        !Number.isNaN(item.quantity) &&
-        item.quantity > 0
-      );
-    });
+    return parsed
+      .map((item) => normalizeCartItem(item))
+      .filter((item): item is CartItem => item !== null);
   } catch {
     return [];
   }
@@ -105,34 +129,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart, hasHydrated]);
 
   const addToCart = (item: AddToCartInput) => {
-    const qty =
-      typeof item.quantity === "number" && item.quantity > 0
-        ? item.quantity
-        : 1;
+    const normalized = normalizeCartItem({
+      ...item,
+      quantity: item.quantity ?? 1,
+    });
+
+    if (!normalized) {
+      console.error("addToCart recibió un item inválido:", item);
+      return;
+    }
 
     setCart((prev) => {
-      const existing = prev.find((p) => p.id === item.id);
+      const existing = prev.find((p) => p.id === normalized.id);
 
       if (existing) {
         return prev.map((p) =>
-          p.id === item.id
-            ? { ...p, quantity: p.quantity + qty }
+          p.id === normalized.id
+            ? { ...p, quantity: p.quantity + normalized.quantity }
             : p
         );
       }
 
-      return [
-        ...prev,
-        {
-          id: item.id,
-          title: item.title,
-          arPrice: item.arPrice,
-          usdPrice: item.usdPrice,
-          quantity: qty,
-          coverImageUrl: item.coverImageUrl,
-          description: item.description,
-        },
-      ];
+      return [...prev, normalized];
     });
   };
 
@@ -170,7 +188,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     setCart((prev) =>
       prev.map((item) =>
-        item.id === productId ? { ...item, quantity } : item
+        item.id === productId
+          ? { ...item, quantity: Math.floor(quantity) }
+          : item
       )
     );
   };
