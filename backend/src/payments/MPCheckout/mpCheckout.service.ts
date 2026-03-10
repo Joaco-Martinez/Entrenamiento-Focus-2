@@ -15,6 +15,8 @@ function normalizeCurrency(items: CheckoutItem[], fallback: string) {
   return items[0]?.currency_id || fallback || "ARS";
 }
 
+
+
 function normalizeItems(items: CheckoutItem[]) {
   return items.map((i) => {
     const quantity = Number(i.quantity);
