@@ -34,6 +34,8 @@ type Props = {
   payer: Payer;
 };
 
+type UiPaymentStatus = "idle" | "loading" | "approved" | "pending" | "rejected" | "error";
+
 const SCRIPT_ID = "mercadopago-sdk-payment";
 
 export default function MercadoPagoPaymentBrick({
@@ -43,6 +45,8 @@ export default function MercadoPagoPaymentBrick({
 }: Props) {
   const [sdkReady, setSdkReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<UiPaymentStatus>("idle");
+  const [paymentMessage, setPaymentMessage] = useState("");
   const containerId = useMemo(() => "paymentBrick_container", []);
 
   useEffect(() => {
@@ -70,6 +74,8 @@ export default function MercadoPagoPaymentBrick({
 
     if (!publicKey || !apiUrl) {
       console.error("Faltan NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY o NEXT_PUBLIC_API_URL");
+      setPaymentStatus("error");
+      setPaymentMessage("Faltan variables de entorno de Mercado Pago.");
       return;
     }
 
@@ -88,6 +94,8 @@ export default function MercadoPagoPaymentBrick({
 
     if (!normalizedItems.length) {
       console.error("No hay items válidos para Mercado Pago");
+      setPaymentStatus("error");
+      setPaymentMessage("No hay productos válidos para procesar el pago.");
       return;
     }
 
@@ -198,6 +206,8 @@ export default function MercadoPagoPaymentBrick({
               return new Promise<void>(async (resolve, reject) => {
                 try {
                   setSubmitting(true);
+                  setPaymentStatus("loading");
+                  setPaymentMessage("Procesando pago...");
 
                   const payload = {
                     ...formData,
@@ -223,25 +233,47 @@ export default function MercadoPagoPaymentBrick({
                   const data = await response.json();
 
                   if (!response.ok) {
+                    const backendStatus = data?.status;
+                    const backendStatusDetail = data?.statusDetail || data?.status_detail;
+
+                    if (backendStatus === "rejected") {
+                      setPaymentStatus("rejected");
+                      setPaymentMessage(
+                        `Pago rechazado${backendStatusDetail ? `: ${backendStatusDetail}` : "."}`
+                      );
+                    } else {
+                      setPaymentStatus("error");
+                      setPaymentMessage(data?.message || "No se pudo procesar el pago.");
+                    }
+
                     console.error("Error process payment:", data);
                     reject(data);
                     return;
                   }
 
-                  if (
-                    data.status !== "approved" &&
-                    data.status !== "pending" &&
-                    data.status !== "in_process"
-                  ) {
-                    console.error("Pago rechazado:", data);
-                    reject(data);
+                  if (data.status === "approved") {
+                    setPaymentStatus("approved");
+                    setPaymentMessage("Pago aprobado correctamente.");
+                    resolve();
                     return;
                   }
 
-                  console.log("Pago creado:", data);
-                  resolve();
+                  if (data.status === "pending" || data.status === "in_process") {
+                    setPaymentStatus("pending");
+                    setPaymentMessage("El pago quedó pendiente o en proceso.");
+                    resolve();
+                    return;
+                  }
+
+                  setPaymentStatus("rejected");
+                  setPaymentMessage(
+                    `Pago rechazado${data?.statusDetail ? `: ${data.statusDetail}` : "."}`
+                  );
+                  reject(data);
                 } catch (error) {
                   console.error(error);
+                  setPaymentStatus("error");
+                  setPaymentMessage("Ocurrió un error al procesar el pago.");
                   reject(error);
                 } finally {
                   setSubmitting(false);
@@ -250,6 +282,8 @@ export default function MercadoPagoPaymentBrick({
             },
             onError: (error: any) => {
               console.error("Error Payment Brick:", error);
+              setPaymentStatus("error");
+              setPaymentMessage("Hubo un error en el formulario de pago.");
             },
           },
         }
@@ -278,6 +312,20 @@ export default function MercadoPagoPaymentBrick({
       )}
 
       <div id={containerId} />
+
+      {paymentStatus !== "idle" && paymentStatus !== "loading" && paymentMessage && (
+        <div
+          className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
+            paymentStatus === "approved"
+              ? "border-green-700 bg-green-950/40 text-green-300"
+              : paymentStatus === "pending"
+              ? "border-yellow-700 bg-yellow-950/40 text-yellow-300"
+              : "border-red-700 bg-red-950/40 text-red-300"
+          }`}
+        >
+          {paymentMessage}
+        </div>
+      )}
     </div>
   );
 }
