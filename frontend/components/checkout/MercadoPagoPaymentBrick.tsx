@@ -45,7 +45,6 @@ export default function MercadoPagoPaymentBrick({
   const [sdkReady, setSdkReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [paymentId, setPaymentId] = useState<string | number | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<string>("");
   const [paymentMessage, setPaymentMessage] = useState("");
   const containerId = useMemo(() => "paymentBrick_container", []);
 
@@ -178,9 +177,6 @@ export default function MercadoPagoPaymentBrick({
                   label: "Correo electrónico",
                   placeholder: "tuemail@ejemplo.com",
                 },
-                cardholderIdentification: {
-                  label: "Documento del titular",
-                },
                 cardNumber: {
                   label: "Número de tarjeta",
                   placeholder: "0000 0000 0000 0000",
@@ -193,8 +189,6 @@ export default function MercadoPagoPaymentBrick({
                   label: "Código de seguridad",
                   placeholder: "123",
                 },
-                selectInstallments: "Seleccioná cuotas",
-                selectIssuerBank: "Seleccioná banco emisor",
                 formSubmit: "Pagar ahora",
               },
             },
@@ -221,6 +215,8 @@ export default function MercadoPagoPaymentBrick({
                     description: normalizedItems.map((item) => item.title).join(", "),
                   };
 
+                  console.log("Payload enviado a process-payment:", payload);
+
                   const response = await fetch(
                     `${apiUrl}/mercadopago_checkout/process-payment`,
                     {
@@ -240,22 +236,19 @@ export default function MercadoPagoPaymentBrick({
                   }
 
                   if (!response.ok) {
-                    setPaymentStatus(data?.status || "error");
                     setPaymentMessage(
-                      data?.message ||
-                        data?.statusDetail ||
+                      data?.statusDetail ||
+                        data?.message ||
                         "No se pudo procesar el pago."
                     );
                     reject(data);
                     return;
                   }
 
-                  setPaymentStatus(data?.status || "");
                   setPaymentMessage(data?.message || "");
                   resolve();
                 } catch (error) {
                   console.error(error);
-                  setPaymentStatus("error");
                   setPaymentMessage("Ocurrió un error al procesar el pago.");
                   reject(error);
                 } finally {
@@ -265,8 +258,9 @@ export default function MercadoPagoPaymentBrick({
             },
             onError: (error: any) => {
               console.error("Error Payment Brick:", error);
-              setPaymentStatus("error");
-              setPaymentMessage("Hubo un error en el formulario de pago.");
+              setPaymentMessage(
+                error?.message || "Hubo un error en el formulario de pago."
+              );
             },
           },
         }
@@ -303,7 +297,7 @@ export default function MercadoPagoPaymentBrick({
       )}
 
       {paymentMessage && !paymentId && (
-        <div className="mb-3 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-300">
+        <div className="mb-3 rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
           {paymentMessage}
         </div>
       )}
