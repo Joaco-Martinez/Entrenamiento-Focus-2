@@ -88,8 +88,8 @@ export async function processPayment(req: RequestWithUser, res: Response) {
       },
     });
 
-    const status = result.status;
-    const statusDetail = result.status_detail;
+    const status = result?.status;
+    const statusDetail = result?.status_detail;
 
     if (status === "approved") {
       await ordersService.markPaid(orderId, String(result.id), result);
@@ -102,7 +102,7 @@ export async function processPayment(req: RequestWithUser, res: Response) {
     ) {
       return res.status(201).json({
         message: "Pago procesado correctamente",
-        paymentId: result.id,
+        paymentId: result?.id,
         status,
         statusDetail,
         raw: result,
@@ -111,7 +111,7 @@ export async function processPayment(req: RequestWithUser, res: Response) {
 
     return res.status(400).json({
       message: "El pago fue rechazado",
-      paymentId: result.id,
+      paymentId: result?.id,
       status,
       statusDetail,
       raw: result,
@@ -181,9 +181,9 @@ export async function createPreference(req: RequestWithUser, res: Response) {
 
     return res.status(201).json({
       message: "Preferencia creada correctamente",
-      preferenceId: result.id,
-      initPoint: result.init_point,
-      sandboxInitPoint: result.sandbox_init_point,
+      preferenceId: result?.id,
+      initPoint: result?.init_point,
+      sandboxInitPoint: result?.sandbox_init_point,
     });
   } catch (error: any) {
     console.error("Error createPreference:", error);
@@ -197,10 +197,14 @@ export async function createPreference(req: RequestWithUser, res: Response) {
 }
 
 export async function webhook(req: Request, res: Response) {
-  res.status(200).json({ ok: true });
+  res.status(200).send("ok");
 
   try {
-    await mercadoPagoService.processWebhook(req.body, req.query);
+    await mercadoPagoService.processWebhook(
+      req.body,
+      req.query,
+      req.headers
+    );
   } catch (error) {
     console.error("Error webhook Mercado Pago:", error);
   }

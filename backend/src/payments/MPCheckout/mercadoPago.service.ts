@@ -49,9 +49,11 @@ export type CreatePreferenceInput = {
   payer?: MpPayerInput;
 };
 
-export async function processPayment(data: ProcessPaymentInput) {
-  const backendUrl = process.env.BACKEND_URL;
+function unwrapMpResponse<T = any>(payload: any): T {
+  return payload?.response ?? payload;
+}
 
+export async function processPayment(data: ProcessPaymentInput) {
   const response = await paymentClient.create({
     body: {
       transaction_amount: Number(data.transaction_amount),
@@ -67,18 +69,14 @@ export async function processPayment(data: ProcessPaymentInput) {
       metadata: {
         orderId: data.orderId,
       },
-      notification_url: backendUrl
-        ? `${backendUrl}/mercadopago_checkout/webhook`
-        : undefined,
     },
   });
 
-  return response;
+  return unwrapMpResponse(response);
 }
 
 export async function createPreference(data: CreatePreferenceInput) {
   const frontendUrl = process.env.CORS_ORIGIN || "http://localhost:3000";
-  const backendUrl = process.env.BACKEND_URL;
 
   const response = await preferenceClient.create({
     body: {
@@ -102,9 +100,6 @@ export async function createPreference(data: CreatePreferenceInput) {
       metadata: {
         orderId: data.orderId,
       },
-      notification_url: backendUrl
-        ? `${backendUrl}/mercadopago_checkout/webhook`
-        : undefined,
       back_urls: {
         success: `${frontendUrl}/checkout/success`,
         failure: `${frontendUrl}/checkout/failure`,
@@ -114,42 +109,104 @@ export async function createPreference(data: CreatePreferenceInput) {
     },
   });
 
-  return response;
+  return unwrapMpResponse(response);
 }
 
-export async function processWebhook(body: any, query: any) {
-  const topic = body?.type || body?.topic || query?.type || query?.topic;
+import crypto from "crypto";
 
-  const paymentId = body?.data?.id || query?.["data.id"] || query?.id;
+export async function processWebhook(
+  body: any,
+  query: any,
+  headers: any
+) {
+  try {
+    const secret = process.env.MP_WEBHOOK_KEY_CHECKOUT_BRICKS;
 
-  if (!topic || !paymentId) {
-    console.log("Webhook ignorado: faltan datos", { body, query });
-    return;
+    if (!secret) {
+      console.error("MP_WEBHOOK_KEY_CHECKOUT_BRICKS no configurado");
+      return;
+    }
+
+    const signature = headers["x-signature"];
+    const requestId = headers["x-request-id"];
+
+    if (!signature || !requestId) {
+      console.log("Webhook sin firma, ignorado");
+      return;
+    }
+
+    const dataId =
+      body?.data?.id ||
+      query?.["data.id"] ||
+      query?.id;
+
+    if (!dataId) {
+      console.log("Webhook sin data.id");
+      return;
+    }
+
+    const manifest = `id:${dataId};request-id:${requestId};`;
+
+    const hmac = crypto
+      .createHmac("sha256", secret)
+      .update(manifest)
+      .digest("hex");
+
+    const receivedHash = signature.split(",")[0].split("=")[1];
+
+    if (hmac !== receivedHash) {
+      console.log("Firma webhook inválida");
+      return;
+    }
+
+    console.log("Webhook firma válida");
+
+    const topic =
+      body?.type ||
+      body?.topic ||
+      query?.type ||
+      query?.topic;
+
+    if (String(topic) !== "payment") {
+      console.log("Webhook ignorado: no es payment");
+      return;
+    }
+
+    const paymentId = dataId;
+
+    const payment = await paymentClient.get({
+      id: String(paymentId),
+    });
+
+    const paymentData = unwrapMpResponse(payment);
+
+    const orderId =
+      paymentData?.external_reference ||
+      paymentData?.metadata?.orderId;
+
+    if (!orderId) {
+      console.log("Webhook sin orderId");
+      return;
+    }
+
+    const status = paymentData?.status;
+
+    if (status === "approved") {
+      await ordersService.markPaid(
+        orderId,
+        String(paymentData.id),
+        paymentData
+      );
+
+      console.log("Orden marcada como PAID:", orderId);
+      return;
+    }
+
+    console.log(
+      `Webhook recibido para order ${orderId}, payment ${paymentData?.id}, status ${status}`
+    );
+
+  } catch (error) {
+    console.error("Error procesando webhook:", error);
   }
-
-  if (String(topic) !== "payment") {
-    console.log("Webhook ignorado: topic no soportado", topic);
-    return;
-  }
-
-  const paymentData = await paymentClient.get({
-    id: String(paymentId),
-  });
-
-  const status = paymentData.status;
-  const orderId =
-    paymentData.external_reference || paymentData.metadata?.orderId;
-
-  if (!orderId) {
-    console.log("Webhook sin orderId", paymentData.id);
-    return;
-  }
-
-  if (status === "approved") {
-    await ordersService.markPaid(orderId, String(paymentData.id), paymentData);
-    console.log(`Orden ${orderId} marcada como PAID`);
-    return;
-  }
-
-  console.log(`Pago ${paymentData.id} con estado ${status}`);
 }
