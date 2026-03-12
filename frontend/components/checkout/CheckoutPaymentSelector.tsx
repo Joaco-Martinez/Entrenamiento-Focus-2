@@ -5,7 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import MercadoPagoPaymentBrick from "./MercadoPagoPaymentBrick";
 import MercadoPagoWalletBrick from "./MercadoPagoWalletBrick";
-
+import PaypalCheckout from "./PaypalCheckout";
 type PaymentProvider = "mercadopago" | "paypal";
 type MercadoPagoMethod = "card" | "wallet";
 
@@ -400,23 +400,16 @@ export default function CheckoutPaymentSelector() {
         )}
 
         {provider === "paypal" && (
-          <div>
-            <p className="mb-3 text-sm text-zinc-400">
-              Checkout internacional en USD.
-            </p>
-
-            {!paymentReady || !createdOrder || isCreatingOrder ? (
-              <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-                Tocá <span className="font-semibold">“Continuar al pago”</span> para crear la orden y habilitar PayPal.
-              </div>
-            ) : (
-              <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-                Orden lista para PayPal: {createdOrder.id}
-                {/* <PaypalCheckout items={paypalItems} payer={payer} orderId={createdOrder.id} /> */}
-              </div>
-            )}
-          </div>
-        )}
+  <div>
+    {!paymentReady || !createdOrder || isCreatingOrder ? (
+      <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
+        Tocá <span className="font-semibold">“Continuar al pago”</span> para crear la orden y habilitar PayPal.
+      </div>
+    ) : (
+      <PaypalCheckout orderId={createdOrder.id} />
+    )}
+  </div>
+)}
       </div>
     </div>
   );

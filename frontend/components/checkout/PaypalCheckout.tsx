@@ -1,39 +1,43 @@
 "use client";
 
-type PaypalItem = {
-  id: string;
-  title: string;
-  quantity: number;
-  unit_price: number;
-  currency_id?: "USD";
-  description?: string;
-  image_url?: string;
-};
-
-type Payer = {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  fullName?: string;
-};
-
 type Props = {
-  items: PaypalItem[];
-  payer: Payer;
-  amount: number;
+  orderId: string;
 };
 
-export default function PaypalCheckout({ items, payer, amount }: Props) {
+export default function PaypalCheckout({ orderId }: Props) {
   const handlePaypal = async () => {
-    console.log("PayPal pendiente de implementar", {
-      items,
-      payer,
-      amount,
-    });
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
 
-    // después acá hacés:
-    // fetch(`${process.env.NEXT_PUBLIC_API_URL}/paypal/create-order`, ...)
-    // y redirección al approveUrl
+      const res = await fetch(`${apiUrl}/payments/paypal/checkout`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId,
+          returnUrl: `${appUrl}/checkout/paypal/return`,
+          cancelUrl: `${appUrl}/checkout/paypal/cancel`,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.approveUrl) {
+        throw new Error(data?.message || "No se pudo iniciar PayPal");
+      }
+
+      window.location.href = data.approveUrl;
+    } catch (error) {
+      console.error("Error iniciando PayPal:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No se pudo iniciar el checkout de PayPal"
+      );
+    }
   };
 
   return (
