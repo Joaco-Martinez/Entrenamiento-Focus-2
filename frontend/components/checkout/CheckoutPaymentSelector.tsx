@@ -30,6 +30,7 @@ export default function CheckoutPaymentSelector() {
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [paymentReady, setPaymentReady] = useState(false);
 
   const lastOrderSignatureRef = useRef<string | null>(null);
 
@@ -133,9 +134,11 @@ export default function CheckoutPaymentSelector() {
   const orderSignature = useMemo(() => {
     return JSON.stringify({
       country: normalizedCountry,
+      provider,
+      mpMethod,
       items: orderPayloadItems,
     });
-  }, [normalizedCountry, orderPayloadItems]);
+  }, [normalizedCountry, provider, mpMethod, orderPayloadItems]);
 
   useEffect(() => {
     if (invalidCartItems.length > 0) {
@@ -144,74 +147,77 @@ export default function CheckoutPaymentSelector() {
   }, [invalidCartItems]);
 
   useEffect(() => {
-    if (!hasHydrated || loading) return;
-    if (!user) return;
-    if (!sanitizedCart.length) return;
+    // Si cambia el carrito / país / método, invalidamos la orden actual en frontend
+    if (lastOrderSignatureRef.current && lastOrderSignatureRef.current !== orderSignature) {
+      setCreatedOrder(null);
+      setPaymentReady(false);
+      setOrderError(null);
+    }
+  }, [orderSignature]);
 
-    const mustCreateOrder =
-      !createdOrder || lastOrderSignatureRef.current !== orderSignature;
+  const createPendingOrder = async () => {
+    if (!user) {
+      setOrderError("Tenés que iniciar sesión para continuar.");
+      return null;
+    }
 
-    if (!mustCreateOrder) return;
+    if (!sanitizedCart.length) {
+      setOrderError("No hay productos válidos en el carrito.");
+      return null;
+    }
 
-    let cancelled = false;
+    // Si ya existe una orden válida para esta firma actual, no la recreamos
+    if (
+      createdOrder &&
+      lastOrderSignatureRef.current === orderSignature
+    ) {
+      setPaymentReady(true);
+      return createdOrder;
+    }
 
-    const createPendingOrder = async () => {
-      try {
-        setIsCreatingOrder(true);
-        setOrderError(null);
+    try {
+      setIsCreatingOrder(true);
+      setOrderError(null);
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            country: normalizedCountry,
-            items: orderPayloadItems,
-          }),
-        });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          country: normalizedCountry,
+          items: orderPayloadItems,
+        }),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (!res.ok || !data?.order) {
-          throw new Error(data?.message || "No se pudo crear la orden");
-        }
-
-        if (cancelled) return;
-
-        setCreatedOrder(data.order);
-        lastOrderSignatureRef.current = orderSignature;
-      } catch (error) {
-        if (cancelled) return;
-
-        console.error("Error creando la orden:", error);
-        setCreatedOrder(null);
-        setOrderError(
-          error instanceof Error ? error.message : "No se pudo crear la orden"
-        );
-      } finally {
-        if (!cancelled) {
-          setIsCreatingOrder(false);
-        }
+      if (!res.ok || !data?.order) {
+        throw new Error(data?.message || "No se pudo crear la orden");
       }
-    };
 
-    createPendingOrder();
+      setCreatedOrder(data.order);
+      setPaymentReady(true);
+      lastOrderSignatureRef.current = orderSignature;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    hasHydrated,
-    loading,
-    user,
-    sanitizedCart,
-    normalizedCountry,
-    orderPayloadItems,
-    orderSignature,
-    createdOrder,
-  ]);
+      return data.order as CreatedOrder;
+    } catch (error) {
+      console.error("Error creando la orden:", error);
+      setCreatedOrder(null);
+      setPaymentReady(false);
+      setOrderError(
+        error instanceof Error ? error.message : "No se pudo crear la orden"
+      );
+      return null;
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
+
+  const handlePreparePayment = async () => {
+    await createPendingOrder();
+  };
 
   if (loading || !hasHydrated) {
     return <div>Cargando checkout...</div>;
@@ -263,7 +269,10 @@ export default function CheckoutPaymentSelector() {
           {isArgentina && (
             <button
               type="button"
-              onClick={() => setProvider("mercadopago")}
+              onClick={() => {
+                setProvider("mercadopago");
+                setPaymentReady(false);
+              }}
               className={`rounded-xl px-4 py-2 text-sm ${
                 provider === "mercadopago"
                   ? "bg-white text-black"
@@ -276,7 +285,10 @@ export default function CheckoutPaymentSelector() {
 
           <button
             type="button"
-            onClick={() => setProvider("paypal")}
+            onClick={() => {
+              setProvider("paypal");
+              setPaymentReady(false);
+            }}
             className={`rounded-xl px-4 py-2 text-sm ${
               provider === "paypal"
                 ? "bg-white text-black"
@@ -287,9 +299,50 @@ export default function CheckoutPaymentSelector() {
           </button>
         </div>
 
-        {isCreatingOrder && (
-          <div className="mb-4 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-300">
-            Preparando orden...
+        {provider === "mercadopago" && isArgentina && (
+          <div className="mb-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMpMethod("card");
+                setPaymentReady(false);
+              }}
+              className={`rounded-xl px-4 py-2 text-sm ${
+                mpMethod === "card"
+                  ? "bg-white text-black"
+                  : "border border-zinc-700 bg-zinc-900 text-zinc-300"
+              }`}
+            >
+              Tarjeta
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMpMethod("wallet");
+                setPaymentReady(false);
+              }}
+              className={`rounded-xl px-4 py-2 text-sm ${
+                mpMethod === "wallet"
+                  ? "bg-white text-black"
+                  : "border border-zinc-700 bg-zinc-900 text-zinc-300"
+              }`}
+            >
+              Mercado Pago directo
+            </button>
+          </div>
+        )}
+
+        {!paymentReady && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={handlePreparePayment}
+              disabled={isCreatingOrder}
+              className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-black disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isCreatingOrder ? "Preparando orden..." : "Continuar al pago"}
+            </button>
           </div>
         )}
 
@@ -299,7 +352,7 @@ export default function CheckoutPaymentSelector() {
           </div>
         )}
 
-        {createdOrder && (
+        {createdOrder && paymentReady && (
           <div className="mb-4 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-300">
             Orden creada: <span className="font-semibold">{createdOrder.id}</span>
           </div>
@@ -307,35 +360,9 @@ export default function CheckoutPaymentSelector() {
 
         {provider === "mercadopago" && isArgentina && (
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setMpMethod("card")}
-                className={`rounded-xl px-4 py-2 text-sm ${
-                  mpMethod === "card"
-                    ? "bg-white text-black"
-                    : "border border-zinc-700 bg-zinc-900 text-zinc-300"
-                }`}
-              >
-                Tarjeta
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMpMethod("wallet")}
-                className={`rounded-xl px-4 py-2 text-sm ${
-                  mpMethod === "wallet"
-                    ? "bg-white text-black"
-                    : "border border-zinc-700 bg-zinc-900 text-zinc-300"
-                }`}
-              >
-                Mercado Pago directo
-              </button>
-            </div>
-
-            {!createdOrder || isCreatingOrder ? (
+            {!paymentReady || !createdOrder || isCreatingOrder ? (
               <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-                Esperando la creación de la orden para habilitar el pago...
+                Tocá <span className="font-semibold">“Continuar al pago”</span> para crear la orden y habilitar Mercado Pago.
               </div>
             ) : (
               <>
@@ -378,9 +405,9 @@ export default function CheckoutPaymentSelector() {
               Checkout internacional en USD.
             </p>
 
-            {!createdOrder || isCreatingOrder ? (
+            {!paymentReady || !createdOrder || isCreatingOrder ? (
               <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-                Esperando la creación de la orden para habilitar PayPal...
+                Tocá <span className="font-semibold">“Continuar al pago”</span> para crear la orden y habilitar PayPal.
               </div>
             ) : (
               <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
