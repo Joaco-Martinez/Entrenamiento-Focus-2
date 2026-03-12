@@ -1,4 +1,5 @@
 import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
+import * as ordersService from "../../services/orders.service";
 
 const accessToken = process.env.MP_ACCESS_TOKEN_CHECKOUT_BRICKS;
 
@@ -30,6 +31,7 @@ export type MpPayerInput = {
 };
 
 export type ProcessPaymentInput = {
+  orderId: string;
   transaction_amount: number;
   token: string;
   description?: string;
@@ -42,12 +44,14 @@ export type ProcessPaymentInput = {
 };
 
 export type CreatePreferenceInput = {
+  orderId: string;
   items: MpItemInput[];
   payer?: MpPayerInput;
-  externalReference?: string;
 };
 
 export async function processPayment(data: ProcessPaymentInput) {
+  const backendUrl = process.env.BACKEND_URL;
+
   const response = await paymentClient.create({
     body: {
       transaction_amount: Number(data.transaction_amount),
@@ -59,6 +63,13 @@ export async function processPayment(data: ProcessPaymentInput) {
       payer: {
         email: data.payer.email,
       },
+      external_reference: data.orderId,
+      metadata: {
+        orderId: data.orderId,
+      },
+      notification_url: backendUrl
+        ? `${backendUrl}/mercadopago_checkout/webhook`
+        : undefined,
     },
   });
 
@@ -67,6 +78,7 @@ export async function processPayment(data: ProcessPaymentInput) {
 
 export async function createPreference(data: CreatePreferenceInput) {
   const frontendUrl = process.env.CORS_ORIGIN || "http://localhost:3000";
+  const backendUrl = process.env.BACKEND_URL;
 
   const response = await preferenceClient.create({
     body: {
@@ -86,7 +98,13 @@ export async function createPreference(data: CreatePreferenceInput) {
             email: data.payer.email,
           }
         : undefined,
-      external_reference: data.externalReference,
+      external_reference: data.orderId,
+      metadata: {
+        orderId: data.orderId,
+      },
+      notification_url: backendUrl
+        ? `${backendUrl}/mercadopago_checkout/webhook`
+        : undefined,
       back_urls: {
         success: `${frontendUrl}/checkout/success`,
         failure: `${frontendUrl}/checkout/failure`,
@@ -97,4 +115,41 @@ export async function createPreference(data: CreatePreferenceInput) {
   });
 
   return response;
+}
+
+export async function processWebhook(body: any, query: any) {
+  const topic = body?.type || body?.topic || query?.type || query?.topic;
+
+  const paymentId = body?.data?.id || query?.["data.id"] || query?.id;
+
+  if (!topic || !paymentId) {
+    console.log("Webhook ignorado: faltan datos", { body, query });
+    return;
+  }
+
+  if (String(topic) !== "payment") {
+    console.log("Webhook ignorado: topic no soportado", topic);
+    return;
+  }
+
+  const paymentData = await paymentClient.get({
+    id: String(paymentId),
+  });
+
+  const status = paymentData.status;
+  const orderId =
+    paymentData.external_reference || paymentData.metadata?.orderId;
+
+  if (!orderId) {
+    console.log("Webhook sin orderId", paymentData.id);
+    return;
+  }
+
+  if (status === "approved") {
+    await ordersService.markPaid(orderId, String(paymentData.id), paymentData);
+    console.log(`Orden ${orderId} marcada como PAID`);
+    return;
+  }
+
+  console.log(`Pago ${paymentData.id} con estado ${status}`);
 }

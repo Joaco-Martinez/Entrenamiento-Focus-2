@@ -9,7 +9,12 @@ export async function create(req: AuthedRequest, res: Response) {
     return res.status(401).json({ ok: false, message: "Usuario no autenticado" });
   }
 
-  const order = await ordersService.createOrder(userId, req.body.items);
+  const order = await ordersService.createOrder(
+    userId,
+    req.body.items,
+    req.body.country
+  );
+
   return res.status(201).json({ ok: true, order });
 }
 

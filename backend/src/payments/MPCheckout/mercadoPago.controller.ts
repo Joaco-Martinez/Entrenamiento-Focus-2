@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as mercadoPagoService from "./mercadoPago.service";
+import * as ordersService from "../../services/orders.service";
 
 type RequestWithUser = Request & {
   user?: {
@@ -24,7 +25,12 @@ export async function processPayment(req: RequestWithUser, res: Response) {
       amount,
       items,
       description,
+      orderId,
     } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ message: "Falta orderId" });
+    }
 
     if (!token) {
       return res.status(400).json({ message: "Falta token de pago" });
@@ -67,6 +73,7 @@ export async function processPayment(req: RequestWithUser, res: Response) {
         : Number(issuer_id);
 
     const result = await mercadoPagoService.processPayment({
+      orderId,
       transaction_amount: transactionAmount,
       token,
       description:
@@ -83,6 +90,10 @@ export async function processPayment(req: RequestWithUser, res: Response) {
 
     const status = result.status;
     const statusDetail = result.status_detail;
+
+    if (status === "approved") {
+      await ordersService.markPaid(orderId, String(result.id), result);
+    }
 
     if (
       status === "approved" ||
@@ -118,7 +129,13 @@ export async function processPayment(req: RequestWithUser, res: Response) {
 
 export async function createPreference(req: RequestWithUser, res: Response) {
   try {
-    const { items, payer } = req.body;
+    const { items, payer, orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({
+        message: "Falta orderId",
+      });
+    }
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -142,9 +159,8 @@ export async function createPreference(req: RequestWithUser, res: Response) {
       });
     }
 
-    const userId = req.user?.id || req.user?.sub || "guest";
-
     const result = await mercadoPagoService.createPreference({
+      orderId,
       items: items.map((item: any) => ({
         id: String(item.id),
         title: String(item.title),
@@ -161,7 +177,6 @@ export async function createPreference(req: RequestWithUser, res: Response) {
             email: payer.email,
           }
         : undefined,
-      externalReference: `focus_${userId}_${Date.now()}`,
     });
 
     return res.status(201).json({
@@ -178,5 +193,15 @@ export async function createPreference(req: RequestWithUser, res: Response) {
       error: error?.message || "Unknown error",
       cause: error?.cause || null,
     });
+  }
+}
+
+export async function webhook(req: Request, res: Response) {
+  res.status(200).json({ ok: true });
+
+  try {
+    await mercadoPagoService.processWebhook(req.body, req.query);
+  } catch (error) {
+    console.error("Error webhook Mercado Pago:", error);
   }
 }

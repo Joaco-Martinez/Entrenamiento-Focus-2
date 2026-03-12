@@ -33,6 +33,7 @@ type Props = {
   amount: number;
   items: MpItem[];
   payer: Payer;
+  orderId: string;
 };
 
 const SCRIPT_ID = "mercadopago-sdk-payment";
@@ -41,6 +42,7 @@ export default function MercadoPagoPaymentBrick({
   amount,
   items,
   payer,
+  orderId,
 }: Props) {
   const [sdkReady, setSdkReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +78,7 @@ export default function MercadoPagoPaymentBrick({
     if (!window.MercadoPago) return;
     if (!amount || amount <= 0) return;
     if (!Array.isArray(items) || items.length === 0) return;
+    if (!orderId) return;
     if (paymentId) return;
 
     const publicKey = process.env.NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY;
@@ -211,12 +214,11 @@ export default function MercadoPagoPaymentBrick({
 
                   const payload = {
                     ...formData,
+                    orderId,
                     items: normalizedItems,
                     amount: Number(amount),
                     description: normalizedItems.map((item) => item.title).join(", "),
                   };
-
-                  console.log("Payload enviado a process-payment:", payload);
 
                   const response = await fetch(
                     `${apiUrl}/mercadopago_checkout/process-payment`,
@@ -275,7 +277,7 @@ export default function MercadoPagoPaymentBrick({
         window.paymentBrickController?.unmount?.();
       } catch {}
     };
-  }, [sdkReady, amount, payer, items, containerId, paymentId]);
+  }, [sdkReady, amount, payer, items, containerId, paymentId, orderId]);
 
   if (paymentId) {
     return (
@@ -292,9 +294,7 @@ export default function MercadoPagoPaymentBrick({
       </p>
 
       {submitting && (
-        <p className="mb-3 text-sm text-zinc-500">
-          Procesando pago...
-        </p>
+        <p className="mb-3 text-sm text-zinc-500">Procesando pago...</p>
       )}
 
       {paymentMessage && !paymentId && (

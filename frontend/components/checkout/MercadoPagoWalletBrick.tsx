@@ -31,11 +31,16 @@ type Payer = {
 type Props = {
   items: MpItem[];
   payer: Payer;
+  orderId: string;
 };
 
 const SCRIPT_ID = "mercadopago-sdk-wallet";
 
-export default function MercadoPagoWalletBrick({ items, payer }: Props) {
+export default function MercadoPagoWalletBrick({
+  items,
+  payer,
+  orderId,
+}: Props) {
   const [sdkReady, setSdkReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const containerId = useMemo(() => "walletBrick_container", []);
@@ -58,6 +63,7 @@ export default function MercadoPagoWalletBrick({ items, payer }: Props) {
     if (!sdkReady) return;
     if (!window.MercadoPago) return;
     if (!items.length) return;
+    if (!orderId) return;
 
     const publicKey = process.env.NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY;
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -88,6 +94,7 @@ export default function MercadoPagoWalletBrick({ items, payer }: Props) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
+              orderId,
               items,
               payer,
             }),
@@ -137,7 +144,7 @@ export default function MercadoPagoWalletBrick({ items, payer }: Props) {
         window.walletBrickController?.unmount?.();
       } catch {}
     };
-  }, [sdkReady, items, payer, containerId]);
+  }, [sdkReady, items, payer, containerId, orderId]);
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
