@@ -167,7 +167,6 @@ export default function CheckoutPaymentSelector() {
       setOrderError("Tenés que iniciar sesión para continuar.");
       return null;
     }
-    
 
     if (!sanitizedCart.length) {
       setOrderError("No hay productos válidos en el carrito.");
@@ -184,10 +183,7 @@ export default function CheckoutPaymentSelector() {
       return null;
     }
 
-    if (
-      createdOrder &&
-      lastOrderSignatureRef.current === orderSignature
-    ) {
+    if (createdOrder && lastOrderSignatureRef.current === orderSignature) {
       setPaymentReady(true);
       return createdOrder;
     }
@@ -197,6 +193,8 @@ export default function CheckoutPaymentSelector() {
       setOrderError(null);
 
       const payload = {
+        country: normalizedCountry,
+        provider: provider === "mercadopago" ? "MERCADOPAGO" : "PAYPAL",
         items: orderPayloadItems,
       };
 
@@ -220,7 +218,7 @@ export default function CheckoutPaymentSelector() {
         throw new Error(data?.message || "No se pudo crear la orden");
       }
 
-      setCreatedOrder(order);
+      setCreatedOrder(order as CreatedOrder);
       setPaymentReady(true);
       lastOrderSignatureRef.current = orderSignature;
 
