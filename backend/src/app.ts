@@ -44,6 +44,17 @@ app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
 
+app.use((req, _res, next) => {
+  console.log("========== REQUEST ==========");
+  console.log("Fecha:", new Date().toISOString());
+  console.log("Método:", req.method);
+  console.log("URL:", req.originalUrl);
+  console.log("Params:", req.params);
+  console.log("Query:", req.query);
+  console.log("Body:", req.body);
+  console.log("=============================");
+  next();
+});
 app.get("/", (_req, res) => res.json({ ok: true, name: "back-2" }));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/mercadopago_checkout", MpRoutes);

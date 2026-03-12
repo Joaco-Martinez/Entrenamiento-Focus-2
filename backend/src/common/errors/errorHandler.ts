@@ -1,14 +1,33 @@
 import { Request, Response, NextFunction } from "express";
-import { ApiError } from "./ApiError";
 
-export function errorHandler(err: any, _req: Request, res: Response, _next: NextFunction) {
-  const status = err instanceof ApiError ? err.status : 500;
+export function errorHandler(
+  err: any,
+  req: Request,
+  res: Response,
+  _next: NextFunction
+) {
+  console.log("========== ERROR ==========");
+  console.log("Fecha:", new Date().toISOString());
+  console.log("Método:", req.method);
+  console.log("URL:", req.originalUrl);
+  console.log("Params:", req.params);
+  console.log("Query:", req.query);
+  console.log("Body:", req.body);
+  console.log("Headers:", {
+    authorization: req.headers.authorization,
+    contentType: req.headers["content-type"],
+    origin: req.headers.origin,
+  });
+  console.log("Error completo:", err);
+  console.log("Message:", err?.message);
+  console.log("Status:", err?.status || err?.statusCode || 500);
+  console.log("Stack:", err?.stack);
+  console.log("===========================");
 
-  if (status === 500) console.error("❌", err);
+  const statusCode = err?.status || err?.statusCode || 500;
 
-  res.status(status).json({
+  return res.status(statusCode).json({
     ok: false,
-    message: err?.message ?? "Internal server error",
-    details: err instanceof ApiError ? err.details : undefined
+    message: err?.message || "Internal server error",
   });
 }
