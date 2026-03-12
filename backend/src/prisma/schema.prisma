@@ -99,7 +99,7 @@ model Order {
 
   totalAmount Int
   currency    String
-provider    PaymentProvider
+
   paidAt      DateTime?
   cancelledAt DateTime?
 
@@ -110,10 +110,6 @@ provider    PaymentProvider
   payments    Payment[]
 }
 
-enum PaymentProvider {
-  MERCADOPAGO
-  PAYPAL
-}
 
 model OrderItem {
   id        String  @id @default(uuid())
