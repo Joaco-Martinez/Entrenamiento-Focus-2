@@ -167,6 +167,7 @@ export default function CheckoutPaymentSelector() {
       setOrderError("Tenés que iniciar sesión para continuar.");
       return null;
     }
+    
 
     if (!sanitizedCart.length) {
       setOrderError("No hay productos válidos en el carrito.");
