@@ -185,10 +185,11 @@ export default function CheckoutPaymentSelector() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          country: normalizedCountry,
-          items: orderPayloadItems,
-        }),
+       body: JSON.stringify({
+  country: normalizedCountry,
+  provider: provider === "mercadopago" ? "MERCADOPAGO" : "PAYPAL",
+  items: orderPayloadItems,
+}),
       });
 
       const data = await res.json();

@@ -99,7 +99,7 @@ model Order {
 
   totalAmount Int
   currency    String
-
+provider    PaymentProvider
   paidAt      DateTime?
   cancelledAt DateTime?
 
@@ -108,6 +108,11 @@ model Order {
 
   items       OrderItem[]
   payments    Payment[]
+}
+
+enum PaymentProvider {
+  MERCADOPAGO
+  PAYPAL
 }
 
 model OrderItem {

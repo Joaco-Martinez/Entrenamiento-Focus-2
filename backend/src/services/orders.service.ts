@@ -10,10 +10,15 @@ type CreateOrderItemInput = {
 export async function createOrder(
   userId: string,
   items: CreateOrderItemInput[],
+  provider: PaymentProvider,
   country?: string
 ) {
   if (!items || items.length === 0) {
     throw new ApiError(400, "Items are required");
+  }
+
+  if (!provider || !["MERCADOPAGO", "PAYPAL"].includes(provider)) {
+    throw new ApiError(400, "Invalid payment provider");
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -26,8 +31,12 @@ export async function createOrder(
 
   const isArgentina = normalizedCountry === "arg" || normalizedCountry === "ar";
 
-  const provider: PaymentProvider = isArgentina ? "MERCADOPAGO" : "PAYPAL";
-  const currency = isArgentina ? "ARS" : "USD";
+  // REGLA DE NEGOCIO
+  if (!isArgentina && provider !== "PAYPAL") {
+    throw new ApiError(400, "For this country, only PayPal is available");
+  }
+
+  const currency = provider === "MERCADOPAGO" ? "ARS" : "USD";
 
   const products = await prisma.product.findMany({
     where: {
@@ -40,8 +49,8 @@ export async function createOrder(
     throw new ApiError(400, "Some products not found or inactive");
   }
 
-  const itemRows = items.map((i) => {
-    const product = products.find((p) => p.id === i.productId);
+  const itemRows = items.map((i: any) => {
+    const product = products.find((p: any) => p.id === i.productId);
     if (!product) {
       throw new ApiError(400, `Product not found: ${i.productId}`);
     }
@@ -51,7 +60,10 @@ export async function createOrder(
       throw new ApiError(400, `Invalid quantity for product ${product.id}`);
     }
 
-    const unitPrice = isArgentina ? Number(product.arPrice) : Number(product.usdPrice);
+    const unitPrice =
+      provider === "MERCADOPAGO"
+        ? Number(product.arPrice)
+        : Number(product.usdPrice);
 
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
       throw new ApiError(400, `Invalid price for product ${product.id}`);
@@ -170,8 +182,8 @@ export async function markPaid(orderId: string, externalId?: string, raw?: any) 
   });
 
   const grants = items
-    .filter((i) => !i.product.isSubscription)
-    .map((i) => ({
+    .filter((i: any) => !i.product.isSubscription)
+    .map((i: any) => ({
       userId: order.userId,
       productId: i.productId,
       orderId,

@@ -12,6 +12,7 @@ export async function create(req: AuthedRequest, res: Response) {
   const order = await ordersService.createOrder(
     userId,
     req.body.items,
+    req.body.provider as PaymentProvider,
     req.body.country
   );
 
