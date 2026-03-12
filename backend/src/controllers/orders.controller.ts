@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { AuthedRequest } from "../common/middlewares/authRequired";
 import * as ordersService from "../services/orders.service";
-
+import { PaymentProvider } from "@prisma/client";
 export async function create(req: AuthedRequest, res: Response) {
   const userId = req.user?.id || req.user?.sub;
 
