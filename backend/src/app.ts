@@ -20,7 +20,7 @@ import { ordersRoutes } from "./routes/orders.routes";
 import { paymentsRoutes } from "./routes/payments.routes";
 import { subscriptionsRoutes } from "./routes/subscriptions.routes";
 import { webhooksRoutes } from "./routes/webhooks.routes";
-
+import { paypalRoutes } from "./payments/PaypalCheckout/paypal.routes";
 export const app = express();
 
 app.set("trust proxy", 1);
@@ -47,6 +47,7 @@ app.use(morgan("dev"));
 app.get("/", (_req, res) => res.json({ ok: true, name: "back-2" }));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/mercadopago_checkout", MpRoutes);
+app.use("/paypal_checkout", paypalRoutes);
 app.use("/health", healthRoutes);
 app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
