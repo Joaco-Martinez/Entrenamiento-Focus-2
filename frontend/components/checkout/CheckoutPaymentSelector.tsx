@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import MercadoPagoPaymentBrick from "./MercadoPagoPaymentBrick";
 import MercadoPagoWalletBrick from "./MercadoPagoWalletBrick";
 import PaypalCheckout from "./PaypalCheckout";
+
 type PaymentProvider = "mercadopago" | "paypal";
 type MercadoPagoMethod = "card" | "wallet";
 
@@ -33,10 +34,14 @@ export default function CheckoutPaymentSelector() {
   const [paymentReady, setPaymentReady] = useState(false);
 
   const lastOrderSignatureRef = useRef<string | null>(null);
+  const initialProviderSetRef = useRef(false);
 
   useEffect(() => {
     if (loading) return;
+    if (initialProviderSetRef.current) return;
+
     setProvider(isArgentina ? "mercadopago" : "paypal");
+    initialProviderSetRef.current = true;
   }, [isArgentina, loading]);
 
   const sanitizedCart = useMemo(() => {
@@ -147,8 +152,10 @@ export default function CheckoutPaymentSelector() {
   }, [invalidCartItems]);
 
   useEffect(() => {
-    // Si cambia el carrito / país / método, invalidamos la orden actual en frontend
-    if (lastOrderSignatureRef.current && lastOrderSignatureRef.current !== orderSignature) {
+    if (
+      lastOrderSignatureRef.current &&
+      lastOrderSignatureRef.current !== orderSignature
+    ) {
       setCreatedOrder(null);
       setPaymentReady(false);
       setOrderError(null);
@@ -166,7 +173,16 @@ export default function CheckoutPaymentSelector() {
       return null;
     }
 
-    // Si ya existe una orden válida para esta firma actual, no la recreamos
+    if (provider === "mercadopago" && isArgentina && !mpItems.length) {
+      setOrderError("No se pudieron preparar los ítems de Mercado Pago.");
+      return null;
+    }
+
+    if (provider === "paypal" && !paypalItems.length) {
+      setOrderError("No se pudieron preparar los ítems de PayPal.");
+      return null;
+    }
+
     if (
       createdOrder &&
       lastOrderSignatureRef.current === orderSignature
@@ -179,30 +195,35 @@ export default function CheckoutPaymentSelector() {
       setIsCreatingOrder(true);
       setOrderError(null);
 
+      const payload = {
+        items: orderPayloadItems,
+      };
+
+      console.log("Payload que se envía a /orders:", payload);
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-       body: JSON.stringify({
-  country: normalizedCountry,
-  provider: provider === "mercadopago" ? "MERCADOPAGO" : "PAYPAL",
-  items: orderPayloadItems,
-}),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+      console.log("Respuesta de /orders:", data);
 
-      if (!res.ok || !data?.order) {
+      const order = data?.order || data?.content || data;
+
+      if (!res.ok || !order?.id) {
         throw new Error(data?.message || "No se pudo crear la orden");
       }
 
-      setCreatedOrder(data.order);
+      setCreatedOrder(order);
       setPaymentReady(true);
       lastOrderSignatureRef.current = orderSignature;
 
-      return data.order as CreatedOrder;
+      return order as CreatedOrder;
     } catch (error) {
       console.error("Error creando la orden:", error);
       setCreatedOrder(null);
@@ -257,6 +278,14 @@ export default function CheckoutPaymentSelector() {
     return (
       <div className="rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         No se pudieron preparar los ítems para Mercado Pago.
+      </div>
+    );
+  }
+
+  if (provider === "paypal" && !paypalItems.length) {
+    return (
+      <div className="rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+        No se pudieron preparar los ítems para PayPal.
       </div>
     );
   }
@@ -363,7 +392,8 @@ export default function CheckoutPaymentSelector() {
           <div className="space-y-4">
             {!paymentReady || !createdOrder || isCreatingOrder ? (
               <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-                Tocá <span className="font-semibold">“Continuar al pago”</span> para crear la orden y habilitar Mercado Pago.
+                Tocá <span className="font-semibold">“Continuar al pago”</span>{" "}
+                para crear la orden y habilitar Mercado Pago.
               </div>
             ) : (
               <>
@@ -401,16 +431,17 @@ export default function CheckoutPaymentSelector() {
         )}
 
         {provider === "paypal" && (
-  <div>
-    {!paymentReady || !createdOrder || isCreatingOrder ? (
-      <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-        Tocá <span className="font-semibold">“Continuar al pago”</span> para crear la orden y habilitar PayPal.
-      </div>
-    ) : (
-      <PaypalCheckout orderId={createdOrder.id} />
-    )}
-  </div>
-)}
+          <div>
+            {!paymentReady || !createdOrder || isCreatingOrder ? (
+              <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
+                Tocá <span className="font-semibold">“Continuar al pago”</span>{" "}
+                para crear la orden y habilitar PayPal.
+              </div>
+            ) : (
+              <PaypalCheckout orderId={createdOrder.id} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
