@@ -22,7 +22,7 @@ export default function PaypalReturnClient() {
 
     const capture = async () => {
       try {
-        await apiFetch("/payments/paypal/capture", {
+        await apiFetch("/paypal_checkout/capture", {
           method: "POST",
           body: JSON.stringify({
             paypalOrderId: token,
