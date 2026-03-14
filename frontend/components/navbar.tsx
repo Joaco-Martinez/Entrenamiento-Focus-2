@@ -17,9 +17,12 @@ export function Navbar() {
   const { totalItems } = useCart()
 
   const navItems = [
+    
     { href: "/", label: "Inicio" },
+    { href: "/mentoria", label: "Mentoria" },
     { href: "/servicios", label: "Servicios" },
     { href: "/recursos", label: "Recursos" },
+
   ]
 
   const go = (href: string) => {

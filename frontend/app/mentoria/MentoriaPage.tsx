@@ -1,4 +1,20 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {apiFetch} from "../../lib/api";
+import { useAuth } from "@/context/AuthContext";
+
+type SubscriptionProvider = "paypal" | "mercadopago";
+
 export default function MentoriaPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
+  const [loadingProvider, setLoadingProvider] =
+    useState<SubscriptionProvider | null>(null);
+  const [error, setError] = useState("");
+
   const pillars = [
     "Producción musical",
     "Mezcla",
@@ -31,6 +47,83 @@ export default function MentoriaPage() {
       text: "No trabajamos solo lo técnico: también vemos marketing, contactos, ingresos, hábitos y desarrollo profesional.",
     },
   ];
+
+  const PRODUCT_ID_MENTORIA = "ID_REAL_DEL_PRODUCTO_MENTORIA";
+
+  const ensureAuth = () => {
+    if (authLoading) return false;
+
+    if (!user) {
+      router.push("/login?redirect=/mentoria");
+      return false;
+    }
+
+    return true;
+  };
+
+const handleSubscribe = async (provider: SubscriptionProvider) => {
+  try {
+    setError("");
+
+    const isAuthenticated = ensureAuth();
+    if (!isAuthenticated) return;
+
+    setLoadingProvider(provider);
+
+    if (provider === "paypal") {
+      const res = await apiFetch("/paypal_suscription/create", {
+        method: "POST",
+        body: JSON.stringify({
+          productId: PRODUCT_ID_MENTORIA,
+        }),
+      });
+
+      const approveUrl =
+        res?.approveUrl ||
+        res?.data?.approveUrl ||
+        res?.content?.approveUrl ||
+        res?.content?.data?.approveUrl;
+
+      if (!approveUrl) {
+        throw new Error("PayPal no devolvió la URL de aprobación");
+      }
+
+      window.location.href = approveUrl;
+      return;
+    }
+
+    if (provider === "mercadopago") {
+      const res = await apiFetch("/mercadopago_suscription/create", {
+        method: "POST",
+        body: JSON.stringify({
+          productId: PRODUCT_ID_MENTORIA,
+        }),
+      });
+
+      const initPoint =
+        res?.initPoint ||
+        res?.data?.initPoint ||
+        res?.content?.initPoint ||
+        res?.content?.data?.initPoint;
+
+      if (!initPoint) {
+        throw new Error("Mercado Pago no devolvió la URL de suscripción");
+      }
+
+      window.location.href = initPoint;
+      return;
+    }
+  } catch (err) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : "No se pudo iniciar la suscripción";
+
+    setError(message);
+  } finally {
+    setLoadingProvider(null);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white">
@@ -78,7 +171,7 @@ export default function MentoriaPage() {
 
             <div>
               <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur">
-                <div className="rounded-[24px] border border-[#D4AF37]/20 bg-black/30 p-6">
+                <div >
                   <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">
                     Qué trabajamos
                   </p>
@@ -89,7 +182,9 @@ export default function MentoriaPage() {
                         className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
                       >
                         <div className="mt-1 h-2.5 w-2.5 rounded-full bg-[#D4AF37]" />
-                        <p className="text-sm text-white/85 md:text-base">{item}</p>
+                        <p className="text-sm text-white/85 md:text-base">
+                          {item}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -150,7 +245,10 @@ export default function MentoriaPage() {
         </div>
       </section>
 
-      <section id="modalidad" className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:px-12">
+      <section
+        id="modalidad"
+        className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:px-12"
+      >
         <div className="max-w-2xl">
           <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
             Modalidad
@@ -180,37 +278,95 @@ export default function MentoriaPage() {
         </div>
       </section>
 
-      <section id="cupos" className="pb-20">
-        <div className="mx-auto max-w-5xl px-6 md:px-10 lg:px-12">
-          <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-[#16161d] to-[#0d0d11] p-8 text-center shadow-2xl md:p-12">
-            <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
-              Cupos limitados
-            </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
-              Si podés realizar el pago, todavía quedan lugares disponibles.
-            </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/70">
-              Si hacés clic en el botón de abajo y todavía tenés la posibilidad de
-              pagar, significa que aún hay cupos dentro de Entrenamiento Focus.
-            </p>
+<section id="cupos" className="pb-20">
+  <div className="mx-auto max-w-5xl px-6 md:px-10 lg:px-12">
+    <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-[#16161d] to-[#0d0d11] p-8 text-center shadow-2xl md:p-12">
+      <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
+        Cupos limitados
+      </p>
 
-            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href="#"
-                className="inline-flex items-center justify-center rounded-2xl bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.02]"
-              >
-                Unirme ahora
-              </a>
-              <a
-                href="https://wa.me/"
-                className="inline-flex items-center justify-center rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
-              >
-                Consultar por WhatsApp
-              </a>
-            </div>
+      <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+        Sumate a Entrenamiento Focus
+      </h2>
+
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/70">
+        Accedé a las clases en vivo, grabaciones, feedback y soporte durante la
+        semana.
+      </p>
+
+      <div className="mx-auto mt-8 max-w-md rounded-[28px] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6 md:p-8">
+        <p className="text-sm uppercase tracking-[0.2em] text-[#D4AF37]">
+          Suscripción mensual
+        </p>
+
+        <div className="mt-4 flex flex-col items-center">
+          <div className="flex items-end gap-2">
+            <span className="text-lg font-medium text-[#f4d97c] md:text-xl">
+              USD
+            </span>
+            <span className="text-5xl font-bold leading-none text-white md:text-6xl">
+              15
+            </span>
           </div>
+
+          <p className="mt-3 text-sm font-medium text-white/60 md:text-base">
+            o 
+          </p>
+
+          <p className="mt-1 text-xl font-semibold text-white/80 md:text-2xl">
+            ARS 19.500
+          </p>
         </div>
-      </section>
+
+        <p className="mt-5 text-sm leading-6 text-white/65">
+          Se renueva automáticamente cada mes. Podés cancelar cuando quieras.
+        </p>
+      </div>
+
+      {error && (
+        <p className="mt-6 text-sm font-medium text-red-400">{error}</p>
+      )}
+
+      <div className="mt-8 flex flex-col items-center justify-center gap-4">
+        <button
+          type="button"
+          onClick={() => handleSubscribe("paypal")}
+          disabled={loadingProvider !== null || authLoading}
+          className="inline-flex min-w-[260px] items-center justify-center rounded-2xl bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {loadingProvider === "paypal"
+            ? "Redirigiendo a PayPal..."
+            : "Suscribirme con PayPal"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSubscribe("mercadopago")}
+          disabled={loadingProvider !== null || authLoading}
+          className="inline-flex min-w-[260px] items-center justify-center rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {loadingProvider === "mercadopago"
+            ? "Redirigiendo a Mercado Pago..."
+            : "Suscribirme con Mercado Pago"}
+        </button>
+
+        <a
+          href="https://wa.me/5493518736207?text=Hola%2C+quiero+consultar+por+la+mentor%C3%ADa+Entrenamiento+Focus"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
+        >
+          Consultar por WhatsApp
+        </a>
+      </div>
+
+      <p className="mt-5 text-xs text-white/45">
+        Para suscribirte tenés que iniciar sesión. Después vas a ser redirigido
+        al proveedor de pago para aprobar la suscripción.
+      </p>
+    </div>
+  </div>
+</section>
     </div>
   );
 }

@@ -1,11 +1,15 @@
 "use client"
-
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 
+
+
 export function AboutSection() {
+const Router = useRouter()
+
   return (
     <section className="py-24 px-4 bg-muted/20 flex items-center justify-center overflow-hidden">
       <div className="container max-w-6xl">
@@ -19,9 +23,9 @@ export function AboutSection() {
           {/* Section title */}
           <div className="text-center space-y-4 max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-6xl font-bold text-balance">
-              Aprendé de <span className="text-primary">2 mentores</span>,
+               Lo que no encontrás en <span className="text-primary">mil tutoriales</span>,
               <br />
-              todo lo que no está en <span className="text-primary">tutoriales</span>
+               lo aprendés con <span className="text-primary">2 mentores. En Vivo</span>
             </h2>
             <div className="w-16 h-1 bg-primary mx-auto rounded-full" />
           </div>
@@ -70,9 +74,7 @@ export function AboutSection() {
                   />
                 </div>
 
-                <p className="mt-4 text-sm text-muted-foreground text-center">
-                  Video de introducción
-                </p>
+
               </Card>
             </motion.div>
           </div>
@@ -89,7 +91,7 @@ export function AboutSection() {
               size="lg"
               className="text-lg px-8 py-6 h-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold group"
               onClick={() => {
-                // acción real acá
+                Router.push("/mentoria")
               }}
             >
               Quiero entrar
