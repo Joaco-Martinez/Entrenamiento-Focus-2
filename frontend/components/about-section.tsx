@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { Zap } from "lucide-react"
 
 
 
@@ -87,16 +87,29 @@ const Router = useRouter()
             transition={{ delay: 0.6, duration: 0.8 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8"
           >
-            <Button
-              size="lg"
-              className="text-lg px-8 py-6 h-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold group"
-              onClick={() => {
-                Router.push("/mentoria")
-              }}
-            >
-              Quiero entrar
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
+           <Button
+  size="xl"
+  onClick={() => Router.push("/mentoria")}
+  className="
+    rounded-2xl
+    bg-[#D4AF37]
+    text-black
+    font-semibold
+    px-10
+    py-4
+    text-xl
+    shadow-lg
+    transition-all
+    duration-200
+    hover:scale-[1.05]
+    hover:shadow-[0_10px_40px_rgba(212,175,55,0.35)]
+    group
+    flex items-center
+  "
+>
+  Quiero entrar
+  <Zap className=" h-6 w-6 transition-transform group-hover:translate-x-1" />
+</Button>
           </motion.div>
         </motion.div>
       </div>

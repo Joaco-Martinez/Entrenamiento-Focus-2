@@ -53,7 +53,7 @@ export default function RecursosPage() {
             </h1>
 
             <p className="mx-auto max-w-3xl text-lg text-muted-foreground md:text-xl">
-              Elegí un recurso, mirá el detalle, agregalo al carrito o compralo directo.
+              Elegí un recurso, mirá el detalle y agregalo al carrito.
             </p>
 
             <div className="mx-auto h-1 w-16 rounded-full bg-primary" />

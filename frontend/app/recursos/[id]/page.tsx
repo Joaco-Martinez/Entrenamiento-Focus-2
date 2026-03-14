@@ -129,11 +129,6 @@ export default function RecursoDetallePage() {
                 : "Agregar al carrito"}
             </button>
 
-            <button
-              className="rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground hover:opacity-90"
-            >
-              Comprar ahora
-            </button>
 
           </div>
         </div>

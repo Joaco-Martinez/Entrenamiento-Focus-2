@@ -35,11 +35,6 @@ const testimonials = [
     text: "Todo lo que aportan dentro de la mentoría no tiene comparación con el precio, les agradezco un montón!!",
     rating: 5,
   },
-  {
-    name: "",
-    text: "La organización , los atajos en mi caso Ableton me hicieron obtener más rapidez, y los gadgets de max4live no tenia idea y me simplificaron mucho",
-    rating: 5,
-  },
 ]
 
 export function TestimonialsSection() {

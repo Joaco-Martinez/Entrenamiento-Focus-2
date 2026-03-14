@@ -10,7 +10,7 @@ export function ServicesSection() {
   const handleWhatsApp = () => {
     const message =
       "Hola! Quiero consultar por el pack de servicios profesionales (Producción + Mezcla + Mastering)"
-    const url = `https://wa.me/5491112345678?text=${encodeURIComponent(message)}`
+    const url = `https://wa.me/5493518736207?text=${encodeURIComponent(message)}`
     window.open(url, "_blank")
   }
 
