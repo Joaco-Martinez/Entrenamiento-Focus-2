@@ -66,7 +66,7 @@ const Router = useRouter()
                 <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-primary/10">
                   <iframe
                     className="absolute inset-0 w-full h-full"
-                    src="https://www.youtube.com/embed/KVo3fP_bkNY"
+                    src="https://www.youtube.com/embed/AtgJCwvyCdo"
                     title="Video de proyectos y trabajos reales"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
