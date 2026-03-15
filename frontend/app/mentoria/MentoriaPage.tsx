@@ -390,7 +390,7 @@ export default function MentoriaPage() {
                 Consultar por WhatsApp
               </a>
             </div>
-
+             
             <p className="mt-5 text-xs text-white/45">
               {!user
                 ? "Para suscribirte, primero tenés que iniciar sesión."
