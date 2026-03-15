@@ -43,7 +43,7 @@ export default function MentoriaPage() {
       text: "Podés hacer preguntas en cada clase y resolver dudas reales con acompañamiento directo.",
     },
     {
-      title: "Crecimiento real",
+      title: "Crecimiento profesional",
       text: "No trabajamos solo lo técnico: también vemos marketing, contactos, ingresos, hábitos y desarrollo profesional.",
     },
   ];
@@ -209,6 +209,39 @@ const handleSubscribe = async (provider: SubscriptionProvider) => {
         </div>
       </section>
 
+      <section
+        id="modalidad"
+        className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:px-12"
+      >
+        <hr className="my-6 border-t border-white/10" />
+        <div className="max-w-2xl">
+          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
+            Modalidad
+          </p>
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+            Simple, clara y pensada para que avances de verdad.
+          </h2>
+        </div>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {benefits.map((item) => (
+            <div
+              key={item}
+              className="rounded-[24px] border border-white/10 bg-[#101015] p-6"
+            >
+              <p className="text-base leading-7 text-white/80">{item}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.03] p-8">
+          <p className="text-base leading-8 text-white/75">
+            Esta mentoría es ideal si ya tenés una base sólida y necesitás
+            conocimiento nuevo desde un nivel intermedio a avanzado. Es una
+            suscripción mensual y podés cancelar cuando quieras.
+          </p>
+        </div>
+      </section>
       <section className="border-y border-white/10 bg-white/[0.02]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:px-12">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
@@ -245,40 +278,8 @@ const handleSubscribe = async (provider: SubscriptionProvider) => {
         </div>
       </section>
 
-      <section
-        id="modalidad"
-        className="mx-auto max-w-7xl px-6 py-16 md:px-10 lg:px-12"
-      >
-        <div className="max-w-2xl">
-          <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
-            Modalidad
-          </p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-            Simple, clara y pensada para que avances de verdad.
-          </h2>
-        </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {benefits.map((item) => (
-            <div
-              key={item}
-              className="rounded-[24px] border border-white/10 bg-[#101015] p-6"
-            >
-              <p className="text-base leading-7 text-white/80">{item}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.03] p-8">
-          <p className="text-base leading-8 text-white/75">
-            Esta mentoría es ideal si ya tenés una base sólida y necesitás
-            conocimiento nuevo desde un nivel intermedio a avanzado. Es una
-            suscripción mensual y podés cancelar cuando quieras.
-          </p>
-        </div>
-      </section>
-
-<section id="cupos" className="pb-20">
+<section id="cupos" className="pb-20 pt-10">
   <div className="mx-auto max-w-5xl px-6 md:px-10 lg:px-12">
     <div className="rounded-[32px] border border-white/10 bg-gradient-to-br from-[#16161d] to-[#0d0d11] p-8 text-center shadow-2xl md:p-12">
       <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
