@@ -4,7 +4,7 @@ import { AboutSection } from "@/components/about-section"
 import { LearningSection } from "@/components/learning-section"
 import { TestimonialsSection } from "@/components/testimonials-section"
 import { FinalCTASection } from "@/components/final-cta-section"
-import { MouseGlowBackground } from "@/components/mouse-glow-background"
+import  MouseGlowBackground  from "@/components/mouse-glow-background"
 
 export default function Page() {
   return (
