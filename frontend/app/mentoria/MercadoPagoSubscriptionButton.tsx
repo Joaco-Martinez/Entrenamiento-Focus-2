@@ -4,18 +4,43 @@ import { useState } from "react";
 
 type Props = {
   checkoutUrl: string;
+  user: {
+    email: string;
+  };
   disabled?: boolean;
   onRequireAuth?: () => boolean;
   onError?: (message: string) => void;
 };
+
 
 export default function MercadoPagoSubscriptionButton({
   checkoutUrl,
   disabled,
   onRequireAuth,
   onError,
+    user,
 }: Props) {
   const [loading, setLoading] = useState(false);
+
+  async function subscribe() {
+
+  const res = await fetch(
+    "/api/payments/mercadopago/subscriptions/create",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: user.email
+      }),
+    }
+  );
+
+  const data = await res.json();
+
+  window.location.href = data.init_point;
+}
 
   const handleClick = () => {
     try {

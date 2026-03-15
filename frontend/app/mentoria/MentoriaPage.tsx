@@ -6,6 +6,7 @@ import { apiFetch } from "../../lib/api";
 import { useAuth } from "@/context/AuthContext";
 import PaypalSubscriptionButton from "./PaypalSubscriptionButton";
 import MercadoPagoSubscriptionButton from "./MercadoPagoSubscriptionButton";
+
 type SubscriptionProvider = "paypal" | "mercadopago";
 
 export default function MentoriaPage() {
@@ -48,23 +49,26 @@ export default function MentoriaPage() {
       text: "No trabajamos solo lo técnico: también vemos marketing, contactos, ingresos, hábitos y desarrollo profesional.",
     },
   ];
-const MERCADOPAGO_PLAN_CHECKOUT =
-  "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=49662d5625534ce2a4825dd24b904096";
+
+  const MERCADOPAGO_PLAN_CHECKOUT =
+    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=49662d5625534ce2a4825dd24b904096";
+
   const PRODUCT_ID_MENTORIA = "ID_REAL_DEL_PRODUCTO_MENTORIA";
   const PAYPAL_PLAN_ID = "P-8P659137X08418535NG22LOA";
+
   const PAYPAL_CLIENT_ID =
     process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ||
     "AUexJ2kgXwlf00o6gSpFW0vXtIN9FoNvEBtI2u7owGXSLEjuby4WG5d2pxu6eXSpG5PiwWVRrpvN3LXi";
 
-  const normalizedCountry = (country || user?.country || "")
-    .toString()
+  const normalizedCountry = String(country ?? user?.country ?? "")
     .trim()
     .toLowerCase();
 
   const isArgentina =
-    normalizedCountry === "arg" ||
     normalizedCountry === "ar" ||
-    normalizedCountry === "argentina";
+    normalizedCountry === "arg" ||
+    normalizedCountry === "argentina" ||
+    normalizedCountry.startsWith("ar-");
 
   const goToLogin = () => {
     router.push("/login?redirect=/mentoria");
@@ -122,6 +126,13 @@ const MERCADOPAGO_PLAN_CHECKOUT =
       setLoadingProvider(null);
     }
   };
+
+  console.log({
+    country,
+    userCountry: user?.country,
+    normalizedCountry,
+    isArgentina,
+  });
 
   return (
     <div className="min-h-screen bg-[#0b0b0f] text-white">
@@ -355,13 +366,14 @@ const MERCADOPAGO_PLAN_CHECKOUT =
                   />
 
                   {isArgentina && (
-  <MercadoPagoSubscriptionButton
-    checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
-    disabled={authLoading}
-    onRequireAuth={ensureAuth}
-    onError={(message) => setError(message)}
-  />
-)}
+                    <MercadoPagoSubscriptionButton
+                      checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
+                      disabled={authLoading}
+                      onRequireAuth={ensureAuth}
+                      onError={(message) => setError(message)}
+                      user={{ email: user?.email || "" }}
+                    />
+                  )}
                 </>
               )}
 
