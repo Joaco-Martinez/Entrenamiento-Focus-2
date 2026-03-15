@@ -364,7 +364,11 @@ export default function MentoriaPage() {
                     onRequireAuth={ensureAuth}
                     onError={(message) => setError(message)}
                   />
-
+                    <div>
+                      <p className="text-sm font-medium text-[#f4d97c]">
+                        O
+                      </p>
+                    </div>
                   {isArgentina && (
                     <MercadoPagoSubscriptionButton
                       checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
