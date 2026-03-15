@@ -18,7 +18,7 @@ export default function MentoriaPage() {
   const [error, setError] = useState("");
 
 
-  
+
   const pillars = [
     "Producción musical",
     "Mezcla",
@@ -319,15 +319,12 @@ export default function MentoriaPage() {
 
             <div className="mt-8 flex flex-col items-center justify-center gap-4">
               <PaypalSubscriptionButton
-                planId={PAYPAL_PLAN_ID}
-                clientId={PAYPAL_CLIENT_ID}
-                disabled={loadingProvider !== null || authLoading}
-                onRequireAuth={ensureAuth}
-                onError={(message) => setError(message)}
-                onLoadingChange={(loading) => {
-                  setLoadingProvider(loading ? "paypal" : null);
-                }}
-              />
+  planId={PAYPAL_PLAN_ID}
+  clientId={PAYPAL_CLIENT_ID}
+  disabled={authLoading || loadingProvider === "mercadopago"}
+  onRequireAuth={ensureAuth}
+  onError={(message) => setError(message)}
+/>
 
               <button
                 type="button"

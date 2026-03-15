@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 declare global {
@@ -15,8 +15,52 @@ type Props = {
   disabled?: boolean;
   onRequireAuth?: () => boolean;
   onError?: (message: string) => void;
-  onLoadingChange?: (loading: boolean) => void;
 };
+
+let paypalSdkPromise: Promise<void> | null = null;
+
+function loadPaypalSdk(clientId: string) {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Window no disponible"));
+  }
+
+  if (window.paypal) {
+    return Promise.resolve();
+  }
+
+  if (paypalSdkPromise) {
+    return paypalSdkPromise;
+  }
+
+  paypalSdkPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector(
+      'script[data-paypal-sdk="subscription"]'
+    ) as HTMLScriptElement | null;
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("No se pudo cargar el SDK de PayPal")),
+        { once: true }
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription`;
+    script.async = true;
+    script.setAttribute("data-paypal-sdk", "subscription");
+
+    script.onload = () => resolve();
+    script.onerror = () =>
+      reject(new Error("No se pudo cargar el SDK de PayPal"));
+
+    document.body.appendChild(script);
+  });
+
+  return paypalSdkPromise;
+}
 
 export default function PaypalSubscriptionButton({
   planId,
@@ -24,137 +68,103 @@ export default function PaypalSubscriptionButton({
   disabled = false,
   onRequireAuth,
   onError,
-  onLoadingChange,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [sdkReady, setSdkReady] = useState(false);
-  const [buttonsRendered, setButtonsRendered] = useState(false);
+  const renderedRef = useRef(false);
+  const destroyedRef = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (!clientId) {
-      onError?.("Falta configurar NEXT_PUBLIC_PAYPAL_CLIENT_ID");
-      return;
-    }
+    destroyedRef.current = false;
 
-    const existingScript = document.querySelector(
-      'script[data-paypal-sdk="subscription"]'
-    ) as HTMLScriptElement | null;
+    const renderButton = async () => {
+      try {
+        if (!clientId) {
+          throw new Error("Falta NEXT_PUBLIC_PAYPAL_CLIENT_ID");
+        }
 
-    const handleLoad = () => setSdkReady(true);
+        await loadPaypalSdk(clientId);
 
-    if (existingScript) {
-      if (window.paypal) {
-        setSdkReady(true);
-      } else {
-        existingScript.addEventListener("load", handleLoad);
+        if (destroyedRef.current) return;
+        if (renderedRef.current) return;
+        if (!containerRef.current) return;
+        if (!containerRef.current.isConnected) return;
+        if (!window.paypal?.Buttons) {
+          throw new Error("PayPal SDK no disponible");
+        }
+
+        renderedRef.current = true;
+        containerRef.current.innerHTML = "";
+
+        await window.paypal
+          .Buttons({
+            style: {
+              shape: "pill",
+              color: "silver",
+              layout: "vertical",
+              label: "subscribe",
+            },
+
+            onClick: () => {
+              if (disabled) return false;
+
+              if (onRequireAuth) {
+                const ok = onRequireAuth();
+                if (!ok) return false;
+              }
+
+              return true;
+            },
+
+            createSubscription: (_data: any, actions: any) => {
+              return actions.subscription.create({
+                plan_id: planId,
+              });
+            },
+
+            onApprove: async (data: any) => {
+              try {
+                const subscriptionId = data?.subscriptionID;
+
+                if (!subscriptionId) {
+                  throw new Error("PayPal no devolvió subscriptionID");
+                }
+
+                router.push(
+                  `/mentoria/success?provider=paypal&subscription_id=${subscriptionId}`
+                );
+              } catch (error) {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "No se pudo confirmar la suscripción con PayPal";
+
+                onError?.(message);
+              }
+            },
+
+            onError: (err: any) => {
+              console.error("PayPal subscription error:", err);
+              onError?.("Ocurrió un error al iniciar la suscripción con PayPal");
+            },
+          })
+          .render(containerRef.current);
+      } catch (error) {
+        renderedRef.current = false;
+
+        const message =
+          error instanceof Error ? error.message : "Error cargando PayPal";
+
+        onError?.(message);
       }
-
-      return () => {
-        existingScript.removeEventListener("load", handleLoad);
-      };
-    }
-
-    const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription`;
-    script.async = true;
-    script.setAttribute("data-paypal-sdk", "subscription");
-    script.onload = handleLoad;
-    script.onerror = () => {
-      onError?.("No se pudo cargar el SDK de PayPal");
-      onLoadingChange?.(false);
     };
 
-    document.body.appendChild(script);
+    renderButton();
 
     return () => {
-      script.onload = null;
-      script.onerror = null;
+      destroyedRef.current = true;
     };
-  }, [clientId, onError, onLoadingChange]);
-
-  useEffect(() => {
-    if (!sdkReady || !containerRef.current || buttonsRendered) return;
-    if (!window.paypal?.Buttons) return;
-
-    containerRef.current.innerHTML = "";
-    onLoadingChange?.(true);
-
-    window.paypal
-      .Buttons({
-        style: {
-          shape: "pill",
-          color: "silver",
-          layout: "vertical",
-          label: "subscribe",
-        },
-
-        onClick: () => {
-          if (disabled) {
-            return false;
-          }
-
-          if (onRequireAuth) {
-            const allowed = onRequireAuth();
-            if (!allowed) return false;
-          }
-
-          return true;
-        },
-
-        createSubscription: (_data: any, actions: any) => {
-          return actions.subscription.create({
-            plan_id: planId,
-          });
-        },
-
-        onApprove: async (data: any) => {
-          try {
-            const subscriptionId = data?.subscriptionID;
-
-            if (!subscriptionId) {
-              throw new Error("PayPal no devolvió subscriptionID");
-            }
-
-            router.push(
-              `/mentoria/success?provider=paypal&subscription_id=${subscriptionId}`
-            );
-          } catch (error) {
-            const message =
-              error instanceof Error
-                ? error.message
-                : "No se pudo confirmar la suscripción con PayPal";
-
-            onError?.(message);
-          }
-        },
-
-        onError: (err: any) => {
-          console.error("PayPal subscription error:", err);
-          onError?.("Ocurrió un error al iniciar la suscripción con PayPal");
-        },
-      })
-      .render(containerRef.current)
-      .then(() => {
-        setButtonsRendered(true);
-      })
-      .catch((err: any) => {
-        console.error("PayPal render error:", err);
-        onError?.("No se pudo renderizar el botón de PayPal");
-      })
-      .finally(() => {
-        onLoadingChange?.(false);
-      });
-  }, [
-    sdkReady,
-    buttonsRendered,
-    planId,
-    disabled,
-    onRequireAuth,
-    onError,
-    onLoadingChange,
-    router,
-  ]);
+  }, [clientId, planId, disabled, onRequireAuth, onError, router]);
 
   return (
     <div className="w-full max-w-[320px]">
