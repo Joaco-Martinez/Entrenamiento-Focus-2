@@ -29,7 +29,6 @@ export default function MouseGlowBackground() {
     () => ({
       dustCount: 90,
       bars: 48,
-      waveLines: 4,
       maxBarHeight: 90,
       baseBarHeight: 12,
     }),
@@ -135,28 +134,8 @@ export default function MouseGlowBackground() {
         size.width * 0.6
       );
 
-      gradient.addColorStop(0, "rgba(212,175,55,0.16)");
-      gradient.addColorStop(0.22, "rgba(212,175,55,0.08)");
-      gradient.addColorStop(0.55, "rgba(244,217,124,0.03)");
-      gradient.addColorStop(1, "rgba(0,0,0,0)");
-
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, size.width, size.height);
-    };
-
-    const drawMouseHalo = () => {
-      const gradient = ctx.createRadialGradient(
-        mouse.current.x,
-        mouse.current.y,
-        0,
-        mouse.current.x,
-        mouse.current.y,
-        240
-      );
-
-      gradient.addColorStop(0, "rgba(212,175,55,0.14)");
-      gradient.addColorStop(0.2, "rgba(212,175,55,0.09)");
-      gradient.addColorStop(0.5, "rgba(244,217,124,0.035)");
+      gradient.addColorStop(0, "rgba(0,0,0,0)");
+      gradient.addColorStop(0.55, "rgba(0,0,0,0)");
       gradient.addColorStop(1, "rgba(0,0,0,0)");
 
       ctx.fillStyle = gradient;
@@ -189,40 +168,6 @@ export default function MouseGlowBackground() {
       ctx.beginPath();
       ctx.arc(cx, cy, 70, 0, Math.PI * 2);
       ctx.fill();
-    };
-
-    const drawAudioWaves = (time: number) => {
-      const baseY = size.height * 0.58;
-      const mouseOffset = (mouse.current.x - size.width / 2) * 0.0009;
-
-      for (let line = 0; line < config.waveLines; line++) {
-        const amplitude = 16 + line * 10;
-        const speed = 0.0016 + line * 0.00035;
-        const offsetY = line * 22;
-        const opacity = line === 1 ? 0.15 : line === 2 ? 0.08 : 0.05;
-
-        ctx.beginPath();
-
-        for (let x = 0; x <= size.width; x += 6) {
-          const y =
-            baseY +
-            offsetY +
-            Math.sin(x * 0.012 + time * speed + line * 0.8 + mouseOffset * 20) *
-              amplitude +
-            Math.cos(x * 0.005 + time * speed * 1.7) * (amplitude * 0.35);
-
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-
-        ctx.strokeStyle =
-          line === 1
-            ? `rgba(212,175,55,${opacity})`
-            : `rgba(255,255,255,${opacity})`;
-
-        ctx.lineWidth = line === 1 ? 1.4 : 1;
-        ctx.stroke();
-      }
     };
 
     const drawFrequencyBars = (time: number) => {
@@ -327,10 +272,8 @@ export default function MouseGlowBackground() {
       drawBackground();
       drawTopAura();
       drawCenterPulse(time);
-      drawAudioWaves(time);
       drawFrequencyBars(time);
       drawDust();
-      drawMouseHalo();
       drawScanLines();
       drawVignette();
 
