@@ -24,6 +24,12 @@ function loadPaypalSdk(clientId: string) {
     return Promise.reject(new Error("Window no disponible"));
   }
 
+  if (!clientId) {
+    return Promise.reject(
+      new Error("Falta NEXT_PUBLIC_PAYPAL_CLIENT_ID")
+    );
+  }
+
   if (window.paypal) {
     return Promise.resolve();
   }
@@ -38,25 +44,51 @@ function loadPaypalSdk(clientId: string) {
     ) as HTMLScriptElement | null;
 
     if (existingScript) {
-      existingScript.addEventListener("load", () => resolve(), { once: true });
-      existingScript.addEventListener(
-        "error",
-        () => reject(new Error("No se pudo cargar el SDK de PayPal")),
-        { once: true }
-      );
+      if (window.paypal) {
+        resolve();
+        return;
+      }
+
+      const handleLoad = () => {
+        if (window.paypal) {
+          resolve();
+        } else {
+          reject(new Error("PayPal SDK no disponible"));
+        }
+      };
+
+      const handleError = () => {
+        reject(new Error("No se pudo cargar el SDK de PayPal"));
+      };
+
+      existingScript.addEventListener("load", handleLoad, { once: true });
+      existingScript.addEventListener("error", handleError, { once: true });
       return;
     }
 
     const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription&locale=es_AR&buyer-country=AR`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
+      clientId
+    )}&vault=true&intent=subscription&locale=es_AR`;
     script.async = true;
     script.setAttribute("data-paypal-sdk", "subscription");
 
-    script.onload = () => resolve();
-    script.onerror = () =>
+    script.onload = () => {
+      if (window.paypal) {
+        resolve();
+      } else {
+        reject(new Error("PayPal SDK no disponible"));
+      }
+    };
+
+    script.onerror = () => {
       reject(new Error("No se pudo cargar el SDK de PayPal"));
+    };
 
     document.body.appendChild(script);
+  }).catch((error) => {
+    paypalSdkPromise = null;
+    throw error;
   });
 
   return paypalSdkPromise;
@@ -79,10 +111,6 @@ export default function PaypalSubscriptionButton({
 
     const renderButton = async () => {
       try {
-        if (!clientId) {
-          throw new Error("Falta NEXT_PUBLIC_PAYPAL_CLIENT_ID");
-        }
-
         await loadPaypalSdk(clientId);
 
         if (destroyedRef.current) return;
@@ -93,8 +121,9 @@ export default function PaypalSubscriptionButton({
           throw new Error("PayPal SDK no disponible");
         }
 
-        renderedRef.current = true;
         containerRef.current.innerHTML = "";
+
+        renderedRef.current = true;
 
         await window.paypal
           .Buttons({
@@ -109,8 +138,8 @@ export default function PaypalSubscriptionButton({
               if (disabled) return false;
 
               if (onRequireAuth) {
-                const ok = onRequireAuth();
-                if (!ok) return false;
+                const autorizado = onRequireAuth();
+                if (!autorizado) return false;
               }
 
               return true;
@@ -144,7 +173,7 @@ export default function PaypalSubscriptionButton({
             },
 
             onError: (err: any) => {
-              console.error("PayPal subscription error:", err);
+              console.error("Error de suscripción PayPal:", err);
               onError?.("Ocurrió un error al iniciar la suscripción con PayPal");
             },
           })
@@ -153,7 +182,9 @@ export default function PaypalSubscriptionButton({
         renderedRef.current = false;
 
         const message =
-          error instanceof Error ? error.message : "Error cargando PayPal";
+          error instanceof Error
+            ? error.message
+            : "Error cargando el botón de PayPal";
 
         onError?.(message);
       }
