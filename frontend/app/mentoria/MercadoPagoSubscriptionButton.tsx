@@ -1,79 +1,55 @@
 "use client";
 
-import { useState } from "react";
-
 type Props = {
   checkoutUrl: string;
-  user: {
-    email: string;
-  };
   disabled?: boolean;
   onRequireAuth?: () => boolean;
-  onError?: (message: string) => void;
+  onError?: (msg: string) => void;
+  user? : {
+    email: string;
+  } | null;
 };
-
 
 export default function MercadoPagoSubscriptionButton({
   checkoutUrl,
-  disabled,
+  disabled = false,
   onRequireAuth,
   onError,
-    user,
+  user,
 }: Props) {
-  const [loading, setLoading] = useState(false);
-
-  async function subscribe() {
-
-  const res = await fetch(
-    "/api/payments/mercadopago/subscriptions/create",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: user.email
-      }),
-    }
-  );
-
-  const data = await res.json();
-
-  window.location.href = data.init_point;
-}
-
   const handleClick = () => {
     try {
+      if (disabled) return;
+
       if (onRequireAuth) {
-        const isAuth = onRequireAuth();
-        if (!isAuth) return;
+        const ok = onRequireAuth();
+        if (!ok) return;
       }
 
-      setLoading(true);
-
       window.location.href = checkoutUrl;
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "No se pudo iniciar la suscripción";
-
-      onError?.(message);
-    } finally {
-      setLoading(false);
+    } catch {
+      onError?.("No se pudo iniciar la suscripción con Mercado Pago");
     }
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={disabled || loading}
-      className="inline-flex min-w-[260px] items-center justify-center rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-70"
-    >
-      {loading
-        ? "Redirigiendo a Mercado Pago..."
-        : "Suscribirme con Mercado Pago"}
-    </button>
+    <div className="flex w-full flex-col items-center">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={disabled}
+        className="inline-flex h-12 w-[270px] items-center justify-center gap-2 rounded-[30px] border border-[#1f1f1f] bg-[#1f1f1f] px-0 py-2 text-[15px] font-semibold text-white transition hover:bg-[#151515] disabled:opacity-60"
+      >
+        <img
+          src="/mercadopago-white.svg"
+          alt="Mercado Pago"
+          className="h-5 w-auto"
+        />
+      </button>
+
+      <span className="mt-2 text-[11px] font-medium text-white/70">
+        Pagá de forma segura
+      </span>
+    </div>
   );
 }
