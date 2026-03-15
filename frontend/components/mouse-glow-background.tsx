@@ -225,40 +225,7 @@ export default function MouseGlowBackground() {
       }
     };
 
-    const drawFrequencyBars = (time: number) => {
-      const totalBars = config.bars;
-      const spacing = size.width / totalBars;
-      const baseY = size.height - 6;
 
-      for (let i = 0; i < totalBars; i++) {
-        const x = i * spacing + spacing * 0.5;
-        const centerDistance = Math.abs(i - totalBars / 2) / (totalBars / 2);
-
-        const waveA = Math.sin(time * 0.003 + i * 0.45);
-        const waveB = Math.cos(time * 0.0018 + i * 0.22);
-        const mouseBoost =
-          1 -
-          Math.min(1, Math.abs(mouse.current.x - x) / (size.width * 0.35));
-
-        const height =
-          config.baseBarHeight +
-          ((waveA + 1) * 0.5 * 42 +
-            (waveB + 1) * 0.5 * 26 +
-            mouseBoost * 24) *
-            (1 - centerDistance * 0.28);
-
-        const y = baseY - height;
-        const width = Math.max(2, spacing * 0.22);
-
-        const gradient = ctx.createLinearGradient(x, y, x, baseY);
-        gradient.addColorStop(0, "rgba(244,217,124,0.30)");
-        gradient.addColorStop(0.55, "rgba(212,175,55,0.16)");
-        gradient.addColorStop(1, "rgba(255,255,255,0.02)");
-
-        ctx.fillStyle = gradient;
-        ctx.fillRect(x - width / 2, y, width, height);
-      }
-    };
 
     const drawDust = () => {
       for (const p of dust) {
@@ -325,14 +292,14 @@ export default function MouseGlowBackground() {
       ctx.clearRect(0, 0, size.width, size.height);
 
       drawBackground();
-      drawTopAura();
+    //   drawTopAura();
       drawCenterPulse(time);
       drawAudioWaves(time);
-      drawFrequencyBars(time);
       drawDust();
-      drawMouseHalo();
+    //   drawMouseHalo();
       drawScanLines();
       drawVignette();
+      
 
       animationRef.current = requestAnimationFrame(render);
     };
