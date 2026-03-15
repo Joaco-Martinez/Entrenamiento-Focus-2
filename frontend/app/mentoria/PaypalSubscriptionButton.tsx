@@ -48,7 +48,7 @@ function loadPaypalSdk(clientId: string) {
     }
 
     const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription&locale=es_AR&buyer-country=AR`;
     script.async = true;
     script.setAttribute("data-paypal-sdk", "subscription");
 
