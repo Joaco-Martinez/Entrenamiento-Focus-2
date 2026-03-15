@@ -10,14 +10,11 @@ type SubscriptionProvider = "paypal" | "mercadopago";
 
 export default function MentoriaPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
-
+  const { user, loading: authLoading, country } = useAuth();
 
   const [loadingProvider, setLoadingProvider] =
     useState<SubscriptionProvider | null>(null);
   const [error, setError] = useState("");
-
-
 
   const pillars = [
     "Producción musical",
@@ -58,11 +55,25 @@ export default function MentoriaPage() {
     process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ||
     "AUexJ2kgXwlf00o6gSpFW0vXtIN9FoNvEBtI2u7owGXSLEjuby4WG5d2pxu6eXSpG5PiwWVRrpvN3LXi";
 
+  const normalizedCountry = (country || user?.country || "")
+    .toString()
+    .trim()
+    .toLowerCase();
+
+  const isArgentina =
+    normalizedCountry === "arg" ||
+    normalizedCountry === "ar" ||
+    normalizedCountry === "argentina";
+
+  const goToLogin = () => {
+    router.push("/login?redirect=/mentoria");
+  };
+
   const ensureAuth = () => {
     if (authLoading) return false;
 
     if (!user) {
-      router.push("/login?redirect=/mentoria");
+      goToLogin();
       return false;
     }
 
@@ -318,24 +329,44 @@ export default function MentoriaPage() {
             )}
 
             <div className="mt-8 flex flex-col items-center justify-center gap-4">
-              <PaypalSubscriptionButton
-  planId={PAYPAL_PLAN_ID}
-  clientId={PAYPAL_CLIENT_ID}
-  disabled={authLoading || loadingProvider === "mercadopago"}
-  onRequireAuth={ensureAuth}
-  onError={(message) => setError(message)}
-/>
+              {!authLoading && !user ? (
+                <>
+                  <p className="text-sm font-medium text-[#f4d97c]">
+                    Iniciá sesión para suscribirte
+                  </p>
 
-              <button
-                type="button"
-                onClick={() => handleSubscribe("mercadopago")}
-                disabled={loadingProvider !== null || authLoading}
-                className="inline-flex min-w-[260px] items-center justify-center rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {loadingProvider === "mercadopago"
-                  ? "Redirigiendo a Mercado Pago..."
-                  : "Suscribirme con Mercado Pago"}
-              </button>
+                  <button
+                    type="button"
+                    onClick={goToLogin}
+                    className="inline-flex min-w-[260px] items-center justify-center rounded-2xl bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:scale-[1.02]"
+                  >
+                    Iniciar sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  <PaypalSubscriptionButton
+                    planId={PAYPAL_PLAN_ID}
+                    clientId={PAYPAL_CLIENT_ID}
+                    disabled={authLoading || loadingProvider === "mercadopago"}
+                    onRequireAuth={ensureAuth}
+                    onError={(message) => setError(message)}
+                  />
+
+                  {isArgentina && (
+                    <button
+                      type="button"
+                      onClick={() => handleSubscribe("mercadopago")}
+                      disabled={loadingProvider !== null || authLoading}
+                      className="inline-flex min-w-[260px] items-center justify-center rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {loadingProvider === "mercadopago"
+                        ? "Redirigiendo a Mercado Pago..."
+                        : "Suscribirme con Mercado Pago"}
+                    </button>
+                  )}
+                </>
+              )}
 
               <a
                 href="https://wa.me/5493518736207?text=Hola%2C+quiero+consultar+por+la+mentor%C3%ADa+Entrenamiento+Focus"
@@ -348,8 +379,11 @@ export default function MentoriaPage() {
             </div>
 
             <p className="mt-5 text-xs text-white/45">
-              Para suscribirte tenés que iniciar sesión. Después vas a ser
-              redirigido al proveedor de pago para aprobar la suscripción.
+              {!user
+                ? "Para suscribirte, primero tenés que iniciar sesión."
+                : isArgentina
+                ? "Si estás en Argentina, podés suscribirte con PayPal o Mercado Pago."
+                : "Si estás fuera de Argentina, la suscripción se realiza con PayPal."}
             </p>
           </div>
         </div>
