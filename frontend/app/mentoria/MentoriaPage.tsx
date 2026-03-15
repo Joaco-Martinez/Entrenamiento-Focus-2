@@ -6,7 +6,7 @@ import { apiFetch } from "../../lib/api";
 import { useAuth } from "@/context/AuthContext";
 import PaypalSubscriptionButton from "./PaypalSubscriptionButton";
 import MercadoPagoSubscriptionButton from "./MercadoPagoSubscriptionButton";
-
+import MouseGlowBackground from "@/components/mouse-glow-background";
 type SubscriptionProvider = "paypal" | "mercadopago";
 
 export default function MentoriaPage() {
@@ -135,7 +135,8 @@ export default function MentoriaPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0b0b0f] text-white">
+    <div className="relative min-h-screen overflow-hidden  text-white">
+       <MouseGlowBackground />
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.18),transparent_45%)]" />
         <div className="relative mx-auto max-w-7xl px-6 py-20 md:px-10 lg:px-12 lg:py-28">
@@ -179,7 +180,7 @@ export default function MentoriaPage() {
             </div>
 
             <div>
-              <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur">
+              <div className="rounded-[28px] border border-white/10 bg-white/1 p-6 shadow-2xl backdrop-blur">
                 <div>
                   <p className="text-sm uppercase tracking-[0.25em] text-[#D4AF37]">
                     Qué trabajamos
