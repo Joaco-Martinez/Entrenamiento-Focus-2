@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "@/context/AuthContext";
 import PaypalSubscriptionButton from "./PaypalSubscriptionButton";
-
+import MercadoPagoSubscriptionButton from "./MercadoPagoSubscriptionButton";
 type SubscriptionProvider = "paypal" | "mercadopago";
 
 export default function MentoriaPage() {
@@ -48,7 +48,8 @@ export default function MentoriaPage() {
       text: "No trabajamos solo lo técnico: también vemos marketing, contactos, ingresos, hábitos y desarrollo profesional.",
     },
   ];
-
+const MERCADOPAGO_PLAN_CHECKOUT =
+  "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=49662d5625534ce2a4825dd24b904096";
   const PRODUCT_ID_MENTORIA = "ID_REAL_DEL_PRODUCTO_MENTORIA";
   const PAYPAL_PLAN_ID = "P-8P659137X08418535NG22LOA";
   const PAYPAL_CLIENT_ID =
@@ -354,17 +355,13 @@ export default function MentoriaPage() {
                   />
 
                   {isArgentina && (
-                    <button
-                      type="button"
-                      onClick={() => handleSubscribe("mercadopago")}
-                      disabled={loadingProvider !== null || authLoading}
-                      className="inline-flex min-w-[260px] items-center justify-center rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {loadingProvider === "mercadopago"
-                        ? "Redirigiendo a Mercado Pago..."
-                        : "Suscribirme con Mercado Pago"}
-                    </button>
-                  )}
+  <MercadoPagoSubscriptionButton
+    checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
+    disabled={authLoading}
+    onRequireAuth={ensureAuth}
+    onError={(message) => setError(message)}
+  />
+)}
                 </>
               )}
 
