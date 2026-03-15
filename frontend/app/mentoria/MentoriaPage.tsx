@@ -12,10 +12,13 @@ export default function MentoriaPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
+
   const [loadingProvider, setLoadingProvider] =
     useState<SubscriptionProvider | null>(null);
   const [error, setError] = useState("");
 
+
+  
   const pillars = [
     "Producción musical",
     "Mezcla",
