@@ -55,7 +55,7 @@ export const createSubscription = async (req: Request, res: Response) => {
         providerStatus: response.status ?? null,
         payerEmail: email,
         productId: productId ?? null,
-        raw: response,
+        raw: JSON.parse(JSON.stringify(response)),
       },
       create: {
         userId,
@@ -65,7 +65,7 @@ export const createSubscription = async (req: Request, res: Response) => {
         providerStatus: response.status ?? null,
         payerEmail: email,
         productId: productId ?? null,
-        raw: response,
+        raw: JSON.parse(JSON.stringify(response)),
       },
     });
 
