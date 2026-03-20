@@ -1,43 +1,91 @@
 import { apiFetch } from "@/lib/api"
 
 export const paymentsService = {
-  createPreference(items: Array<{ id: string; quantity: number }>) {
-    return apiFetch("/payments/mercadopago/preference", {
+  /**
+   * Create a Mercado Pago preference. Accepts a payload containing orderId,
+   * items and optional payer information. See backend documentation.
+   */
+  createPreference(payload: any) {
+    return apiFetch("/mercadopago_checkout/create-preference", {
       method: "POST",
-      body: JSON.stringify({ items }),
-    })
+      body: JSON.stringify(payload),
+    });
   },
-  createSubscription(productId: number) {
-    return apiFetch("/payments/mercadopago/subscription", {
+  /**
+   * Create a Mercado Pago subscription. This endpoint requires a more complex
+   * payload (userId, payerEmail, reason, externalReference, etc.). The
+   * productId parameter is left for compatibility, but the caller should build
+   * the correct payload.
+   */
+  createSubscription(payload: any) {
+    return apiFetch("/mercadopago_suscription/create", {
       method: "POST",
-      body: JSON.stringify({ productId }),
-    })
+      body: JSON.stringify(payload),
+    });
   },
+  /**
+   * Create a PayPal checkout for an order.
+   */
   paypalCreateOrder(payload: any) {
-    return apiFetch("/payments/paypal/order", {
+    return apiFetch("/paypal_checkout/checkout", {
       method: "POST",
       body: JSON.stringify(payload),
-    })
+    });
   },
+  /**
+   * Create a PayPal subscription for a product.
+   */
   paypalCreateSubscription(payload: any) {
-    return apiFetch("/payments/paypal/subscription", {
+    return apiFetch("/paypal_checkout/subscription", {
       method: "POST",
       body: JSON.stringify(payload),
-    })
+    });
   },
-  subscriptionStatus() {
-    return apiFetch("/payments/subscription-status")
+  /**
+   * Get current subscription status (generic, independent of provider).
+   * Returns a normalized object with subscriptionId, start/end dates and active flag.
+   */
+  async subscriptionStatus() {
+    const data: any = await apiFetch("/subscriptions/me");
+    const sub = data?.subscription;
+    if (!sub) {
+      return {
+        subscriptionId: null,
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+        hasActiveSubscription: false,
+      };
+    }
+    const status = String(sub.status || "").toLowerCase();
+    return {
+      subscriptionId: sub.id ?? null,
+      subscriptionStartDate: sub.startDate ?? null,
+      subscriptionEndDate: sub.endDate ?? null,
+      hasActiveSubscription: status === "active" || status === "approved",
+    };
   },
-  paypalSubscriptionStatus() {
-    return apiFetch("/payments/paypal/subscription-status")
+  /**
+   * Alias for subscriptionStatus; PayPal uses the same unified endpoint and format.
+   */
+  async paypalSubscriptionStatus() {
+    return this.subscriptionStatus();
   },
-  cancelSubscription() {
-    return apiFetch("/payments/subscription/cancel", { method: "POST" })
-  },
-  paypalCancelSubscription(reason?: string) {
-    return apiFetch("/payments/paypal/subscription/cancel", {
+  /**
+   * Cancel the current subscription. By default cancels at period end.
+   */
+  cancelSubscription(cancelAtPeriodEnd: boolean = true) {
+    return apiFetch("/subscriptions/cancel", {
       method: "POST",
-      body: JSON.stringify({ reason }),
-    })
+      body: JSON.stringify({ cancelAtPeriodEnd }),
+    });
   },
-}
+  /**
+   * Alias for cancelSubscription; PayPal uses the same endpoint.
+   */
+  paypalCancelSubscription(reason?: string) {
+    return apiFetch("/subscriptions/cancel", {
+      method: "POST",
+      body: JSON.stringify({ cancelAtPeriodEnd: true }),
+    });
+  },
+};

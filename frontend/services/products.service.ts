@@ -23,24 +23,48 @@ export type CreateProductDto = Partial<Product> & {
 export type UpdateProductDto = Partial<CreateProductDto>
 
 export const productsService = {
+  /**
+   * List public products. This endpoint hides the resourceUrl.
+   */
   async getAll(): Promise<{ products: Product[] }> {
-    const data = await apiFetch(`/products`)
-    console.log(data)
-    return data
+    const data = await apiFetch(`/products`);
+    return data as { products: Product[] };
   },
-  async getById(id: number): Promise<Product> {
-    return apiFetch(`/products/${id}`)
+
+  /**
+   * List products for admin. Requires admin credentials.
+   */
+  async adminList(): Promise<{ products: Product[] }> {
+    const data = await apiFetch(`/products/admin/products`);
+    return data as { products: Product[] };
   },
-  async getAccess(id: number): Promise<{ resourceUrl: string }> {
-    return apiFetch(`/products/${id}/access`)
+
+  async getById(id: number | string): Promise<Product> {
+    return apiFetch(`/products/${id}`);
   },
+
+  async getAccess(id: number | string): Promise<{ resourceUrl: string }> {
+    return apiFetch(`/products/${id}/access`);
+  },
+
+  /**
+   * Create a new product (admin only).
+   */
   async create(dto: CreateProductDto) {
-    return apiFetch(`/products`, { method: "POST", body: JSON.stringify(dto) })
+    return apiFetch(`/products/admin/products`, { method: "POST", body: JSON.stringify(dto) });
   },
-  async update(id: number, dto: UpdateProductDto) {
-    return apiFetch(`/products/${id}`, { method: "PUT", body: JSON.stringify(dto) })
+
+  /**
+   * Update a product (admin only).
+   */
+  async update(id: number | string, dto: UpdateProductDto) {
+    return apiFetch(`/products/admin/products/${id}`, { method: "PUT", body: JSON.stringify(dto) });
   },
-  async remove(id: number) {
-    return apiFetch(`/products/${id}`, { method: "DELETE" })
+
+  /**
+   * Remove a product (admin only).
+   */
+  async remove(id: number | string) {
+    return apiFetch(`/products/admin/products/${id}`, { method: "DELETE" });
   },
-}
+};

@@ -86,7 +86,12 @@ export default function UserDashboardPage() {
       </div>
 
       <section className="grid gap-4 md:grid-cols-3">
+        {/*
+          La sección de tarjetas muestra accesos rápidos a distintas páginas del dashboard.
+          Agregamos una tarjeta para "Mis órdenes" que apunta a /dashboard/orders.
+        */}
         <Card title="Recursos" desc="Ver y comprar recursos" href="/recursos" />
+        <Card title="Mis órdenes" desc="Historial de compras" href="/dashboard/orders" />
         <Card title="Mi suscripción" desc="Estado y cancelación" href="#" onClick={refresh} />
         <Card title="Soporte" desc="Contactanos" href="/" />
       </section>

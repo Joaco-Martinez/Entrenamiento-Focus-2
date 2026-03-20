@@ -21,14 +21,14 @@ export default function AdminProductsPage() {
   const [openEdit, setOpenEdit] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
 
-  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const refresh = async () => {
     setError(null)
     setLoading(true)
     try {
-      const res = await productsService.getAll(1, 50)
-      setItems(res.data)
+      const res = await productsService.adminList()
+      setItems(res.products)
     } catch (err: any) {
       setError(err?.message || "No se pudieron cargar los productos.")
     } finally {
@@ -46,14 +46,14 @@ export default function AdminProductsPage() {
     await refresh()
   }
 
-  const onEdit = async (id: number, dto: UpdateProductDto) => {
+  const onEdit = async (id: string, dto: UpdateProductDto) => {
     await productsService.update(id, dto)
     setOpenEdit(false)
     setEditing(null)
     await refresh()
   }
 
-  const onDelete = async (id: number) => {
+  const onDelete = async (id: string) => {
     const ok = confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")
     if (!ok) return
 
@@ -131,14 +131,14 @@ export default function AdminProductsPage() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={p.coverImageUrl}
-                              alt={p.name}
+                          alt={p.title}
                               className="h-full w-full object-cover"
                             />
                           ) : null}
                         </div>
 
                         <div>
-                          <div className="font-semibold text-white">{p.name}</div>
+                          <div className="font-semibold text-white">{p.title}</div>
                           {p.description ? (
                             <div className="mt-1 text-xs text-white/55 line-clamp-2">
                               {p.description}
@@ -149,16 +149,16 @@ export default function AdminProductsPage() {
                     </td>
 
                     <td className="py-4 px-3 text-white/80">
-                      {p.priceUsd != null ? (
-                        <>${Number(p.priceUsd).toFixed(2)}</>
+                      {p.usdPrice != null ? (
+                        <>${Number(p.usdPrice).toFixed(2)}</>
                       ) : (
                         <span className="text-white/50">—</span>
                       )}
                     </td>
 
                     <td className="py-4 px-3 text-white/80">
-                      {p.priceArs != null ? (
-                        <>${Number(p.priceArs).toLocaleString("es-AR")}</>
+                      {p.arPrice != null ? (
+                        <>${Number(p.arPrice).toLocaleString("es-AR")}</>
                       ) : (
                         <span className="text-white/50">—</span>
                       )}
@@ -239,10 +239,10 @@ export default function AdminProductsPage() {
           title="Editar producto"
           submitLabel="Guardar"
           defaultValues={{
-            name: editing.name,
+            title: editing.title,
             description: editing.description || "",
-            priceUsd: Number(editing.priceUsd ?? 0),
-            priceArs: editing.priceArs != null ? Number(editing.priceArs) : undefined,
+            usdPrice: Number(editing.usdPrice ?? 0),
+            arPrice: editing.arPrice != null ? Number(editing.arPrice) : undefined,
             isSubscription: editing.isSubscription,
             requiresPremium: editing.requiresPremium,
             coverImageUrl: editing.coverImageUrl ?? "",
@@ -264,10 +264,10 @@ export default function AdminProductsPage() {
 /* ---------------- Modal ---------------- */
 
 type ProductFormValues = {
-  name: string
+  title: string
   description?: string
-  priceUsd: number
-  priceArs?: number
+  usdPrice: number
+  arPrice?: number
   isSubscription?: boolean
   requiresPremium?: boolean
   coverImageUrl?: string
@@ -290,11 +290,11 @@ function ProductModal<TDto extends CreateProductDto | UpdateProductDto>({
   defaultValues?: ProductFormValues
   isEdit?: boolean
 }) {
-  const [name, setName] = useState(defaultValues?.name ?? "")
+  const [titleValue, setTitleValue] = useState(defaultValues?.title ?? "")
   const [description, setDescription] = useState(defaultValues?.description ?? "")
 
-  const [priceUsd, setPriceUsd] = useState<number>(defaultValues?.priceUsd ?? 0)
-  const [priceArs, setPriceArs] = useState<number | "">(defaultValues?.priceArs ?? "")
+  const [usdPrice, setUsdPrice] = useState<number>(defaultValues?.usdPrice ?? 0)
+  const [arPrice, setArPrice] = useState<number | "">(defaultValues?.arPrice ?? "")
 
   const [isSubscription, setIsSubscription] = useState<boolean>(defaultValues?.isSubscription ?? false)
 
@@ -309,12 +309,12 @@ function ProductModal<TDto extends CreateProductDto | UpdateProductDto>({
   const [error, setError] = useState<string | null>(null)
 
   const validate = () => {
-    if (!name.trim()) return "El nombre es obligatorio."
+    if (!titleValue.trim()) return "El título es obligatorio."
 
     // backend: number y >= 0
-    if (!Number.isFinite(priceUsd) || priceUsd < 0) return "El precio USD debe ser 0 o mayor."
+    if (!Number.isFinite(usdPrice) || usdPrice < 0) return "El precio USD debe ser 0 o mayor."
 
-    if (priceArs !== "" && (!Number.isFinite(Number(priceArs)) || Number(priceArs) < 0)) {
+    if (arPrice !== "" && (!Number.isFinite(Number(arPrice)) || Number(arPrice) < 0)) {
       return "Si cargás precio ARS, debe ser 0 o mayor."
     }
 
@@ -337,17 +337,17 @@ function ProductModal<TDto extends CreateProductDto | UpdateProductDto>({
       setSaving(true)
 
       const dto: any = {
-        name: name.trim(),
+        title: titleValue.trim(),
         description: description.trim() || undefined,
-        priceUsd: Number(priceUsd),
+        usdPrice: Number(usdPrice),
         isSubscription,
         requiresPremium,
         coverImageUrl: coverImageUrl.trim() || undefined,
         resourceType,
         resourceUrl: resourceUrl.trim() || undefined,
-      }
+      };
 
-      if (priceArs !== "") dto.priceArs = Number(priceArs)
+      if (arPrice !== "") dto.arPrice = Number(arPrice);
 
       // edit: si no mandás resourceUrl, no lo envíes
       if (isEdit && !dto.resourceUrl) delete dto.resourceUrl
@@ -391,8 +391,8 @@ function ProductModal<TDto extends CreateProductDto | UpdateProductDto>({
           <div>
             <label className="mb-2 block text-sm font-semibold text-white/85">Nombre</label>
             <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
               className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
               placeholder="Plantilla de Ingresos (Excel)"
             />
@@ -415,8 +415,8 @@ function ProductModal<TDto extends CreateProductDto | UpdateProductDto>({
             <div>
               <label className="mb-2 block text-sm font-semibold text-white/85">Precio (USD)</label>
               <input
-                value={priceUsd}
-                onChange={(e) => setPriceUsd(Number(e.target.value))}
+                value={usdPrice}
+                onChange={(e) => setUsdPrice(Number(e.target.value))}
                 type="number"
                 step="0.01"
                 min={0}
@@ -430,8 +430,8 @@ function ProductModal<TDto extends CreateProductDto | UpdateProductDto>({
                 Precio (ARS) (opcional)
               </label>
               <input
-                value={priceArs}
-                onChange={(e) => setPriceArs(e.target.value === "" ? "" : Number(e.target.value))}
+                value={arPrice}
+                onChange={(e) => setArPrice(e.target.value === "" ? "" : Number(e.target.value))}
                 type="number"
                 step="1"
                 min={0}
