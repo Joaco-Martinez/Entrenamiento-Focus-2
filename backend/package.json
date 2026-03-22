@@ -14,7 +14,7 @@
     "db:seed": "tsx src/prisma/seed.ts",
     "db:reset-local": "npm run db:clear && npm run db:seed",
     "delete:pending": "tsx src/scripts/deletePendingOrders.ts",
-    "cron:pending-orders": "tsx scripts/deletePendingOrders.cron.ts"
+    "cron:pending-orders": "tsx src/scripts/deletePendingOrders.cron.ts"
   },
   "dependencies": {
     "@paypal/paypal-server-sdk": "^1.0.0",
