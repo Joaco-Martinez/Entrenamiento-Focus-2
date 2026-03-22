@@ -28,7 +28,7 @@ export const createSubscription = async (req: Request, res: Response) => {
       reason: product?.title || "Suscripción",
       external_reference: userId,
       payer_email: email,
-      back_url: `${process.env.FRONT_URL}/mentoria/success`,
+      back_url: `https://www.entrenamientofocus.com.ar/mentoria/pagada`,
       status: "pending",
     };
 
