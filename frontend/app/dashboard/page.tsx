@@ -259,7 +259,7 @@ export default function UserDashboardPage() {
       </div>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <Card title="Recursos" desc="Ver y comprar recursos" href="/recursos" />
+        <Card title="Productos" desc="Ver y comprar recursos" href="/recursos" />
         <Card title="Mis órdenes" desc="Historial de compras" href="/dashboard/orders" />
         <Card title="Mi suscripción" desc="Estado y cancelación" href="#" onClick={refreshSubscription} />
       </section>
