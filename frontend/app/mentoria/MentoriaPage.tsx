@@ -372,14 +372,13 @@ export default function MentoriaPage() {
                       </p>
                     </div>
                   {isArgentina && (
-                    <MercadoPagoSubscriptionButton
-                      checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
-                      disabled={authLoading}
-                      onRequireAuth={ensureAuth}
-                      onError={(message) => setError(message)}
-                      user={{ email: user?.email || "" }}
-                    />
-                  )}
+  <MercadoPagoSubscriptionButton
+    disabled={authLoading || loadingProvider === "mercadopago"}
+    onRequireAuth={ensureAuth}
+    onError={(message) => setError(message)}
+    onClick={() => handleSubscribe("mercadopago")}
+  />
+)}
                 </>
               )}
 
