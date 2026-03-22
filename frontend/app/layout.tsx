@@ -14,14 +14,51 @@ export const metadata: Metadata = {
   title: "ENTRENAMIENTO FOCUS - Mentoría de Producción Musical Profesional",
   description:
     "Mentoría privada para productores musicales que quieren destacar en la industria real. Producción, mezcla y mastering a nivel profesional.",
-  generator: "v0.app",
+
+  // 👇 LOGO (favicon + google)
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
+
+  // 👇 TU FIRMA (opcional pero pro)
+  creator: "Joaquín Martinez",
+  authors: [{ name: "Joaquín Martinez" }],
+
+  // 👇 REDES / WHATSAPP / LINK PREVIEW
+  openGraph: {
+    title: "ENTRENAMIENTO FOCUS",
+    description:
+      "Mentoría privada para productores musicales que quieren destacar en la industria real.",
+    url: "www.entrenamientofocus.com.ar", // ⚠️ CAMBIAR
+    siteName: "Focus",
+    images: [
+      {
+        url: "/logo.png", // ideal después cambiar por og-image
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "es_AR",
+    type: "website",
+  },
+
+  // 👇 TWITTER (por si pinta)
+  twitter: {
+    card: "summary_large_image",
+    title: "ENTRENAMIENTO FOCUS",
+    description:
+      "Mentoría privada para productores musicales.",
+    images: ["/logo.png"],
+  },
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="es">
       <body className="font-sans antialiased">
