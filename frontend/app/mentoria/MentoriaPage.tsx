@@ -95,11 +95,13 @@ export default function MentoriaPage() {
 
       if (provider === "mercadopago") {
         const res = await apiFetch("/mercadopago_suscription/create", {
-          method: "POST",
-          body: JSON.stringify({
-            productId: PRODUCT_ID_MENTORIA,
-          }),
-        });
+  method: "POST",
+  body: JSON.stringify({
+    productId: PRODUCT_ID_MENTORIA,
+    userId: user.id,
+    email: user.email,
+  }),
+});
 
         const initPoint =
           res?.initPoint ||
