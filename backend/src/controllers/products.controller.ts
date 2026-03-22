@@ -16,6 +16,11 @@ export async function create(req: Request, res: Response) {
   res.status(201).json({ ok: true, product });
 }
 
+export async function listAdmin(req: Request, res: Response) {
+  const products = await productsService.listAdmin();
+  res.json({ ok: true, products });
+}
+
 export async function update(req: Request, res: Response) {
   const product = await productsService.update(req.params.id, req.body);
   res.json({ ok: true, product });

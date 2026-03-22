@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { usersService } from "@/services/users.service";
@@ -12,6 +13,42 @@ const passwordRules = {
   number: (v: string) => /[0-9]/.test(v),
 };
 
+const normalizePhone = (value: string) => value.replace(/[^\d+]/g, "");
+
+const isValidEmail = (value: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+};
+
+const countries = [
+  { code: "arg", label: "🇦🇷 Argentina" },
+  { code: "BO", label: "🇧🇴 Bolivia" },
+  { code: "CL", label: "🇨🇱 Chile" },
+  { code: "CO", label: "🇨🇴 Colombia" },
+  { code: "CR", label: "🇨🇷 Costa Rica" },
+  { code: "CU", label: "🇨🇺 Cuba" },
+  { code: "DO", label: "🇩🇴 República Dominicana" },
+  { code: "EC", label: "🇪🇨 Ecuador" },
+  { code: "SV", label: "🇸🇻 El Salvador" },
+  { code: "ES", label: "🇪🇸 España" },
+  { code: "GT", label: "🇬🇹 Guatemala" },
+  { code: "HN", label: "🇭🇳 Honduras" },
+  { code: "MX", label: "🇲🇽 México" },
+  { code: "NI", label: "🇳🇮 Nicaragua" },
+  { code: "PA", label: "🇵🇦 Panamá" },
+  { code: "PY", label: "🇵🇾 Paraguay" },
+  { code: "PE", label: "🇵🇪 Perú" },
+  { code: "PR", label: "🇵🇷 Puerto Rico" },
+  { code: "UY", label: "🇺🇾 Uruguay" },
+  { code: "VE", label: "🇻🇪 Venezuela" },
+  { code: "US", label: "🇺🇸 Estados Unidos" },
+  { code: "BR", label: "🇧🇷 Brasil" },
+  { code: "IT", label: "🇮🇹 Italia" },
+  { code: "FR", label: "🇫🇷 Francia" },
+  { code: "DE", label: "🇩🇪 Alemania" },
+  { code: "CA", label: "🇨🇦 Canadá" },
+  { code: "GB", label: "🇬🇧 Reino Unido" },
+];
+
 export default function RegisterPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -19,6 +56,7 @@ export default function RegisterPageClient() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [country, setCountry] = useState("AR");
   const [phone, setPhone] = useState("");
 
   const [email, setEmail] = useState("");
@@ -40,8 +78,6 @@ export default function RegisterPageClient() {
     }
   }, [authLoading, isAuth, router]);
 
-  const validEmail = email.trim().includes("@");
-
   const checks = useMemo(() => {
     return {
       minLen: passwordRules.minLen(password),
@@ -53,34 +89,46 @@ export default function RegisterPageClient() {
   }, [password, confirmPassword]);
 
   const validate = () => {
-    if (!firstName.trim()) return "Ingresá tu nombre.";
-    if (firstName.trim().length < 2) {
+    const cleanFirstName = firstName.trim();
+    const cleanLastName = lastName.trim();
+    const cleanPhone = normalizePhone(phone);
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanCountry = country.trim().toUpperCase();
+
+    if (!cleanFirstName) return "Ingresá tu nombre.";
+    if (cleanFirstName.length < 2) {
       return "El nombre debe tener mínimo 2 caracteres.";
     }
 
-    if (!lastName.trim()) return "Ingresá tu apellido.";
-    if (lastName.trim().length < 2) {
+    if (!cleanLastName) return "Ingresá tu apellido.";
+    if (cleanLastName.length < 2) {
       return "El apellido debe tener mínimo 2 caracteres.";
     }
 
-    if (!phone.trim()) return "Ingresá tu teléfono.";
-    if (phone.trim().length < 6) return "El teléfono es muy corto.";
+    if (!cleanCountry) return "Seleccioná tu país.";
 
-    if (!email.trim()) return "Ingresá tu email.";
-    if (!validEmail) return "Email inválido.";
+    if (!cleanPhone) return "Ingresá tu teléfono.";
+    if (cleanPhone.length < 6) return "El teléfono es muy corto.";
+
+    if (!cleanEmail) return "Ingresá tu email.";
+    if (!isValidEmail(cleanEmail)) return "Email inválido.";
 
     if (!checks.minLen) {
       return "La contraseña debe tener mínimo 8 caracteres.";
     }
+
     if (!checks.upper) {
       return "La contraseña debe tener al menos 1 mayúscula.";
     }
+
     if (!checks.lower) {
       return "La contraseña debe tener al menos 1 minúscula.";
     }
+
     if (!checks.number) {
       return "La contraseña debe tener al menos 1 número.";
     }
+
     if (password !== confirmPassword) {
       return "Las contraseñas no coinciden.";
     }
@@ -93,22 +141,23 @@ export default function RegisterPageClient() {
     setError(null);
     setSuccess(null);
 
-    const v = validate();
-    if (v) {
-      setError(v);
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     try {
       setSubmitting(true);
 
-      await usersService.register(
-        email.trim(),
+      await usersService.register({
+        email: email.trim().toLowerCase(),
         password,
-        firstName.trim(),
-        lastName.trim(),
-        phone.trim()
-      );
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: normalizePhone(phone),
+        country: country.trim().toUpperCase(),
+      });
 
       setSuccess("✅ Cuenta creada. Ahora podés iniciar sesión.");
 
@@ -126,7 +175,7 @@ export default function RegisterPageClient() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0B0B0B] grid place-items-center text-white">
+      <div className="grid min-h-screen place-items-center bg-[#0B0B0B] text-white">
         <p className="text-white/70">Cargando...</p>
       </div>
     );
@@ -135,7 +184,7 @@ export default function RegisterPageClient() {
   return (
     <div className="min-h-screen bg-[#0B0B0B] text-white">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[120px]" />
+        <div className="absolute left-1/2 top-[-128px] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[120px]" />
         <div className="absolute bottom-[-120px] right-[-120px] h-[420px] w-[420px] rounded-full bg-yellow-400/5 blur-[120px]" />
       </div>
 
@@ -146,15 +195,15 @@ export default function RegisterPageClient() {
           </div>
 
           <nav className="hidden gap-8 text-sm text-white/75 md:flex">
-            <a className="hover:text-white" href="/">
+            <Link className="hover:text-white" href="/">
               Inicio
-            </a>
-            <a className="hover:text-white" href="/servicios">
+            </Link>
+            <Link className="hover:text-white" href="/servicios">
               Servicios
-            </a>
-            <a className="hover:text-white" href="/recursos">
+            </Link>
+            <Link className="hover:text-white" href="/recursos">
               Recursos
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
@@ -239,11 +288,32 @@ export default function RegisterPageClient() {
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-white/85">
+                  País
+                </label>
+                <select
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
+                >
+                  {countries.map((item) => (
+                    <option
+                      key={item.code}
+                      value={item.code}
+                      className="bg-[#111111] text-white"
+                    >
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white/85">
                   Teléfono
                 </label>
                 <input
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(normalizePhone(e.target.value))}
                   type="tel"
                   autoComplete="tel"
                   inputMode="tel"
@@ -251,7 +321,7 @@ export default function RegisterPageClient() {
                   className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
                 />
                 <p className="mt-2 text-xs text-white/45">
-                  Tip: poné tu número sin espacios (ej: 3516763620).
+                  Tip: poné tu número sin espacios.
                 </p>
               </div>
 
@@ -302,6 +372,7 @@ export default function RegisterPageClient() {
                   placeholder="Repetí tu contraseña"
                   className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
                 />
+
                 {confirmPassword.length > 0 && (
                   <p
                     className={`mt-2 text-xs ${
@@ -323,18 +394,18 @@ export default function RegisterPageClient() {
               </button>
 
               <div className="flex items-center justify-between pt-2 text-sm">
-                <a
+                <Link
                   href="/login"
                   className="text-white/70 underline decoration-yellow-400/70 underline-offset-4 hover:text-white"
                 >
                   Ya tengo cuenta
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/forgot-password"
                   className="text-white/70 underline decoration-yellow-400/70 underline-offset-4 hover:text-white"
                 >
                   Olvidé mi contraseña
-                </a>
+                </Link>
               </div>
             </form>
           </div>

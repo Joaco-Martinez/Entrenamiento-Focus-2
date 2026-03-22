@@ -49,7 +49,7 @@ export default function RecursosPage() {
         >
           <div className="space-y-5 text-center">
             <h1 className="text-balance text-4xl font-bold md:text-6xl">
-              Recursos <span className="text-primary">Focus</span>
+              Productos <span className="text-primary">Focus</span>
             </h1>
 
             <p className="mx-auto max-w-3xl text-lg text-muted-foreground md:text-xl">

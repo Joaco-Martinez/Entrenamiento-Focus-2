@@ -19,8 +19,7 @@ export default function MentoriaPage() {
 
   const pillars = [
     "Producción musical",
-    "Mezcla",
-    "Mastering",
+    "Mezcla y Mastering",
     "Marketing y networking",
     "Organización y hábitos profesionales",
     "Feedback personalizado y soporte cercano",
@@ -54,7 +53,7 @@ export default function MentoriaPage() {
     "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=49662d5625534ce2a4825dd24b904096";
 
   const PRODUCT_ID_MENTORIA = "ID_REAL_DEL_PRODUCTO_MENTORIA";
-  const PAYPAL_PLAN_ID = "P-8P659137X08418535NG22LOA";
+  const PAYPAL_PLAN_ID = "P-89399006J6064773UNDNMPPI";
 
   const PAYPAL_CLIENT_ID =
     process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ||

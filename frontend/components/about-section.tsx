@@ -25,7 +25,7 @@ const Router = useRouter()
             <h2 className="text-4xl md:text-6xl font-bold text-balance">
                Lo que no encontrás en <span className="text-primary">mil tutoriales</span>,
               <br />
-               lo aprendés con <span className="text-primary">2 mentores. En Vivo</span>
+               lo aprendés con <span className="text-primary">2 mentores en vivo</span>
             </h2>
             <div className="w-16 h-1 bg-primary mx-auto rounded-full" />
           </div>
@@ -48,10 +48,10 @@ const Router = useRouter()
                 , productores y técnicos de mezcla y mastering con años de experiencia en proyectos reales.
               </p>
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                No vendemos promesas imposibles. Te enseñamos lo que realmente nos permite vivir de la profesión, y lo que usamos todos los días en el trabajo: desde la producción hasta el mastering final.
+                No vendemos promesas imposibles. Te enseñamos lo que realmente nos permite vivir de la profesión y lo que usamos todos los días en el trabajo: desde la producción hasta el mastering final.
               </p>
               <p className="text-lg md:text-xl text-foreground font-medium">
-                Traemos invitados especiales para sumar puntos de vista nuevos y profundizar temas puntuales.
+                Además traemos invitados especiales para sumar puntos de vista nuevos y profundizar temas puntuales.
               </p>
             </motion.div>
 

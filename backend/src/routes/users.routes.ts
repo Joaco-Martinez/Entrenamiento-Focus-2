@@ -40,7 +40,11 @@ usersRoutes.get("/me", authRequired, asyncHandler(usersController.me));
  *       200: { description: OK }
  *       401: { description: Missing/invalid token }
  */
-usersRoutes.get("/me/orders", authRequired, asyncHandler(usersController.myOrders));
+usersRoutes.get(
+  "/me/orders",
+  authRequired,
+  asyncHandler(usersController.myOrders)
+);
 
 /**
  * @openapi
@@ -54,7 +58,11 @@ usersRoutes.get("/me/orders", authRequired, asyncHandler(usersController.myOrder
  *       200: { description: OK }
  *       401: { description: Missing/invalid token }
  */
-usersRoutes.get("/me/purchases", authRequired, asyncHandler(usersController.myPurchases));
+usersRoutes.get(
+  "/me/purchases",
+  authRequired,
+  asyncHandler(usersController.myPurchases)
+);
 
 /**
  * @openapi
@@ -91,7 +99,7 @@ usersRoutes.get(
  *         name: q
  *         schema: { type: string }
  *         required: false
- *         description: Search by email/firstName/lastName
+ *         description: Search by email, firstName, lastName or phone
  *     responses:
  *       200: { description: OK }
  *       401: { description: Missing/invalid token }
@@ -102,15 +110,17 @@ usersRoutes.get(
   authRequired,
   adminOnly,
   asyncHandler(async (req, res) => {
-    const q = String(req.query.q ?? "");
+    const q = String(req.query.q ?? "").trim();
+
     const users = await prisma.user.findMany({
       where: q
         ? {
             OR: [
               { email: { contains: q, mode: "insensitive" } },
               { firstName: { contains: q, mode: "insensitive" } },
-              { lastName: { contains: q, mode: "insensitive" } }
-            ]
+              { lastName: { contains: q, mode: "insensitive" } },
+              { phone: { contains: q, mode: "insensitive" } },
+            ],
           }
         : {},
       orderBy: { createdAt: "desc" },
@@ -120,10 +130,12 @@ usersRoutes.get(
         role: true,
         firstName: true,
         lastName: true,
+        phone: true,
         country: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     });
+
     res.json({ ok: true, users });
   })
 );
@@ -145,6 +157,7 @@ usersRoutes.get(
  *       200: { description: OK }
  *       401: { description: Missing/invalid token }
  *       403: { description: Admin only }
+ *       404: { description: User not found }
  */
 usersRoutes.get(
   "/admin/users/:id",
@@ -152,16 +165,36 @@ usersRoutes.get(
   adminOnly,
   asyncHandler(async (req, res) => {
     const id = req.params.id;
+
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
         subscription: true,
-        accessGrants: { include: { product: true } },
+        accessGrants: {
+          include: {
+            product: true,
+          },
+        },
         orders: {
-          include: { items: { include: { product: true } }, payments: true }
-        }
-      }
+          include: {
+            items: {
+              include: {
+                product: true,
+              },
+            },
+            payments: true,
+          },
+        },
+      },
     });
+
+    if (!user) {
+      return res.status(404).json({
+        ok: false,
+        message: "User not found",
+      });
+    }
+
     res.json({ ok: true, user });
   })
 );

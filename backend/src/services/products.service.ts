@@ -23,6 +23,13 @@ export async function listPublic() {
   });
 }
 
+
+export async function listAdmin() {
+  return prisma.product.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+}
+
 export async function getPublic(id: string) {
   const p = await prisma.product.findUnique({
     where: { id },

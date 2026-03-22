@@ -21,7 +21,7 @@ export function Navbar() {
     { href: "/", label: "Inicio" },
     { href: "/mentoria", label: "Mentoria" },
     { href: "/servicios", label: "Servicios" },
-    { href: "/recursos", label: "Recursos" },
+    { href: "/recursos", label: "Productos" },
 
   ]
 

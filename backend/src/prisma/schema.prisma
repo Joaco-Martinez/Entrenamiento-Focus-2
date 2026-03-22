@@ -49,7 +49,7 @@ model User {
   email        String @unique
   passwordHash String
   role         Role   @default(USER)
-
+   phone     String?
   firstName String?
   lastName  String?
   country   String? @default("arg")

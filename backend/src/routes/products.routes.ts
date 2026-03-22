@@ -152,6 +152,26 @@ productsRoutes.put(
 
 /**
  * @openapi
+ * /products/admin/products:
+ *   get:
+ *     summary: Admin - list all products
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: OK }
+ *       401: { description: Missing/invalid token }
+ *       403: { description: Admin only }
+ */
+productsRoutes.get(
+  "/admin/products",
+  authRequired,
+  adminOnly,
+  asyncHandler(productsController.listAdmin)
+);
+
+/**
+ * @openapi
  * /products/admin/products/{id}:
  *   delete:
  *     summary: Admin - delete product
