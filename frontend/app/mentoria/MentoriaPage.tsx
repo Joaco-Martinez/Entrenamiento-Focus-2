@@ -50,7 +50,7 @@ export default function MentoriaPage() {
   ];
 
   const MERCADOPAGO_PLAN_CHECKOUT =
-    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=49662d5625534ce2a4825dd24b904096";
+    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=ca4bc88737cf49a9aad0815b97d4fa82";
 
   const PRODUCT_ID_MENTORIA = "ID_REAL_DEL_PRODUCTO_MENTORIA";
   const PAYPAL_PLAN_ID = "P-89399006J6064773UNDNMPPI";
@@ -376,7 +376,7 @@ export default function MentoriaPage() {
     disabled={authLoading || loadingProvider === "mercadopago"}
     onRequireAuth={ensureAuth}
     onError={(message) => setError(message)}
-    onClick={() => handleSubscribe("mercadopago")}
+    checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
   />
 )}
                 </>

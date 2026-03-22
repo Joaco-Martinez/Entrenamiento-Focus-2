@@ -1,19 +1,23 @@
 "use client";
 
 type Props = {
+  checkoutUrl: string;
   disabled?: boolean;
   onRequireAuth?: () => boolean;
   onError?: (msg: string) => void;
-  onClick?: () => void | Promise<void>;
+  user? : {
+    email: string;
+  } | null;
 };
 
 export default function MercadoPagoSubscriptionButton({
+  checkoutUrl,
   disabled = false,
   onRequireAuth,
   onError,
-  onClick,
+  user,
 }: Props) {
-  const handleClick = async () => {
+  const handleClick = () => {
     try {
       if (disabled) return;
 
@@ -22,7 +26,7 @@ export default function MercadoPagoSubscriptionButton({
         if (!ok) return;
       }
 
-      await onClick?.();
+      window.location.href = checkoutUrl;
     } catch {
       onError?.("No se pudo iniciar la suscripción con Mercado Pago");
     }
