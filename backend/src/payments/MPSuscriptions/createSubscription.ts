@@ -18,32 +18,27 @@ export const createSubscription = async (req: Request, res: Response) => {
       });
     }
 
+    if (!process.env.MP_PLAN_ID) {
+      return res.status(500).json({
+        message: "Falta configurar MP_PLAN_ID",
+      });
+    }
+
     const product = productId
       ? await prisma.product.findUnique({
           where: { id: productId },
         })
       : null;
 
-    const body: any = {
-      reason: product?.title || "Suscripción",
+    const body = {
+      reason: product?.title || "Suscripción Entrenamiento Focus",
       external_reference: userId,
       payer_email: email,
-      back_url: `https://www.entrenamientofocus.com.ar/mentoria/pagada`,
+      back_url: "https://www.entrenamientofocus.com.ar/mentoria/pagada",
       status: "pending",
+      preapproval_plan_id: process.env.MP_PLAN_ID,
+      notification_url: `${process.env.BACK_URL}/mercadopago_suscription/webhook`,
     };
-
-    if (process.env.MP_PLAN_ID) {
-      body.preapproval_plan_id = process.env.MP_PLAN_ID;
-    } else {
-      body.auto_recurring = {
-        frequency: 1,
-        frequency_type: "months",
-        transaction_amount: 15,
-        currency_id: "USD",
-      };
-    }
-
-    body.notification_url = `${process.env.BACK_URL}/mercadopago_suscription/webhook`;
 
     const response = await preApproval.create({ body });
 
@@ -72,10 +67,12 @@ export const createSubscription = async (req: Request, res: Response) => {
     return res.json({
       initPoint: response.init_point,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    console.error("Error creando suscripción MP:", error);
+
     return res.status(500).json({
-      message: "Error creando suscripción",
+      message:
+        error?.message || "Error creando suscripción",
     });
   }
 };
