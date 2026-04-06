@@ -522,7 +522,10 @@ export default function CheckoutPaymentSelector() {
                   para crear la orden y habilitar PayPal.
                 </div>
               ) : (
-                <PaypalCheckout orderId={createdOrder.id} />
+                <PaypalCheckout
+  orderId={createdOrder.id}
+  amountUsd={getSubtotalByCountry("other")}
+/>
               )}
             </div>
           )}
