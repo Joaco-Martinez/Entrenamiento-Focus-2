@@ -74,16 +74,19 @@ export default function CheckoutPaymentSelector() {
     );
   }, [cart]);
 
-  const amount = getSubtotalByCountry(isArgentina ? "arg" : "other");
-  const currency = isArgentina ? "ARS" : "USD";
+  const amountArs = getSubtotalByCountry("arg");
+  const amountUsd = getSubtotalByCountry("other");
+
+  const displayAmount = provider === "paypal" ? amountUsd : amountArs;
+  const displayCurrency = provider === "paypal" ? "USD" : "ARS";
 
   const formattedAmount = useMemo(() => {
-    return new Intl.NumberFormat(currency === "ARS" ? "es-AR" : "en-US", {
+    return new Intl.NumberFormat(displayCurrency === "ARS" ? "es-AR" : "en-US", {
       style: "currency",
-      currency,
+      currency: displayCurrency,
       maximumFractionDigits: 2,
-    }).format(amount);
-  }, [amount, currency]);
+    }).format(displayAmount);
+  }, [displayAmount, displayCurrency]);
 
   const mpItems = useMemo(() => {
     if (!isArgentina) return [];
@@ -267,7 +270,7 @@ export default function CheckoutPaymentSelector() {
 
   if (!sanitizedCart.length) {
     return (
-      <div className="mt-20  rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+      <div className="mt-20 rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         Hay productos inválidos en el carrito. Vacialo y volvé a agregarlos.
         <div className="mt-3">
           <button
@@ -284,7 +287,7 @@ export default function CheckoutPaymentSelector() {
 
   if (provider === "mercadopago" && isArgentina && !mpItems.length) {
     return (
-      <div className="mt-20  rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+      <div className="mt-20 rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         No se pudieron preparar los ítems para Mercado Pago.
       </div>
     );
@@ -292,14 +295,14 @@ export default function CheckoutPaymentSelector() {
 
   if (provider === "paypal" && !paypalItems.length) {
     return (
-      <div className="mt-20  rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+      <div className="mt-20 rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         No se pudieron preparar los ítems para PayPal.
       </div>
     );
   }
 
   return (
-    <div className="mt-20  space-y-6">
+    <div className="mt-20 space-y-6">
       <div className="rounded-[28px] border border-white/10 bg-[#090909] p-4 text-white shadow-[0_20px_80px_rgba(0,0,0,0.35)] md:p-6">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/45">
@@ -337,9 +340,7 @@ export default function CheckoutPaymentSelector() {
                   </div>
 
                   <div>
-                    <p className="text-base font-bold text-white">
-                      Mercado Pago
-                    </p>
+                    <p className="text-base font-bold text-white">Mercado Pago</p>
                     <p className="text-sm text-white/55">Pesos argentinos</p>
                   </div>
                 </div>
@@ -446,7 +447,9 @@ export default function CheckoutPaymentSelector() {
                   : "PayPal"}
               </p>
               <p className="mt-1 text-sm text-white/45">
-                {currency === "ARS" ? "Pesos argentinos" : "Dólares estadounidenses"}
+                {displayCurrency === "ARS"
+                  ? "Pesos argentinos"
+                  : "Dólares estadounidenses"}
               </p>
             </div>
 
@@ -465,7 +468,7 @@ export default function CheckoutPaymentSelector() {
               disabled={isCreatingOrder}
               className="mt-5 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-[0_14px_40px_rgba(255,190,0,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isCreatingOrder ? "Preparando orden..." : `Continuar al pago`}
+              {isCreatingOrder ? "Preparando orden..." : "Continuar al pago"}
             </button>
           )}
 
@@ -499,7 +502,7 @@ export default function CheckoutPaymentSelector() {
                 </div>
               ) : mpMethod === "card" ? (
                 <MercadoPagoPaymentBrick
-                  amount={amount}
+                  amount={amountArs}
                   items={mpItems}
                   payer={payer}
                   orderId={createdOrder.id}
@@ -523,9 +526,9 @@ export default function CheckoutPaymentSelector() {
                 </div>
               ) : (
                 <PaypalCheckout
-  orderId={createdOrder.id}
-  amountUsd={getSubtotalByCountry("other")}
-/>
+                  orderId={createdOrder.id}
+                  amountUsd={amountUsd}
+                />
               )}
             </div>
           )}
