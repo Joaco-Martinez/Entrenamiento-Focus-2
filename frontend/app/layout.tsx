@@ -65,11 +65,11 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <AuthProvider>
           <CartProvider>
-             <MaintenanceGate>
+             {/* <MaintenanceGate> */}
             <Navbar />
             {children}
             <Analytics />
-             </MaintenanceGate>
+             {/* </MaintenanceGate> */}
           </CartProvider>
         </AuthProvider>
       </body>
