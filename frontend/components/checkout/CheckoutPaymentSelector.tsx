@@ -255,7 +255,7 @@ export default function CheckoutPaymentSelector() {
 
   if (!user) {
     return (
-      <div className="rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+      <div className="mt-20 rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         Tenés que iniciar sesión para continuar con el pago.
       </div>
     );
@@ -267,7 +267,7 @@ export default function CheckoutPaymentSelector() {
 
   if (!sanitizedCart.length) {
     return (
-      <div className="rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+      <div className="mt-20  rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         Hay productos inválidos en el carrito. Vacialo y volvé a agregarlos.
         <div className="mt-3">
           <button
@@ -284,7 +284,7 @@ export default function CheckoutPaymentSelector() {
 
   if (provider === "mercadopago" && isArgentina && !mpItems.length) {
     return (
-      <div className="rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+      <div className="mt-20  rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         No se pudieron preparar los ítems para Mercado Pago.
       </div>
     );
@@ -292,14 +292,14 @@ export default function CheckoutPaymentSelector() {
 
   if (provider === "paypal" && !paypalItems.length) {
     return (
-      <div className="rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
+      <div className="mt-20  rounded-2xl border border-red-800 bg-red-950/40 p-4 text-red-200">
         No se pudieron preparar los ítems para PayPal.
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mt-20  space-y-6">
       <div className="rounded-[28px] border border-white/10 bg-[#090909] p-4 text-white shadow-[0_20px_80px_rgba(0,0,0,0.35)] md:p-6">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/45">
