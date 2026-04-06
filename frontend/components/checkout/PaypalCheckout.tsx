@@ -41,15 +41,15 @@ export default function PaypalCheckout({ orderId }: Props) {
   };
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
-      <p className="mb-3 text-sm text-zinc-400">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="mb-3 text-sm text-white/60">
         Checkout internacional en USD.
       </p>
 
       <button
         type="button"
         onClick={handlePaypal}
-        className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+        className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition hover:scale-[1.01] hover:opacity-95"
       >
         Pagar con PayPal
       </button>

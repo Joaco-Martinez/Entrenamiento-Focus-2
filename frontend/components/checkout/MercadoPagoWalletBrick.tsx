@@ -146,19 +146,19 @@ export default function MercadoPagoWalletBrick({
     };
   }, [sdkReady, items, payer, containerId, orderId]);
 
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
-      <p className="mb-3 text-sm text-zinc-400">
-        Vas al checkout de Mercado Pago.
+return (
+  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <p className="mb-3 text-sm text-white/60">
+      Vas al checkout de Mercado Pago.
+    </p>
+
+    {loading && (
+      <p className="mb-3 text-sm text-white/45">
+        Preparando Mercado Pago...
       </p>
+    )}
 
-      {loading && (
-        <p className="mb-3 text-sm text-zinc-500">
-          Preparando Mercado Pago...
-        </p>
-      )}
-
-      <div id={containerId} />
-    </div>
-  );
+    <div id={containerId} />
+  </div>
+);
 }

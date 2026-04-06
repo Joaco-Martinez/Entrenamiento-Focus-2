@@ -139,9 +139,9 @@ export default function MercadoPagoPaymentBrick({
                   textSecondaryColor: "#A1A1AA",
                   inputBackgroundColor: "#111111",
                   formBackgroundColor: "#0A0A0A",
-                  baseColor: "#FFFFFF",
-                  baseColorFirstVariant: "#D4D4D8",
-                  baseColorSecondVariant: "#A1A1AA",
+                  baseColor: "#EAB308",
+                  baseColorFirstVariant: "#FACC15",
+                  baseColorSecondVariant: "#CA8A04",
                   errorColor: "#EF4444",
                   successColor: "#22C55E",
                   outlinePrimaryColor: "#27272A",
@@ -157,7 +157,7 @@ export default function MercadoPagoPaymentBrick({
                   formInputsTextTransform: "none",
                   inputVerticalPadding: "14px",
                   inputHorizontalPadding: "16px",
-                  inputFocusedBoxShadow: "0 0 0 3px rgba(255,255,255,0.10)",
+                  inputFocusedBoxShadow: "0 0 0 3px rgba(234,179,8,0.18)",
                   inputErrorFocusedBoxShadow: "0 0 0 3px rgba(239,68,68,0.20)",
                   inputBorderWidth: "1px",
                   inputFocusedBorderWidth: "1px",
@@ -279,31 +279,31 @@ export default function MercadoPagoPaymentBrick({
     };
   }, [sdkReady, amount, payer, items, containerId, paymentId, orderId]);
 
-  if (paymentId) {
-    return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
-        <MercadoPagoStatusScreenBrick paymentId={paymentId} />
-      </div>
-    );
-  }
-
+if (paymentId) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
-      <p className="mb-3 text-sm text-zinc-400">
-        Pagás con tarjeta dentro de la web.
-      </p>
-
-      {submitting && (
-        <p className="mb-3 text-sm text-zinc-500">Procesando pago...</p>
-      )}
-
-      {paymentMessage && !paymentId && (
-        <div className="mb-3 rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
-          {paymentMessage}
-        </div>
-      )}
-
-      <div id={containerId} />
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <MercadoPagoStatusScreenBrick paymentId={paymentId} />
     </div>
   );
+}
+
+return (
+  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <p className="mb-3 text-sm text-white/60">
+      Pagás con tarjeta dentro de la web.
+    </p>
+
+    {submitting && (
+      <p className="mb-3 text-sm text-white/45">Procesando pago...</p>
+    )}
+
+    {paymentMessage && !paymentId && (
+      <div className="mb-3 rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+        {paymentMessage}
+      </div>
+    )}
+
+    <div id={containerId} />
+  </div>
+);
 }

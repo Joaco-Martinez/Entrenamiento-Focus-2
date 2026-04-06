@@ -61,9 +61,10 @@ export function CartDrawer({
     }).format(value)
   }
 
-  function goToCheckout() {
-    router.push("/checkout")
-  }
+function goToCheckout() {
+  onClose()
+  router.push("/checkout")
+}
 
   return (
     <>

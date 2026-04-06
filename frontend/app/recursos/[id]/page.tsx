@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
-import { ShoppingCart } from "lucide-react";
+import { Check, ShoppingCart } from "lucide-react";
 
 type Product = {
   id: string;
@@ -31,19 +31,16 @@ export default function RecursoDetallePage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/${id}`
-        );
-
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`);
         const data = await res.json();
-        console.log("Fetched product data:", data);
+
         if (!data.ok) {
           throw new Error("No se pudo cargar el producto");
         }
 
         setProduct(data.product);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.message || "Error al cargar el recurso");
       } finally {
         setLoading(false);
       }
@@ -52,84 +49,188 @@ export default function RecursoDetallePage() {
     if (id) fetchProduct();
   }, [id]);
 
-  if (loading)
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <p className="text-muted-foreground">Cargando recurso...</p>
-      </div>
-    );
+  const parsedDescription = useMemo(() => {
+    if (!product?.description) {
+      return {
+        intro: "",
+        features: [],
+        extra: [],
+      };
+    }
 
-  if (error || !product)
+    const lines = product.description
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const introParts: string[] = [];
+    const features: string[] = [];
+    const extra: string[] = [];
+
+    let includesMode = false;
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+
+      if (/incluye:?/i.test(line)) {
+        includesMode = true;
+
+        const cleaned = line.replace(/incluye:?/i, "").trim();
+        if (cleaned) {
+          features.push(cleaned.replace(/^[-•✅]\s*/, ""));
+        }
+        continue;
+      }
+
+      const isBullet =
+        line.startsWith("✅") ||
+        line.startsWith("-") ||
+        line.startsWith("•");
+
+      if (isBullet || includesMode) {
+        const cleaned = line.replace(/^[-•✅]\s*/, "").trim();
+        if (cleaned) features.push(cleaned);
+      } else if (!includesMode && introParts.length < 2) {
+        introParts.push(line);
+      } else {
+        extra.push(line);
+      }
+    }
+
+    return {
+      intro: introParts.join(" "),
+      features,
+      extra,
+    };
+  }, [product?.description]);
+
+  if (loading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <p className="text-red-400">{error || "Recurso no encontrado"}</p>
+      <div className="flex h-[60vh] items-center justify-center px-4">
+        <p className="text-sm text-muted-foreground">Cargando recurso...</p>
       </div>
     );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center px-4">
+        <p className="text-sm text-red-400">{error || "Recurso no encontrado"}</p>
+      </div>
+    );
+  }
 
   return (
-    <section className="px-4 py-24">
-      <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-2">
+    <section className="px-4 py-12 md:px-6 md:py-20">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          {/* Imagen */}
+          <div className="w-full">
 
-        {/* Imagen */}
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-primary/20 bg-muted">
-          <Image
-            src={product.coverImageUrl || "/placeholder.svg"}
-            alt={product.title}
-            fill
-            className="object-cover"
-          />
-        </div>
+    
+    <div className="relative flex items-center justify-center overflow-hidden rounded-[22px] ">
+      
+      <div className="relative aspect-[4/3] w-full">
+        <Image
+          src={product.coverImageUrl || "/placeholder.svg"}
+          alt={product.title}
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 52vw"
+          className="object-contain p-6"
+        />
+      </div>
 
-        {/* Info */}
-        <div className="flex flex-col justify-center space-y-6">
+    </div>
 
-          <h1 className="text-4xl font-bold">
-            {product.title}
-          </h1>
+</div>
 
-          {product.description && (
-            <p className="text-muted-foreground leading-relaxed">
-              {product.description}
-            </p>
-          )}
+          {/* Info */}
+          <div className="flex flex-col">
+            <div className="space-y-5">
+              <h1 className="text-balance text-3xl font-extrabold leading-tight text-white md:text-5xl">
+                {product.title}
+              </h1>
 
-          {/* Precio */}
-          <div className="space-y-1">
-            <p className="text-3xl font-bold text-primary">
-              USD {product.usdPrice.toFixed(2)}
-            </p>
+              {parsedDescription.intro ? (
+                <p className="text-base leading-8 text-white/80 md:text-lg">
+                  {parsedDescription.intro}
+                </p>
+              ) : null}
 
-            {product.arPrice && (
-              <p className="text-sm text-muted-foreground">
-                ARS {product.arPrice.toLocaleString("es-AR")}
-              </p>
-            )}
-          </div>
+              {(parsedDescription.features.length > 0 || parsedDescription.extra.length > 0) && (
+                <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 backdrop-blur-sm md:p-6">
+                  {parsedDescription.features.length > 0 ? (
+                    <div className="space-y-4">
+                      <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-primary/90">
+                        Incluye
+                      </h2>
 
-          {/* Botones */}
-          <div className="flex gap-4 pt-4">
+                      <div className="grid gap-3">
+                        {parsedDescription.features.map((feature, index) => (
+                          <div key={`${feature}-${index}`} className="flex items-start gap-3">
+                            <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                              <Check className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            <p className="text-sm leading-7 text-white/85 md:text-base">
+                              {feature}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
-            <button
-              onClick={() =>
-                addToCart({
-                  id: product.id,
-                  title: product.title,
-                  usdPrice: product.usdPrice,
-                  arPrice: product.arPrice,
-                  coverImageUrl: product.coverImageUrl || undefined,
-                  quantity: 1,
-                })
-              }
-              className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-6 py-3 font-semibold text-primary transition hover:bg-primary/20"
-            >
-              <ShoppingCart className="h-4 w-4" />
+                  {parsedDescription.extra.length > 0 ? (
+                    <div className={parsedDescription.features.length > 0 ? "mt-6 space-y-3" : "space-y-3"}>
+                      {parsedDescription.extra.map((line, index) => (
+                        <p key={`${line}-${index}`} className="text-sm leading-7 text-white/70 md:text-base">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
 
-              {isInCart(product.id)
-                ? "Agregar otro"
-                : "Agregar al carrito"}
-            </button>
+            {/* Precio + CTA */}
+            <div className="mt-8 border-t border-white/10 pt-8">
+              <div className="space-y-2">
+                <p className="text-4xl font-extrabold leading-none text-primary md:text-5xl">
+                  USD {product.usdPrice.toFixed(2)}
+                </p>
 
+                {product.arPrice != null ? (
+                  <p className="text-base text-white/65 md:text-lg">
+                    ARS {product.arPrice.toLocaleString("es-AR")}
+                  </p>
+                ) : (
+                  <p className="text-base text-white/65 md:text-lg">
+                    {product.isSubscription ? "Suscripción mensual" : "Pago único"}
+                  </p>
+                )}
+              </div>
 
+              <div className="mt-8 flex flex-wrap gap-4">
+                <button
+                  onClick={() =>
+                    addToCart({
+                      id: product.id,
+                      title: product.title,
+                      usdPrice: product.usdPrice,
+                      arPrice: product.arPrice,
+                      coverImageUrl: product.coverImageUrl || undefined,
+                      quantity: 1,
+                    })
+                  }
+                  className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-2xl bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_30px_rgba(255,190,0,0.18)] transition hover:scale-[1.01] hover:opacity-95"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {isInCart(product.id) ? "Agregar otro al carrito" : "Agregar al carrito"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

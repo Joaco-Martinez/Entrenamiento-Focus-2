@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CreditCard, Wallet, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import MercadoPagoPaymentBrick from "./MercadoPagoPaymentBrick";
@@ -22,7 +23,10 @@ export default function CheckoutPaymentSelector() {
   const { user, country, loading, fullName } = useAuth();
 
   const normalizedCountry = (country || "arg").toLowerCase();
-  const isArgentina = normalizedCountry === "arg" || normalizedCountry === "ar";
+  const isArgentina =
+    normalizedCountry === "arg" ||
+    normalizedCountry === "ar" ||
+    normalizedCountry === "argentina";
 
   const [provider, setProvider] = useState<PaymentProvider>(
     isArgentina ? "mercadopago" : "paypal"
@@ -71,6 +75,15 @@ export default function CheckoutPaymentSelector() {
   }, [cart]);
 
   const amount = getSubtotalByCountry(isArgentina ? "arg" : "other");
+  const currency = isArgentina ? "ARS" : "USD";
+
+  const formattedAmount = useMemo(() => {
+    return new Intl.NumberFormat(currency === "ARS" ? "es-AR" : "en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }, [amount, currency]);
 
   const mpItems = useMemo(() => {
     if (!isArgentina) return [];
@@ -198,8 +211,6 @@ export default function CheckoutPaymentSelector() {
         items: orderPayloadItems,
       };
 
-      console.log("Payload que se envía a /orders:", payload);
-
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
         method: "POST",
         credentials: "include",
@@ -210,8 +221,6 @@ export default function CheckoutPaymentSelector() {
       });
 
       const data = await res.json();
-      console.log("Respuesta de /orders:", data);
-
       const order = data?.order || data?.content || data;
 
       if (!res.ok || !order?.id) {
@@ -291,10 +300,17 @@ export default function CheckoutPaymentSelector() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-zinc-800 bg-black p-4 text-white">
-        <h2 className="mb-4 text-lg font-semibold">Elegí cómo pagar</h2>
+      <div className="rounded-[28px] border border-white/10 bg-[#090909] p-4 text-white shadow-[0_20px_80px_rgba(0,0,0,0.35)] md:p-6">
+        <div className="mb-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/45">
+            Método de pago seguro
+          </p>
+          <h2 className="mt-2 text-2xl font-bold md:text-3xl">
+            Elegí cómo pagar
+          </h2>
+        </div>
 
-        <div className="mb-4 flex gap-2">
+        <div className="grid gap-3 md:grid-cols-2">
           {isArgentina && (
             <button
               type="button"
@@ -302,13 +318,36 @@ export default function CheckoutPaymentSelector() {
                 setProvider("mercadopago");
                 setPaymentReady(false);
               }}
-              className={`rounded-xl px-4 py-2 text-sm ${
+              className={`rounded-2xl border p-4 text-left transition ${
                 provider === "mercadopago"
-                  ? "bg-white text-black"
-                  : "border border-zinc-700 bg-zinc-900 text-zinc-300"
+                  ? "border-primary bg-primary/10 shadow-[0_0_0_1px_rgba(255,190,0,0.15)]"
+                  : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
               }`}
             >
-              Mercado Pago
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex gap-3">
+                  <div
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                      provider === "mercadopago"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-white/5 text-white/70"
+                    }`}
+                  >
+                    <Wallet className="h-5 w-5" />
+                  </div>
+
+                  <div>
+                    <p className="text-base font-bold text-white">
+                      Mercado Pago
+                    </p>
+                    <p className="text-sm text-white/55">Pesos argentinos</p>
+                  </div>
+                </div>
+
+                {provider === "mercadopago" && (
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                )}
+              </div>
             </button>
           )}
 
@@ -318,129 +357,176 @@ export default function CheckoutPaymentSelector() {
               setProvider("paypal");
               setPaymentReady(false);
             }}
-            className={`rounded-xl px-4 py-2 text-sm ${
+            className={`rounded-2xl border p-4 text-left transition ${
               provider === "paypal"
-                ? "bg-white text-black"
-                : "border border-zinc-700 bg-zinc-900 text-zinc-300"
+                ? "border-primary bg-primary/10 shadow-[0_0_0_1px_rgba(255,190,0,0.15)]"
+                : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
             }`}
           >
-            PayPal
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex gap-3">
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                    provider === "paypal"
+                      ? "bg-primary/15 text-primary"
+                      : "bg-white/5 text-white/70"
+                  }`}
+                >
+                  <CreditCard className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <p className="text-base font-bold text-white">PayPal</p>
+                  <p className="text-sm text-white/55">Dólares estadounidenses</p>
+                </div>
+              </div>
+
+              {provider === "paypal" && (
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+              )}
+            </div>
           </button>
         </div>
 
         {provider === "mercadopago" && isArgentina && (
-          <div className="mb-4 flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setMpMethod("card");
-                setPaymentReady(false);
-              }}
-              className={`rounded-xl px-4 py-2 text-sm ${
-                mpMethod === "card"
-                  ? "bg-white text-black"
-                  : "border border-zinc-700 bg-zinc-900 text-zinc-300"
-              }`}
-            >
-              Tarjeta
-            </button>
+          <div className="mt-6">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
+              Cómo querés pagar
+            </p>
 
-            <button
-              type="button"
-              onClick={() => {
-                setMpMethod("wallet");
-                setPaymentReady(false);
-              }}
-              className={`rounded-xl px-4 py-2 text-sm ${
-                mpMethod === "wallet"
-                  ? "bg-white text-black"
-                  : "border border-zinc-700 bg-zinc-900 text-zinc-300"
-              }`}
-            >
-              Mercado Pago directo
-            </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMpMethod("card");
+                  setPaymentReady(false);
+                }}
+                className={`rounded-2xl border p-4 text-left transition ${
+                  mpMethod === "card"
+                    ? "border-primary bg-primary/10"
+                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
+                }`}
+              >
+                <p className="font-semibold text-white">Tarjeta</p>
+                <p className="mt-1 text-sm text-white/55">
+                  Pagás dentro de la web
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMpMethod("wallet");
+                  setPaymentReady(false);
+                }}
+                className={`rounded-2xl border p-4 text-left transition ${
+                  mpMethod === "wallet"
+                    ? "border-primary bg-primary/10"
+                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
+                }`}
+              >
+                <p className="font-semibold text-white">Mercado Pago directo</p>
+                <p className="mt-1 text-sm text-white/55">
+                  Vas al checkout de Mercado Pago
+                </p>
+              </button>
+            </div>
           </div>
         )}
 
-        {!paymentReady && (
-          <div className="mb-4">
+        <div className="mt-8 rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-white/50">Vas a pagar con</p>
+              <p className="mt-1 text-lg font-bold text-white">
+                {provider === "mercadopago"
+                  ? mpMethod === "wallet"
+                    ? "Mercado Pago directo"
+                    : "Mercado Pago"
+                  : "PayPal"}
+              </p>
+              <p className="mt-1 text-sm text-white/45">
+                {currency === "ARS" ? "Pesos argentinos" : "Dólares estadounidenses"}
+              </p>
+            </div>
+
+            <div className="text-right">
+              <p className="text-sm text-white/50">Total</p>
+              <p className="mt-1 text-3xl font-extrabold text-primary">
+                {formattedAmount}
+              </p>
+            </div>
+          </div>
+
+          {!paymentReady && (
             <button
               type="button"
               onClick={handlePreparePayment}
               disabled={isCreatingOrder}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-black disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-5 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-[0_14px_40px_rgba(255,190,0,0.22)] transition hover:scale-[1.01] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isCreatingOrder ? "Preparando orden..." : "Continuar al pago"}
+              {isCreatingOrder ? "Preparando orden..." : `Continuar al pago`}
             </button>
-          </div>
-        )}
+          )}
+
+          {!paymentReady && (
+            <p className="mt-3 text-center text-xs text-white/40">
+              Primero creamos tu orden y después habilitamos el medio de pago.
+            </p>
+          )}
+        </div>
 
         {orderError && (
-          <div className="mb-4 rounded-xl border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
+          <div className="mt-5 rounded-2xl border border-red-800 bg-red-950/40 p-4 text-sm text-red-200">
             {orderError}
           </div>
         )}
 
         {createdOrder && paymentReady && (
-          <div className="mb-4 rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-zinc-300">
-            Orden creada: <span className="font-semibold">{createdOrder.id}</span>
+          <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-white/85">
+            Orden creada:{" "}
+            <span className="font-semibold text-primary">{createdOrder.id}</span>
           </div>
         )}
 
-        {provider === "mercadopago" && isArgentina && (
-          <div className="space-y-4">
-            {!paymentReady || !createdOrder || isCreatingOrder ? (
-              <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-                Tocá <span className="font-semibold">“Continuar al pago”</span>{" "}
-                para crear la orden y habilitar Mercado Pago.
-              </div>
-            ) : (
-              <>
-                {mpMethod === "card" && (
-                  <div>
-                    <p className="mb-3 text-sm text-zinc-400">
-                      Pagás con tarjeta dentro de la web.
-                    </p>
+        <div className="mt-6">
+          {provider === "mercadopago" && isArgentina && (
+            <div className="space-y-4">
+              {!paymentReady || !createdOrder || isCreatingOrder ? (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/65">
+                  Tocá <span className="font-semibold text-white">“Continuar al pago”</span>{" "}
+                  para crear la orden y habilitar Mercado Pago.
+                </div>
+              ) : mpMethod === "card" ? (
+                <MercadoPagoPaymentBrick
+                  amount={amount}
+                  items={mpItems}
+                  payer={payer}
+                  orderId={createdOrder.id}
+                />
+              ) : (
+                <MercadoPagoWalletBrick
+                  items={mpItems}
+                  payer={payer}
+                  orderId={createdOrder.id}
+                />
+              )}
+            </div>
+          )}
 
-                    <MercadoPagoPaymentBrick
-                      amount={amount}
-                      items={mpItems}
-                      payer={payer}
-                      orderId={createdOrder.id}
-                    />
-                  </div>
-                )}
-
-                {mpMethod === "wallet" && (
-                  <div>
-                    <p className="mb-3 text-sm text-zinc-400">
-                      Vas al checkout de Mercado Pago.
-                    </p>
-
-                    <MercadoPagoWalletBrick
-                      items={mpItems}
-                      payer={payer}
-                      orderId={createdOrder.id}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {provider === "paypal" && (
-          <div>
-            {!paymentReady || !createdOrder || isCreatingOrder ? (
-              <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-4 text-sm text-zinc-300">
-                Tocá <span className="font-semibold">“Continuar al pago”</span>{" "}
-                para crear la orden y habilitar PayPal.
-              </div>
-            ) : (
-              <PaypalCheckout orderId={createdOrder.id} />
-            )}
-          </div>
-        )}
+          {provider === "paypal" && (
+            <div>
+              {!paymentReady || !createdOrder || isCreatingOrder ? (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/65">
+                  Tocá <span className="font-semibold text-white">“Continuar al pago”</span>{" "}
+                  para crear la orden y habilitar PayPal.
+                </div>
+              ) : (
+                <PaypalCheckout orderId={createdOrder.id} />
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
