@@ -433,7 +433,8 @@ export default function UserDashboardPage() {
       </section>
 
       <p className="text-sm text-white/50">
-        Tip: el recurso se habilita consultando el endpoint protegido del producto comprado.
+       ⚠️ Atención: El acceso a los productos es único y personal.  
+Si se detecta uso desde una cuenta o IP no autorizada, el acceso será revocado automáticamente.
       </p>
     </div>
   );
