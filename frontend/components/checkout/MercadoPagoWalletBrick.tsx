@@ -32,7 +32,6 @@ type Props = {
   items: MpItem[];
   payer: Payer;
   orderId: string;
-  onRedirectToMercadoPago?: () => void;
 };
 
 const SCRIPT_ID = "mercadopago-sdk-wallet";
@@ -41,7 +40,6 @@ export default function MercadoPagoWalletBrick({
   items,
   payer,
   orderId,
-  onRedirectToMercadoPago,
 }: Props) {
   const [sdkReady, setSdkReady] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -121,8 +119,6 @@ export default function MercadoPagoWalletBrick({
           return;
         }
 
-        onRedirectToMercadoPago?.();
-
         window.walletBrickController = await bricksBuilder.create(
           "wallet",
           containerId,
@@ -159,7 +155,7 @@ export default function MercadoPagoWalletBrick({
         window.walletBrickController?.unmount?.();
       } catch {}
     };
-  }, [sdkReady, items, payer, containerId, orderId, onRedirectToMercadoPago]);
+  }, [sdkReady, items, payer, containerId, orderId]);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">

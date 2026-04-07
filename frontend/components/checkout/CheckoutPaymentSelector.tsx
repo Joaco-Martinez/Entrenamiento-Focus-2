@@ -521,11 +521,10 @@ export default function CheckoutPaymentSelector() {
                 />
               ) : (
                 <MercadoPagoWalletBrick
-                  items={mpItems}
-                  payer={payer}
-                  orderId={createdOrder.id}
-                  onRedirectToMercadoPago={clearCart}
-                />
+  items={mpItems}
+  payer={payer}
+  orderId={createdOrder.id}
+/>
               )}
             </div>
           )}
