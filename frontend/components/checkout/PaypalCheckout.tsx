@@ -11,7 +11,7 @@ export default function PaypalCheckout({ orderId, amountUsd }: Props) {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
 
-      const res = await fetch(`${apiUrl}/payments/paypal/checkout`, {
+      const res = await fetch(`${apiUrl}/paypal_checkout/checkout`, {
         method: "POST",
         credentials: "include",
         headers: {
