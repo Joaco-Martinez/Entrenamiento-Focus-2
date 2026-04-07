@@ -54,53 +54,61 @@ export default function RecursoDetallePage() {
       return {
         intro: "",
         features: [],
-        extra: [],
       };
     }
 
-    const lines = product.description
+    let raw = product.description.replace(/\r/g, " ").trim();
+
+    raw = raw
+      .replace(/INCLUYE:/gi, "\nINCLUYE:\n")
+      .replace(/Incluye:/gi, "\nIncluye:\n")
+      .replace(/✅/g, "\n✅ ")
+      .replace(/✔️/g, "\n✔️ ")
+      .replace(/☑️/g, "\n☑️ ")
+      .replace(/\n{2,}/g, "\n")
+      .trim();
+
+    const lines = raw
       .split("\n")
       .map((line) => line.trim())
       .filter(Boolean);
 
     const introParts: string[] = [];
     const features: string[] = [];
-    const extra: string[] = [];
-
     let includesMode = false;
 
     for (const rawLine of lines) {
       const line = rawLine.trim();
 
-      if (/incluye:?/i.test(line)) {
+      if (/^incluye:?$/i.test(line)) {
         includesMode = true;
-
-        const cleaned = line.replace(/incluye:?/i, "").trim();
-        if (cleaned) {
-          features.push(cleaned.replace(/^[-•✅]\s*/, ""));
-        }
         continue;
       }
 
-      const isBullet =
-        line.startsWith("✅") ||
-        line.startsWith("-") ||
-        line.startsWith("•");
+      const isBullet = /^([\-•*]|✅|✔️|☑️)/.test(line);
 
-      if (isBullet || includesMode) {
-        const cleaned = line.replace(/^[-•✅]\s*/, "").trim();
+      if (includesMode || isBullet) {
+        const cleaned = line
+          .replace(/^([\-•*]|✅|✔️|☑️)\s*/, "")
+          .replace(/^incluye:\s*/i, "")
+          .trim();
+
         if (cleaned) features.push(cleaned);
-      } else if (!includesMode && introParts.length < 2) {
-        introParts.push(line);
-      } else {
-        extra.push(line);
+        continue;
       }
+
+      introParts.push(line);
     }
 
+    const intro = introParts
+      .join(" ")
+      .replace(/\s*INCLUYE:\s*$/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
     return {
-      intro: introParts.join(" "),
+      intro,
       features,
-      extra,
     };
   }, [product?.description]);
 
@@ -124,28 +132,21 @@ export default function RecursoDetallePage() {
     <section className="px-4 py-12 md:px-6 md:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="grid items-start gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
-          {/* Imagen */}
           <div className="w-full">
+            <div className="relative flex items-center justify-center overflow-hidden rounded-[22px]">
+              <div className="relative aspect-[4/3] w-full">
+                <Image
+                  src={product.coverImageUrl || "/placeholder.svg"}
+                  alt={product.title}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 52vw"
+                  className="object-contain p-6"
+                />
+              </div>
+            </div>
+          </div>
 
-    
-    <div className="relative flex items-center justify-center overflow-hidden rounded-[22px] ">
-      
-      <div className="relative aspect-[4/3] w-full">
-        <Image
-          src={product.coverImageUrl || "/placeholder.svg"}
-          alt={product.title}
-          fill
-          priority
-          sizes="(max-width: 1024px) 100vw, 52vw"
-          className="object-contain p-6"
-        />
-      </div>
-
-    </div>
-
-</div>
-
-          {/* Info */}
           <div className="flex flex-col">
             <div className="space-y-5">
               <h1 className="text-balance text-3xl font-extrabold leading-tight text-white md:text-5xl">
@@ -153,48 +154,36 @@ export default function RecursoDetallePage() {
               </h1>
 
               {parsedDescription.intro ? (
-                <p className="text-base leading-8 text-white/80 md:text-lg">
+                <p className="text-[17px] leading-9 text-white/80 md:text-lg">
                   {parsedDescription.intro}
                 </p>
               ) : null}
 
-              {(parsedDescription.features.length > 0 || parsedDescription.extra.length > 0) && (
-                <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 backdrop-blur-sm md:p-6">
-                  {parsedDescription.features.length > 0 ? (
+              {parsedDescription.features.length > 0 ? (
+                <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm md:p-7">
+                  <div className="space-y-5">
+                    <h2 className="text-sm font-bold uppercase tracking-[0.25em] text-primary/90">
+                      Incluye
+                    </h2>
+
                     <div className="space-y-4">
-                      <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-primary/90">
-                        Incluye
-                      </h2>
-
-                      <div className="grid gap-3">
-                        {parsedDescription.features.map((feature, index) => (
-                          <div key={`${feature}-${index}`} className="flex items-start gap-3">
-                            <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15">
-                              <Check className="h-3.5 w-3.5 text-primary" />
-                            </div>
-                            <p className="text-sm leading-7 text-white/85 md:text-base">
-                              {feature}
-                            </p>
+                      {parsedDescription.features.map((feature, index) => (
+                        <div key={`${feature}-${index}`} className="flex items-start gap-3">
+                          <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                            <Check className="h-3.5 w-3.5 text-primary" />
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
 
-                  {parsedDescription.extra.length > 0 ? (
-                    <div className={parsedDescription.features.length > 0 ? "mt-6 space-y-3" : "space-y-3"}>
-                      {parsedDescription.extra.map((line, index) => (
-                        <p key={`${line}-${index}`} className="text-sm leading-7 text-white/70 md:text-base">
-                          {line}
-                        </p>
+                          <p className="text-sm leading-8 text-white/85 md:text-base">
+                            {feature}
+                          </p>
+                        </div>
                       ))}
                     </div>
-                  ) : null}
+                  </div>
                 </div>
-              )}
+              ) : null}
             </div>
 
-            {/* Precio + CTA */}
             <div className="mt-8 border-t border-white/10 pt-8">
               <div className="space-y-2">
                 <p className="text-4xl font-extrabold leading-none text-primary md:text-5xl">

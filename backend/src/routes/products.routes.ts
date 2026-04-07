@@ -70,7 +70,10 @@ productsRoutes.get(
   "/:id/access",
   authRequired,
   asyncHandler(async (req: any, res) => {
-    const data = await productsService.getAccess(req.user.id, req.params.id);
+    const userId = req.user.sub; // 🔥 FIX CLAVE
+
+    const data = await productsService.getAccess(userId, req.params.id);
+
     res.json({ ok: true, ...data });
   })
 );
