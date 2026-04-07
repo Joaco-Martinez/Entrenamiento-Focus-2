@@ -32,6 +32,7 @@ type Props = {
   items: MpItem[];
   payer: Payer;
   orderId: string;
+  onRedirectToMercadoPago?: () => void;
 };
 
 const SCRIPT_ID = "mercadopago-sdk-wallet";
@@ -40,6 +41,7 @@ export default function MercadoPagoWalletBrick({
   items,
   payer,
   orderId,
+  onRedirectToMercadoPago,
 }: Props) {
   const [sdkReady, setSdkReady] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,6 +49,15 @@ export default function MercadoPagoWalletBrick({
 
   useEffect(() => {
     if (document.getElementById(SCRIPT_ID)) {
+      setSdkReady(true);
+      return;
+    }
+
+    const existingSdk = document.querySelector(
+      'script[src="https://sdk.mercadopago.com/js/v2"]'
+    );
+
+    if (existingSdk) {
       setSdkReady(true);
       return;
     }
@@ -69,7 +80,9 @@ export default function MercadoPagoWalletBrick({
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (!publicKey || !apiUrl) {
-      console.error("Faltan NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY o NEXT_PUBLIC_API_URL");
+      console.error(
+        "Faltan NEXT_PUBLIC_MP_BRICKS_PUBLIC_KEY o NEXT_PUBLIC_API_URL"
+      );
       return;
     }
 
@@ -103,10 +116,12 @@ export default function MercadoPagoWalletBrick({
 
         const data = await response.json();
 
-        if (!response.ok) {
+        if (!response.ok || !data?.preferenceId) {
           console.error("Error create preference:", data);
           return;
         }
+
+        onRedirectToMercadoPago?.();
 
         window.walletBrickController = await bricksBuilder.create(
           "wallet",
@@ -131,7 +146,7 @@ export default function MercadoPagoWalletBrick({
           }
         );
       } catch (error) {
-        console.error(error);
+        console.error("Error renderizando Wallet Brick:", error);
       } finally {
         setLoading(false);
       }
@@ -144,21 +159,21 @@ export default function MercadoPagoWalletBrick({
         window.walletBrickController?.unmount?.();
       } catch {}
     };
-  }, [sdkReady, items, payer, containerId, orderId]);
+  }, [sdkReady, items, payer, containerId, orderId, onRedirectToMercadoPago]);
 
-return (
-  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-    <p className="mb-3 text-sm text-white/60">
-      Vas al checkout de Mercado Pago.
-    </p>
-
-    {loading && (
-      <p className="mb-3 text-sm text-white/45">
-        Preparando Mercado Pago...
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="mb-3 text-sm text-white/60">
+        Vas al checkout de Mercado Pago.
       </p>
-    )}
 
-    <div id={containerId} />
-  </div>
-);
+      {loading && (
+        <p className="mb-3 text-sm text-white/45">
+          Preparando Mercado Pago...
+        </p>
+      )}
+
+      <div id={containerId} />
+    </div>
+  );
 }

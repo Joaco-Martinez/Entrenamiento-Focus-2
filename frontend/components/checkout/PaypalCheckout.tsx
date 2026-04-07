@@ -3,13 +3,22 @@
 type Props = {
   orderId: string;
   amountUsd: number;
+  onRedirect?: () => void;
 };
 
-export default function PaypalCheckout({ orderId, amountUsd }: Props) {
+export default function PaypalCheckout({
+  orderId,
+  amountUsd,
+  onRedirect,
+}: Props) {
   const handlePaypal = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+
+      if (!apiUrl) {
+        throw new Error("Falta NEXT_PUBLIC_API_URL");
+      }
 
       const res = await fetch(`${apiUrl}/paypal_checkout/checkout`, {
         method: "POST",
@@ -30,6 +39,7 @@ export default function PaypalCheckout({ orderId, amountUsd }: Props) {
         throw new Error(data?.message || "No se pudo iniciar PayPal");
       }
 
+      onRedirect?.();
       window.location.href = data.approveUrl;
     } catch (error) {
       console.error("Error iniciando PayPal:", error);

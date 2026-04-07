@@ -81,11 +81,14 @@ export default function CheckoutPaymentSelector() {
   const displayCurrency = provider === "paypal" ? "USD" : "ARS";
 
   const formattedAmount = useMemo(() => {
-    return new Intl.NumberFormat(displayCurrency === "ARS" ? "es-AR" : "en-US", {
-      style: "currency",
-      currency: displayCurrency,
-      maximumFractionDigits: 2,
-    }).format(displayAmount);
+    return new Intl.NumberFormat(
+      displayCurrency === "ARS" ? "es-AR" : "en-US",
+      {
+        style: "currency",
+        currency: displayCurrency,
+        maximumFractionDigits: 2,
+      }
+    ).format(displayAmount);
   }, [displayAmount, displayCurrency]);
 
   const mpItems = useMemo(() => {
@@ -208,13 +211,19 @@ export default function CheckoutPaymentSelector() {
       setIsCreatingOrder(true);
       setOrderError(null);
 
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      if (!apiUrl) {
+        throw new Error("Falta NEXT_PUBLIC_API_URL");
+      }
+
       const payload = {
         country: normalizedCountry,
         provider: provider === "mercadopago" ? "MERCADOPAGO" : "PAYPAL",
         items: orderPayloadItems,
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+      const res = await fetch(`${apiUrl}/orders`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -378,7 +387,9 @@ export default function CheckoutPaymentSelector() {
 
                 <div>
                   <p className="text-base font-bold text-white">PayPal</p>
-                  <p className="text-sm text-white/55">Dólares estadounidenses</p>
+                  <p className="text-sm text-white/55">
+                    Dólares estadounidenses
+                  </p>
                 </div>
               </div>
 
@@ -506,12 +517,14 @@ export default function CheckoutPaymentSelector() {
                   items={mpItems}
                   payer={payer}
                   orderId={createdOrder.id}
+                  onPaymentSuccess={clearCart}
                 />
               ) : (
                 <MercadoPagoWalletBrick
                   items={mpItems}
                   payer={payer}
                   orderId={createdOrder.id}
+                  onRedirectToMercadoPago={clearCart}
                 />
               )}
             </div>
@@ -528,6 +541,7 @@ export default function CheckoutPaymentSelector() {
                 <PaypalCheckout
                   orderId={createdOrder.id}
                   amountUsd={amountUsd}
+                  onRedirect={clearCart}
                 />
               )}
             </div>
