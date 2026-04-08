@@ -83,7 +83,7 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Button onClick={() => go(dashboardHref)}>Dashboard</Button>
+                <Button onClick={() => go(dashboardHref)}>Panel de usuario</Button>
                 <Button variant="ghost" onClick={handleLogout}>Cerrar sesión</Button>
               </div>
             )}

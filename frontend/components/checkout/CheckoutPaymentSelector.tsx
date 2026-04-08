@@ -4,12 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CreditCard, Wallet, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import MercadoPagoPaymentBrick from "./MercadoPagoPaymentBrick";
 import MercadoPagoWalletBrick from "./MercadoPagoWalletBrick";
 import PaypalCheckout from "./PaypalCheckout";
 
 type PaymentProvider = "mercadopago" | "paypal";
-type MercadoPagoMethod = "card" | "wallet";
 
 type CreatedOrder = {
   id: string;
@@ -31,7 +29,6 @@ export default function CheckoutPaymentSelector() {
   const [provider, setProvider] = useState<PaymentProvider>(
     isArgentina ? "mercadopago" : "paypal"
   );
-  const [mpMethod, setMpMethod] = useState<MercadoPagoMethod>("card");
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder | null>(null);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -159,10 +156,9 @@ export default function CheckoutPaymentSelector() {
     return JSON.stringify({
       country: normalizedCountry,
       provider,
-      mpMethod,
       items: orderPayloadItems,
     });
-  }, [normalizedCountry, provider, mpMethod, orderPayloadItems]);
+  }, [normalizedCountry, provider, orderPayloadItems]);
 
   useEffect(() => {
     if (invalidCartItems.length > 0) {
@@ -350,7 +346,9 @@ export default function CheckoutPaymentSelector() {
 
                   <div>
                     <p className="text-base font-bold text-white">Mercado Pago</p>
-                    <p className="text-sm text-white/55">Pesos argentinos</p>
+                    <p className="text-sm text-white/55">
+                      Checkout directo de Mercado Pago
+                    </p>
                   </div>
                 </div>
 
@@ -400,62 +398,12 @@ export default function CheckoutPaymentSelector() {
           </button>
         </div>
 
-        {provider === "mercadopago" && isArgentina && (
-          <div className="mt-6">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/45">
-              Cómo querés pagar
-            </p>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMpMethod("card");
-                  setPaymentReady(false);
-                }}
-                className={`rounded-2xl border p-4 text-left transition ${
-                  mpMethod === "card"
-                    ? "border-primary bg-primary/10"
-                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
-                }`}
-              >
-                <p className="font-semibold text-white">Tarjeta</p>
-                <p className="mt-1 text-sm text-white/55">
-                  Pagás dentro de la web
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setMpMethod("wallet");
-                  setPaymentReady(false);
-                }}
-                className={`rounded-2xl border p-4 text-left transition ${
-                  mpMethod === "wallet"
-                    ? "border-primary bg-primary/10"
-                    : "border-white/10 bg-white/[0.03] hover:bg-white/[0.05]"
-                }`}
-              >
-                <p className="font-semibold text-white">Mercado Pago directo</p>
-                <p className="mt-1 text-sm text-white/55">
-                  Vas al checkout de Mercado Pago
-                </p>
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="mt-8 rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-white/50">Vas a pagar con</p>
               <p className="mt-1 text-lg font-bold text-white">
-                {provider === "mercadopago"
-                  ? mpMethod === "wallet"
-                    ? "Mercado Pago directo"
-                    : "Mercado Pago"
-                  : "PayPal"}
+                {provider === "mercadopago" ? "Mercado Pago directo" : "PayPal"}
               </p>
               <p className="mt-1 text-sm text-white/45">
                 {displayCurrency === "ARS"
@@ -508,23 +456,18 @@ export default function CheckoutPaymentSelector() {
             <div className="space-y-4">
               {!paymentReady || !createdOrder || isCreatingOrder ? (
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/65">
-                  Tocá <span className="font-semibold text-white">“Continuar al pago”</span>{" "}
+                  Tocá{" "}
+                  <span className="font-semibold text-white">
+                    “Continuar al pago”
+                  </span>{" "}
                   para crear la orden y habilitar Mercado Pago.
                 </div>
-              ) : mpMethod === "card" ? (
-                <MercadoPagoPaymentBrick
-                  amount={amountArs}
+              ) : (
+                <MercadoPagoWalletBrick
                   items={mpItems}
                   payer={payer}
                   orderId={createdOrder.id}
-                  onPaymentSuccess={clearCart}
                 />
-              ) : (
-                <MercadoPagoWalletBrick
-  items={mpItems}
-  payer={payer}
-  orderId={createdOrder.id}
-/>
               )}
             </div>
           )}
@@ -533,7 +476,10 @@ export default function CheckoutPaymentSelector() {
             <div>
               {!paymentReady || !createdOrder || isCreatingOrder ? (
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/65">
-                  Tocá <span className="font-semibold text-white">“Continuar al pago”</span>{" "}
+                  Tocá{" "}
+                  <span className="font-semibold text-white">
+                    “Continuar al pago”
+                  </span>{" "}
                   para crear la orden y habilitar PayPal.
                 </div>
               ) : (
