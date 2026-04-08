@@ -50,10 +50,12 @@ export default function MentoriaPage() {
   ];
 
   const MERCADOPAGO_PLAN_CHECKOUT =
-    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=ca4bc88737cf49a9aad0815b97d4fa82";
+    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=6f369e6f51fd4891a03a291ad76bc4ad";
 
   const PRODUCT_ID_MENTORIA = "ID_REAL_DEL_PRODUCTO_MENTORIA";
-  const PAYPAL_PLAN_ID = "P-89399006J6064773UNDNMPPI";
+  const PAYPAL_PLAN_ID = "P-78247559TD359713NNHKR2EI";
+  // const PAYPAL_PLAN_ID = "P-89399006J6064773UNDNMPPI"; ORIGINAL
+
 
   const PAYPAL_CLIENT_ID =
     process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ||
