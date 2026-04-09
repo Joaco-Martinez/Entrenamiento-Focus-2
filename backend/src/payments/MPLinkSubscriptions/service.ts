@@ -28,8 +28,11 @@ type MercadoPagoPreapproval = {
 };
 
 function mapSubscriptionStatus(mpStatus?: string) {
-  switch (mpStatus) {
+  const s = String(mpStatus || "").toLowerCase();
+
+  switch (s) {
     case "authorized":
+    case "active":
       return "ACTIVE";
     case "paused":
       return "SUSPENDED";

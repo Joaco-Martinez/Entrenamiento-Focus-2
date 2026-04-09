@@ -51,6 +51,8 @@ export async function mercadoPagoLinkWebhookController(
       req.query
     );
 
+    console.log("MP LINK WEBHOOK RESULT:", result);
+
     return res.status(200).json({
       ok: true,
       result,
