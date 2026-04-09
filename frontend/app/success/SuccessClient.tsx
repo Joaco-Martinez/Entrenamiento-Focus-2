@@ -6,18 +6,32 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Clock3, XCircle, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
+type SubscriptionStatus =
+  | "ACTIVE"
+  | "CANCELLED"
+  | "EXPIRED"
+  | "PAST_DUE"
+  | "SUSPENDED";
+
+type IntentStatus =
+  | "PENDING"
+  | "MATCHED"
+  | "ACTIVATED"
+  | "FAILED"
+  | "EXPIRED";
+
 type SubscriptionResponse = {
   ok: boolean;
   subscription?: {
     id: string;
-    status: "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "SUSPENDED";
+    status: SubscriptionStatus;
     provider?: string;
     payerEmail?: string | null;
     externalId?: string | null;
   } | null;
   latestIntent?: {
     id: string;
-    status: "PENDING" | "MATCHED" | "ACTIVATED" | "FAILED" | "EXPIRED";
+    status: IntentStatus;
     mpPreapprovalId?: string | null;
   } | null;
   isPremium?: boolean;
@@ -31,14 +45,16 @@ export default function SuccessClient() {
   const [error, setError] = useState("");
   const [data, setData] = useState<SubscriptionResponse | null>(null);
 
+  const intentStatus = data?.latestIntent?.status;
+
   const title = useMemo(() => {
     if (loading) return "Estamos activando tu suscripción";
     if (data?.isPremium) return "Tu suscripción ya está activa";
-    if (data?.latestIntent?.status === "PENDING" || data?.latestIntent?.status === "MATCHED") {
+    if (intentStatus === "PENDING" || intentStatus === "MATCHED") {
       return "Tu pago fue recibido";
     }
     return "No pudimos confirmar la suscripción";
-  }, [loading, data]);
+  }, [loading, data?.isPremium, intentStatus]);
 
   const description = useMemo(() => {
     if (loading) {
@@ -49,26 +65,32 @@ export default function SuccessClient() {
       return "Ya tenés acceso habilitado. Podés entrar a tu panel y acceder al contenido.";
     }
 
-    if (data?.latestIntent?.status === "PENDING" || data?.latestIntent?.status === "MATCHED") {
+    if (intentStatus === "PENDING" || intentStatus === "MATCHED") {
       return "Tu suscripción figura en proceso. Si el webhook tarda unos segundos, se va a activar automáticamente.";
     }
 
-    return error || "Todavía no pudimos confirmar la activación. Probá actualizar en unos segundos.";
-  }, [loading, data, error]);
+    return (
+      error ||
+      "Todavía no pudimos confirmar la activación. Probá actualizar en unos segundos."
+    );
+  }, [loading, data?.isPremium, intentStatus, error]);
 
   useEffect(() => {
     let cancelled = false;
+
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
 
     const checkSubscription = async () => {
       try {
         setLoading(true);
         setError("");
 
-        // Poll simple: 6 intentos cada 3 segundos
         for (let i = 0; i < 6; i++) {
-          const res = await apiFetch("/mp-link-subscriptions/me", {
-            method: "GET",
-          });
+          const res = (await apiFetch(
+  "/mp-link-subscriptions/me",
+  { method: "GET" }
+)) as SubscriptionResponse;
 
           if (cancelled) return;
 
@@ -80,11 +102,13 @@ export default function SuccessClient() {
           }
 
           if (i < 5) {
-            await new Promise((resolve) => setTimeout(resolve, 3000));
+            await sleep(3000);
           }
         }
 
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       } catch (err) {
         if (cancelled) return;
 
@@ -113,12 +137,12 @@ export default function SuccessClient() {
       return <CheckCircle2 className="h-12 w-12 text-green-400" />;
     }
 
-    if (data?.latestIntent?.status === "PENDING" || data?.latestIntent?.status === "MATCHED") {
+    if (intentStatus === "PENDING" || intentStatus === "MATCHED") {
       return <Clock3 className="h-12 w-12 text-yellow-400" />;
     }
 
     return <XCircle className="h-12 w-12 text-red-400" />;
-  }, [loading, data]);
+  }, [loading, data?.isPremium, intentStatus]);
 
   return (
     <main className="min-h-screen bg-[#0b0b0f] px-6 py-16 text-white">
@@ -153,11 +177,49 @@ export default function SuccessClient() {
                 </span>
               </p>
 
+              {data.subscription.provider && (
+                <p className="mt-2 text-sm text-white/60">
+                  Proveedor:{" "}
+                  <span className="font-semibold text-white">
+                    {data.subscription.provider}
+                  </span>
+                </p>
+              )}
+
               {data.subscription.payerEmail && (
                 <p className="mt-2 text-sm text-white/60">
                   Email pagador:{" "}
                   <span className="font-semibold text-white">
                     {data.subscription.payerEmail}
+                  </span>
+                </p>
+              )}
+
+              {data.subscription.externalId && (
+                <p className="mt-2 break-all text-sm text-white/60">
+                  ID externo:{" "}
+                  <span className="font-semibold text-white">
+                    {data.subscription.externalId}
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
+
+          {data?.latestIntent && (
+            <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5 text-left">
+              <p className="text-sm text-white/60">
+                Estado del intento:{" "}
+                <span className="font-semibold text-white">
+                  {data.latestIntent.status}
+                </span>
+              </p>
+
+              {data.latestIntent.mpPreapprovalId && (
+                <p className="mt-2 break-all text-sm text-white/60">
+                  Preapproval ID:{" "}
+                  <span className="font-semibold text-white">
+                    {data.latestIntent.mpPreapprovalId}
                   </span>
                 </p>
               )}
