@@ -22,10 +22,17 @@ export async function mercadoPagoWebhook(body: any) {
     });
 
     const pre = r.data;
-    const ext = String(pre.external_reference ?? "");
-    const [userId, productId] = ext.includes(":") ? ext.split(":") : [undefined, undefined];
+const payerEmail = pre.payer_email;
 
-    if (!userId) return { ok: true };
+if (!payerEmail) return { ok: true };
+
+const user = await prisma.user.findUnique({
+  where: { email: payerEmail }
+});
+
+if (!user) return { ok: true };
+
+const userId = user.id;
 
     const statusMp = String(pre.status ?? "").toLowerCase();
     const mapped =

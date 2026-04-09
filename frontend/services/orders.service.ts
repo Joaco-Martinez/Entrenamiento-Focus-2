@@ -7,10 +7,13 @@ import { apiFetch } from "@/lib/api";
 export type OrderStatus = "PENDING" | "PAID" | "CANCELLED" | "REFUNDED";
 
 export type OrderItem = {
+  title: string;
   productId: string;
   quantity: number;
   // When requesting orders we include product details
   product?: {
+    slug: null;
+    name: string;
     id: string;
     title: string;
     coverImageUrl?: string | null;
