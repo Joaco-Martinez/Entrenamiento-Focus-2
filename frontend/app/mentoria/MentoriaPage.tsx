@@ -46,7 +46,7 @@ export default function MentoriaPage() {
     },
   ];
 
-  const MP_PLAN_ID = "6f369e6f51fd4891a03a291ad76bc4ad";
+  const MP_PLAN_ID = "db54b230dd1a457d8a4c64c7b94e03da";
   const MERCADOPAGO_PLAN_CHECKOUT = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}`;
 
   // PONÉ ACÁ EL ID REAL DE PRISMA
