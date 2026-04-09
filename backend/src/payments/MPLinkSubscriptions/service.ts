@@ -160,6 +160,10 @@ export async function createMercadoPagoLinkIntent(input: CreateIntentInput) {
 }
 
 export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
+  console.log("========== MP LINK WEBHOOK ==========");
+  console.log("PAYLOAD:", JSON.stringify(payload, null, 2));
+  console.log("QUERY:", JSON.stringify(query, null, 2));
+
   const eventType =
     payload?.type ||
     payload?.topic ||
@@ -174,7 +178,11 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     query?.id ||
     null;
 
+  console.log("eventType:", eventType);
+  console.log("preapprovalId:", preapprovalId);
+
   if (!preapprovalId) {
+    console.log("IGNORED: sin preapprovalId");
     return { ignored: true, reason: "Sin preapprovalId" };
   }
 
@@ -183,24 +191,33 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     !String(eventType).toLowerCase().includes("preapproval") &&
     !String(eventType).toLowerCase().includes("subscription")
   ) {
+    console.log("IGNORED: evento no válido para suscripción:", eventType);
     return { ignored: true, reason: `Evento ignorado: ${eventType}` };
   }
 
-  // CONSULTA SOLAMENTE. NO CREA NADA EN MP.
   const mpPreapproval = await getPreapprovalById(String(preapprovalId));
+
+  console.log("mpPreapproval:", JSON.stringify(mpPreapproval, null, 2));
 
   const payerEmail = String(mpPreapproval.payer_email || "")
     .trim()
     .toLowerCase();
 
   const planId = String(mpPreapproval.preapproval_plan_id || "").trim();
-  const mpStatus = String(mpPreapproval.status || "").trim();
+  const mpStatus = String(mpPreapproval.status || "").trim().toLowerCase();
+
+  console.log("payerEmail:", payerEmail);
+  console.log("planId:", planId);
+  console.log("mpStatus:", mpStatus);
 
   if (!payerEmail || !planId) {
+    console.log("IGNORED: falta payer_email o preapproval_plan_id");
     return {
       ignored: true,
       reason: "La suscripción no tiene payer_email o preapproval_plan_id",
       preapprovalId,
+      payerEmail,
+      planId,
     };
   }
 
@@ -211,6 +228,8 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
       externalId: String(preapprovalId),
     },
   });
+
+  console.log("existingByExternalId:", existingByExternalId?.id ?? null);
 
   let matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
     where: {
@@ -225,6 +244,8 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     },
   });
 
+  console.log("matchedIntent by pending+email+plan:", matchedIntent?.id ?? null);
+
   if (!matchedIntent && existingByExternalId?.userId) {
     matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
       where: {
@@ -235,12 +256,64 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
         createdAt: "desc",
       },
     });
+
+    console.log(
+      "matchedIntent by existing subscription userId + planId:",
+      matchedIntent?.id ?? null
+    );
+  }
+
+  // fallback extra: por email + plan aunque ya no esté en PENDING
+  if (!matchedIntent) {
+    matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
+      where: {
+        provider: "MERCADOPAGO",
+        planId,
+        email: payerEmail,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    console.log(
+      "matchedIntent by any status email + plan:",
+      matchedIntent?.id ?? null
+    );
+  }
+
+  // fallback extra: buscar usuario por email y luego intent por userId + planId
+  if (!matchedIntent) {
+    const user = await prisma.user.findUnique({
+      where: { email: payerEmail },
+      select: { id: true, email: true },
+    });
+
+    console.log("user by payerEmail:", user?.id ?? null);
+
+    if (user) {
+      matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
+        where: {
+          userId: user.id,
+          planId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      console.log(
+        "matchedIntent by userId + planId:",
+        matchedIntent?.id ?? null
+      );
+    }
   }
 
   if (!matchedIntent) {
+    console.log("IGNORED: no se encontró intent");
     return {
       ignored: true,
-      reason: "No se encontró intent pendiente para ese email + plan",
+      reason: "No se encontró intent para ese email + plan",
       payerEmail,
       planId,
       preapprovalId,
@@ -249,7 +322,10 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
 
   const mappedStatus = mapSubscriptionStatus(mpStatus);
 
-  await prisma.subscription.upsert({
+  console.log("mappedStatus:", mappedStatus);
+  console.log("matchedIntent.userId:", matchedIntent.userId);
+
+  const subscription = await prisma.subscription.upsert({
     where: {
       userId: matchedIntent.userId,
     },
@@ -288,7 +364,14 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     },
   });
 
-  await prisma.subscriptionLinkIntent.update({
+  console.log("subscription upserted:", {
+    id: subscription.id,
+    userId: subscription.userId,
+    status: subscription.status,
+    externalId: subscription.externalId,
+  });
+
+  const updatedIntent = await prisma.subscriptionLinkIntent.update({
     where: { id: matchedIntent.id },
     data: {
       status: mappedStatus === "ACTIVE" ? "ACTIVATED" : "MATCHED",
@@ -301,6 +384,14 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
       raw: JSON.parse(JSON.stringify(mpPreapproval)),
     },
   });
+
+  console.log("intent updated:", {
+    id: updatedIntent.id,
+    status: updatedIntent.status,
+    mpPreapprovalId: updatedIntent.mpPreapprovalId,
+  });
+
+  console.log("========== MP LINK WEBHOOK OK ==========");
 
   return {
     ok: true,
