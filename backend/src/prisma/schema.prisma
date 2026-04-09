@@ -44,6 +44,55 @@ enum SubscriptionStatus {
   SUSPENDED
 }
 
+enum SubscriptionLinkIntentStatus {
+  PENDING
+  MATCHED
+  ACTIVATED
+  FAILED
+  EXPIRED
+}
+
+model SubscriptionLinkIntent {
+  id        String @id @default(uuid())
+
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  provider  PaymentProvider @default(MERCADOPAGO)
+
+  planId      String
+  checkoutUrl String
+  email       String
+  payerEmail  String?
+
+  status SubscriptionLinkIntentStatus @default(PENDING)
+
+  mpPreapprovalId String?
+  mpStatus        String?
+
+  openedAt     DateTime?
+  matchedAt    DateTime?
+  activatedAt  DateTime?
+  expiresAt    DateTime?
+  lastWebhookAt DateTime?
+
+  raw Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@index([provider])
+  @@index([planId])
+  @@index([email])
+  @@index([status])
+  @@index([mpPreapprovalId])
+}
+
 model User {
   id           String @id @default(uuid())
   email        String @unique
@@ -56,7 +105,7 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+subscriptionLinkIntents SubscriptionLinkIntent[]
   orders       Order[]
   subscription Subscription?
   accessGrants AccessGrant[]
@@ -69,7 +118,7 @@ model Product {
 
   arPrice  Int @default(0)
   usdPrice Int @default(0)
-
+subscriptionLinkIntents SubscriptionLinkIntent[]
   isActive        Boolean @default(true)
   isSubscription  Boolean @default(false)
   requiresPremium Boolean @default(false)

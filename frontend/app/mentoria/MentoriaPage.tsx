@@ -2,19 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "../../lib/api";
 import { useAuth } from "@/context/AuthContext";
 import PaypalSubscriptionButton from "./PaypalSubscriptionButton";
 import MercadoPagoSubscriptionButton from "./MercadoPagoSubscriptionButton";
 import MouseGlowBackground from "@/components/mouse-glow-background";
-type SubscriptionProvider = "paypal" | "mercadopago";
 
 export default function MentoriaPage() {
   const router = useRouter();
   const { user, loading: authLoading, country } = useAuth();
 
-  const [loadingProvider, setLoadingProvider] =
-    useState<SubscriptionProvider | null>(null);
+  const [loadingProvider, setLoadingProvider] = useState<"paypal" | "mercadopago" | null>(null);
   const [error, setError] = useState("");
 
   const pillars = [
@@ -49,13 +46,13 @@ export default function MentoriaPage() {
     },
   ];
 
-  const MERCADOPAGO_PLAN_CHECKOUT =
-    "https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=6f369e6f51fd4891a03a291ad76bc4ad";
+  const MP_PLAN_ID = "6f369e6f51fd4891a03a291ad76bc4ad";
+  const MERCADOPAGO_PLAN_CHECKOUT = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}`;
 
-  const PRODUCT_ID_MENTORIA = "ID_REAL_DEL_PRODUCTO_MENTORIA";
+  // PONÉ ACÁ EL ID REAL DE PRISMA
+  const PRODUCT_ID_MENTORIA = "mentoria-focus-product-id";
+
   const PAYPAL_PLAN_ID = "P-78247559TD359713NNHKR2EI";
-  // const PAYPAL_PLAN_ID = "P-89399006J6064773UNDNMPPI"; ORIGINAL
-
 
   const PAYPAL_CLIENT_ID =
     process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ||
@@ -86,60 +83,10 @@ export default function MentoriaPage() {
     return true;
   };
 
-  const handleSubscribe = async (provider: SubscriptionProvider) => {
-    try {
-      setError("");
-
-      const isAuthenticated = ensureAuth();
-      if (!isAuthenticated) return;
-
-      setLoadingProvider(provider);
-
-      if (provider === "mercadopago") {
-        const res = await apiFetch("/mercadopago_suscription/create", {
-  method: "POST",
-  body: JSON.stringify({
-    productId: PRODUCT_ID_MENTORIA,
-    userId: user.id,
-    email: user.email,
-  }),
-});
-
-        const initPoint =
-          res?.initPoint ||
-          res?.data?.initPoint ||
-          res?.content?.initPoint ||
-          res?.content?.data?.initPoint;
-
-        if (!initPoint) {
-          throw new Error("Mercado Pago no devolvió la URL de suscripción");
-        }
-
-        window.location.href = initPoint;
-        return;
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "No se pudo iniciar la suscripción";
-
-      setError(message);
-    } finally {
-      setLoadingProvider(null);
-    }
-  };
-
-  console.log({
-    country,
-    userCountry: user?.country,
-    normalizedCountry,
-    isArgentina,
-  });
-
   return (
-    <div className="relative min-h-screen overflow-hidden  text-white">
-       <MouseGlowBackground />
+    <div className="relative min-h-screen overflow-hidden text-white">
+      <MouseGlowBackground />
+
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.18),transparent_45%)]" />
         <div className="relative mx-auto max-w-7xl px-6 py-20 md:px-10 lg:px-12 lg:py-28">
@@ -368,19 +315,21 @@ export default function MentoriaPage() {
                     onRequireAuth={ensureAuth}
                     onError={(message) => setError(message)}
                   />
-                    <div>
-                      <p className="text-sm font-medium text-[#f4d97c]">
-                        O
-                      </p>
-                    </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-[#f4d97c]">O</p>
+                  </div>
+
                   {isArgentina && (
-  <MercadoPagoSubscriptionButton
-    disabled={authLoading || loadingProvider === "mercadopago"}
-    onRequireAuth={ensureAuth}
-    onError={(message) => setError(message)}
-    checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
-  />
-)}
+                    <MercadoPagoSubscriptionButton
+                      disabled={authLoading || loadingProvider === "paypal"}
+                      onRequireAuth={ensureAuth}
+                      onError={(message) => setError(message)}
+                      checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
+                      productId={PRODUCT_ID_MENTORIA}
+                      planId={MP_PLAN_ID}
+                    />
+                  )}
                 </>
               )}
 
@@ -393,7 +342,12 @@ export default function MentoriaPage() {
                 Consultar por WhatsApp
               </a>
             </div>
-             
+
+            <p className="mt-4 text-xs text-[#f4d97c]/80">
+              Importante: hacé la suscripción con el mismo email de tu cuenta
+              para activar el acceso automáticamente.
+            </p>
+
             <p className="mt-5 text-xs text-white/45">
               {!user
                 ? "Para suscribirte, primero tenés que iniciar sesión."

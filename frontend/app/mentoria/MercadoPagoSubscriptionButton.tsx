@@ -1,34 +1,57 @@
 "use client";
 
+import { useState } from "react";
+import { apiFetch } from "../../lib/api";
+
 type Props = {
   checkoutUrl: string;
+  productId: string;
+  planId: string;
   disabled?: boolean;
   onRequireAuth?: () => boolean;
   onError?: (msg: string) => void;
-  user? : {
-    email: string;
-  } | null;
 };
 
 export default function MercadoPagoSubscriptionButton({
   checkoutUrl,
+  productId,
+  planId,
   disabled = false,
   onRequireAuth,
   onError,
-  user,
 }: Props) {
-  const handleClick = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
     try {
-      if (disabled) return;
+      if (disabled || loading) return;
 
       if (onRequireAuth) {
         const ok = onRequireAuth();
         if (!ok) return;
       }
 
+      setLoading(true);
+
+      await apiFetch("/mp-link-subscriptions/intent", {
+        method: "POST",
+        body: JSON.stringify({
+          productId,
+          checkoutUrl,
+          planId,
+        }),
+      });
+
       window.location.href = checkoutUrl;
-    } catch {
-      onError?.("No se pudo iniciar la suscripción con Mercado Pago");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No se pudo iniciar la suscripción con Mercado Pago";
+
+      onError?.(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,7 +60,7 @@ export default function MercadoPagoSubscriptionButton({
       <button
         type="button"
         onClick={handleClick}
-        disabled={disabled}
+        disabled={disabled || loading}
         className="inline-flex h-12 w-[270px] items-center justify-center gap-2 rounded-[30px] border border-[#1f1f1f] bg-[#1f1f1f] px-0 py-2 text-[15px] font-semibold text-white transition hover:bg-[#151515] disabled:opacity-60"
       >
         <img
@@ -48,7 +71,7 @@ export default function MercadoPagoSubscriptionButton({
       </button>
 
       <span className="mt-2 text-[11px] font-medium text-white/70">
-        Pagá de forma segura
+        {loading ? "Redirigiendo..." : "Pagá de forma segura"}
       </span>
     </div>
   );

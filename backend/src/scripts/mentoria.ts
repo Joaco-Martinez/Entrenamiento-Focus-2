@@ -1,5 +1,6 @@
-import { ProductResourceType } from "@prisma/client";
-import { prisma } from "./client";
+import { PrismaClient, ProductResourceType } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 async function main() {
   const product = await prisma.product.upsert({
@@ -18,8 +19,7 @@ async function main() {
       coverImageUrl:
         "https://res.cloudinary.com/deb7jg37j/image/upload/v1773600142/mercadopago-white_g42ckf.png",
       resourceType: ProductResourceType.LINK,
-      resourceUrl:
-        "https://www.notion.so/Bienvenido-a-Entrenamiento-Focus-3190f88a3140803b9",
+      resourceUrl: "https://www.notion.so/Bienvenido-a-Entrenamiento-Focus-3190f88a3140803b9",
     },
     create: {
       id: "mentoria-focus-product-id",
@@ -34,12 +34,11 @@ async function main() {
       coverImageUrl:
         "https://res.cloudinary.com/deb7jg37j/image/upload/v1773600142/mercadopago-white_g42ckf.png",
       resourceType: ProductResourceType.LINK,
-      resourceUrl:
-        "https://www.notion.so/Bienvenido-a-Entrenamiento-Focus-3190f88a3140803b9",
+      resourceUrl: "https://www.notion.so/Bienvenido-a-Entrenamiento-Focus-3190f88a3140803b9",
     },
   });
 
-  console.log("✅ Producto mentoría creado/actualizado:", product.id);
+  console.log("✅ Producto creado/actualizado:", product);
 }
 
 main()
