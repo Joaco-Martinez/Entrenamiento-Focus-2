@@ -174,31 +174,57 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     query?.topic ||
     null;
 
-  const preapprovalId =
+  const resourceId =
     payload?.data?.id ||
     payload?.id ||
     query?.["data.id"] ||
     query?.id ||
     null;
 
-  console.log("eventType:", eventType);
-  console.log("preapprovalId:", preapprovalId);
+  const typeLower = String(eventType || "").toLowerCase();
 
-  if (!preapprovalId) {
-    console.log("IGNORED: sin preapprovalId");
-    return { ignored: true, reason: "Sin preapprovalId" };
+  console.log("eventType:", eventType);
+  console.log("resourceId:", resourceId);
+
+  if (!resourceId) {
+    console.log("IGNORED: sin resourceId");
+    return { ignored: true, reason: "Sin resourceId" };
   }
 
+  if (!typeLower) {
+    console.log("IGNORED: sin eventType");
+    return { ignored: true, reason: "Sin eventType" };
+  }
+
+  // 1) Evento de pago de suscripción: NO es preapproval.
+  // No hay que llamar /preapproval/:id con este id porque rompe con 400.
+  if (typeLower.includes("authorized_payment")) {
+    console.log(
+      "IGNORED: subscription_authorized_payment no activa la suscripción directamente:",
+      resourceId
+    );
+
+    return {
+      ignored: true,
+      reason: "Evento de cobro de suscripción ignorado",
+      eventType,
+      resourceId: String(resourceId),
+    };
+  }
+
+  // 2) Solo seguimos con eventos de suscripción/preapproval
   if (
-    eventType &&
-    !String(eventType).toLowerCase().includes("preapproval") &&
-    !String(eventType).toLowerCase().includes("subscription")
+    !typeLower.includes("preapproval") &&
+    !typeLower.includes("subscription")
   ) {
     console.log("IGNORED: evento no válido para suscripción:", eventType);
     return { ignored: true, reason: `Evento ignorado: ${eventType}` };
   }
 
-  const mpPreapproval = await getPreapprovalById(String(preapprovalId));
+  // 3) Este sí debe ser el ID de preapproval
+  const preapprovalId = String(resourceId);
+
+  const mpPreapproval = await getPreapprovalById(preapprovalId);
 
   console.log("mpPreapproval:", JSON.stringify(mpPreapproval, null, 2));
 
@@ -228,7 +254,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
 
   const existingByExternalId = await prisma.subscription.findFirst({
     where: {
-      externalId: String(preapprovalId),
+      externalId: preapprovalId,
     },
   });
 
@@ -247,7 +273,10 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     },
   });
 
-  console.log("matchedIntent by pending+email+plan:", matchedIntent?.id ?? null);
+  console.log(
+    "matchedIntent by pending+email+plan:",
+    matchedIntent?.id ?? null
+  );
 
   if (!matchedIntent && existingByExternalId?.userId) {
     matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
@@ -266,7 +295,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     );
   }
 
-  // fallback extra: por email + plan aunque ya no esté en PENDING
+  // fallback: por email + plan aunque ya no esté en PENDING
   if (!matchedIntent) {
     matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
       where: {
@@ -285,7 +314,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     );
   }
 
-  // fallback extra: buscar usuario por email y luego intent por userId + planId
+  // fallback: buscar usuario por email y luego intent por userId + planId
   if (!matchedIntent) {
     const user = await prisma.user.findUnique({
       where: { email: payerEmail },
@@ -335,7 +364,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     update: {
       provider: "MERCADOPAGO",
       status: mappedStatus as any,
-      externalId: String(preapprovalId),
+      externalId: preapprovalId,
       providerStatus: mpStatus || null,
       payerEmail,
       productId: matchedIntent.productId ?? null,
@@ -352,7 +381,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
       userId: matchedIntent.userId,
       provider: "MERCADOPAGO",
       status: mappedStatus as any,
-      externalId: String(preapprovalId),
+      externalId: preapprovalId,
       providerStatus: mpStatus || null,
       payerEmail,
       productId: matchedIntent.productId ?? null,
@@ -379,7 +408,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     data: {
       status: mappedStatus === "ACTIVE" ? "ACTIVATED" : "MATCHED",
       payerEmail,
-      mpPreapprovalId: String(preapprovalId),
+      mpPreapprovalId: preapprovalId,
       mpStatus,
       matchedAt: now,
       activatedAt: mappedStatus === "ACTIVE" ? now : null,
@@ -400,7 +429,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     ok: true,
     matchedIntentId: matchedIntent.id,
     userId: matchedIntent.userId,
-    preapprovalId: String(preapprovalId),
+    preapprovalId,
     payerEmail,
     planId,
     mpStatus,
