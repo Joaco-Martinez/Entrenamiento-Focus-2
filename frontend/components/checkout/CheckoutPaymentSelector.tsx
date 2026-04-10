@@ -6,6 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import MercadoPagoWalletBrick from "./MercadoPagoWalletBrick";
 import PaypalCheckout from "./PaypalCheckout";
+import { apiFetch } from "@/lib/api";
 
 type PaymentProvider = "mercadopago" | "paypal";
 
@@ -219,14 +220,10 @@ export default function CheckoutPaymentSelector() {
         items: orderPayloadItems,
       };
 
-      const res = await fetch(`${apiUrl}/orders`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiFetch("/orders", {
+  method: "POST",
+  body: JSON.stringify(payload),
+});
 
       const data = await res.json();
       const order = data?.order || data?.content || data;
