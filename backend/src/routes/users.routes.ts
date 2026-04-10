@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Prisma } from "@prisma/client";
 import { authRequired } from "../common/middlewares/authRequired";
 import { adminOnly } from "../common/middlewares/adminOnly";
 import { asyncHandler } from "../common/utils/asyncHandler";
@@ -112,17 +113,22 @@ usersRoutes.get(
   asyncHandler(async (req, res) => {
     const q = String(req.query.q ?? "").trim();
 
+    const phoneNumber = Number(q);
+    const isNumericSearch = q !== "" && !Number.isNaN(phoneNumber);
+
+    const where: Prisma.UserWhereInput | undefined = q
+      ? {
+          OR: [
+            { email: { contains: q, mode: "insensitive" } },
+            { firstName: { contains: q, mode: "insensitive" } },
+            { lastName: { contains: q, mode: "insensitive" } },
+            ...(isNumericSearch ? [{ phone: { equals: phoneNumber } }] : []),
+          ],
+        }
+      : undefined;
+
     const users = await prisma.user.findMany({
-      where: q
-        ? {
-            OR: [
-              { email: { contains: q, mode: "insensitive" } },
-              { firstName: { contains: q, mode: "insensitive" } },
-              { lastName: { contains: q, mode: "insensitive" } },
-              { phone: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {},
+      where,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
