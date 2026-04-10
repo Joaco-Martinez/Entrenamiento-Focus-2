@@ -9,6 +9,8 @@ import { ArrowRight, Lock, Sparkles, ShoppingCart } from "lucide-react"
 import { productsService, Product } from "@/services/products.service"
 import { useCart } from "@/context/CartContext"
 
+const HIDDEN_PRODUCT_ID = "mentoria-focus-product-id"
+
 export default function RecursosPage() {
   const [items, setItems] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -23,11 +25,13 @@ export default function RecursosPage() {
       try {
         const data = await productsService.getAll()
 
-        if (Array.isArray(data)) {
-          setItems(data)
-        } else {
-          setItems(data.products ?? [])
-        }
+        const rawItems = Array.isArray(data) ? data : data.products ?? []
+
+        const filteredItems = rawItems.filter(
+          (item) => String(item.id) !== HIDDEN_PRODUCT_ID
+        )
+
+        setItems(filteredItems)
       } catch (e: any) {
         setError(e?.message || "No se pudieron cargar los recursos.")
       } finally {
@@ -102,16 +106,16 @@ export default function RecursosPage() {
 
                     <Link href={`/recursos/${item.id}`} className="block">
                       <div className="relative overflow-hidden rounded-2xl">
-  <div className="relative aspect-4/3 w-full">
-    <Image
-      src={item.coverImageUrl || "/placeholder.svg"}
-      alt={item.title || "Imagen del recurso"}
-      fill
-      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-      className="object-contain bg-transparent"
-    />
-  </div>
-</div>
+                        <div className="relative aspect-4/3 w-full">
+                          <Image
+                            src={item.coverImageUrl || "/placeholder.svg"}
+                            alt={item.title || "Imagen del recurso"}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-contain bg-transparent"
+                          />
+                        </div>
+                      </div>
 
                       <div className="mt-5 space-y-3">
                         <div className="space-y-2">
