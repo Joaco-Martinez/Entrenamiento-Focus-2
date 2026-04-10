@@ -77,9 +77,6 @@ export async function processPayment(data: ProcessPaymentInput) {
 
 export async function createPreference(data: CreatePreferenceInput) {
   const frontendUrl = process.env.CORS_ORIGIN || "http://localhost:3000";
-  const notificationUrl =
-    process.env.MP_NOTIFICATION_URL ||
-    "https://www.api.entrenamientofocus.com.ar/mercadopago_checkout/webhook";
 
   const response = await preferenceClient.create({
     body: {
@@ -103,7 +100,6 @@ export async function createPreference(data: CreatePreferenceInput) {
       metadata: {
         orderId: data.orderId,
       },
-      notification_url: notificationUrl,
       back_urls: {
         success: `${frontendUrl}/checkout/success`,
         failure: `${frontendUrl}/checkout/failure`,
@@ -117,48 +113,6 @@ export async function createPreference(data: CreatePreferenceInput) {
 }
 
 import crypto from "crypto";
-
-export async function confirmPayment(input: {
-  paymentId?: string;
-  externalReference?: string;
-}) {
-  const paymentId = String(input.paymentId || "").trim();
-  const externalReference = String(input.externalReference || "").trim();
-
-  if (!paymentId && !externalReference) {
-    throw new Error("Falta paymentId o externalReference");
-  }
-
-  let paymentData: any = null;
-
-  if (paymentId) {
-    const payment = await paymentClient.get({
-      id: paymentId,
-    });
-
-    paymentData = unwrapMpResponse(payment);
-  }
-
-  const resolvedOrderId =
-    paymentData?.external_reference ||
-    paymentData?.metadata?.orderId ||
-    externalReference;
-
-  if (!resolvedOrderId) {
-    throw new Error("No se pudo resolver el orderId");
-  }
-
-  const status = String(paymentData?.status || "").toLowerCase();
-
-  return {
-    ok: true,
-    orderId: resolvedOrderId,
-    paymentId: paymentData?.id ? String(paymentData.id) : paymentId || null,
-    status,
-    statusDetail: paymentData?.status_detail || null,
-    raw: paymentData || null,
-  };
-}
 
 export async function processWebhook(
   body: any,

@@ -196,63 +196,6 @@ export async function createPreference(req: RequestWithUser, res: Response) {
   }
 }
 
-export async function confirmPayment(req: RequestWithUser, res: Response) {
-  try {
-    const {
-      paymentId,
-      payment_id,
-      externalReference,
-      external_reference,
-    } = req.body || {};
-
-    const result = await mercadoPagoService.confirmPayment({
-      paymentId: paymentId || payment_id,
-      externalReference: externalReference || external_reference,
-    });
-
-    if (!result.orderId) {
-      return res.status(400).json({
-        message: "No se pudo identificar la orden",
-      });
-    }
-
-    if (result.status !== "approved") {
-      return res.status(200).json({
-        message: "El pago todavía no está aprobado",
-        approved: false,
-        orderId: result.orderId,
-        paymentId: result.paymentId,
-        status: result.status,
-        statusDetail: result.statusDetail,
-        raw: result.raw,
-      });
-    }
-
-    await ordersService.markPaid(
-      result.orderId,
-      String(result.paymentId),
-      result.raw
-    );
-
-    return res.status(200).json({
-      message: "Pago confirmado correctamente",
-      approved: true,
-      orderId: result.orderId,
-      paymentId: result.paymentId,
-      status: result.status,
-      statusDetail: result.statusDetail,
-    });
-  } catch (error: any) {
-    console.error("Error confirmPayment:", error);
-
-    return res.status(500).json({
-      message: "Error al confirmar el pago de Mercado Pago",
-      error: error?.message || "Unknown error",
-      cause: error?.cause || null,
-    });
-  }
-}
-
 export async function webhook(req: Request, res: Response) {
   res.status(200).send("ok");
 

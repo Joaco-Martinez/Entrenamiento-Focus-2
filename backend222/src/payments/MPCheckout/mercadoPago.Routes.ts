@@ -153,34 +153,3 @@ MpRoutes.post(
   "/webhook",
   mercadoPagoController.webhook
 );
-
-/**
- * @swagger
- * /mercadopago_checkout/mercadopago/confirm-payment:
- *   post:
- *     summary: Confirmar pago de Mercado Pago luego del redirect
- *     tags: [MercadoPago]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               paymentId:
- *                 type: string
- *                 example: "153376346267"
- *               externalReference:
- *                 type: string
- *                 example: "76e3b457-2f46-438d-8040-e72b9535e995"
- *     responses:
- *       200:
- *         description: Pago confirmado o pendiente
- *       500:
- *         description: Error servidor
- */
-MpRoutes.post(
-  "/confirm-payment",
-  requireArgentinaForMercadoPago,
-  mercadoPagoController.confirmPayment
-);

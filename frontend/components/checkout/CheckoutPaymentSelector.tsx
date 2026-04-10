@@ -6,6 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import MercadoPagoWalletBrick from "./MercadoPagoWalletBrick";
 import PaypalCheckout from "./PaypalCheckout";
+import { apiFetch } from "@/lib/api";
 
 type PaymentProvider = "mercadopago" | "paypal";
 
@@ -207,32 +208,21 @@ export default function CheckoutPaymentSelector() {
       setIsCreatingOrder(true);
       setOrderError(null);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (!apiUrl) {
-        throw new Error("Falta NEXT_PUBLIC_API_URL");
-      }
-
       const payload = {
         country: normalizedCountry,
         provider: provider === "mercadopago" ? "MERCADOPAGO" : "PAYPAL",
         items: orderPayloadItems,
       };
 
-      const res = await fetch(`${apiUrl}/orders`, {
+      const data = await apiFetch("/orders", {
         method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
       const order = data?.order || data?.content || data;
 
-      if (!res.ok || !order?.id) {
-        throw new Error(data?.message || "No se pudo crear la orden");
+      if (!order?.id) {
+        throw new Error("No se pudo crear la orden");
       }
 
       setCreatedOrder(order as CreatedOrder);
