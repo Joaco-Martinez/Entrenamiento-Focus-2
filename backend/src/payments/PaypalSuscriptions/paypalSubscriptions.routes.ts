@@ -47,7 +47,8 @@ export const paypalSubscriptionsRoutes = Router();
  *                 nullable: true
  *                 example: "http://localhost:3000/subscription/paypal/cancel"
  *     responses:
- *       200: { description: Suscripción creada correctamente }
+ *       200:
+ *         description: Suscripción creada correctamente
  */
 paypalSubscriptionsRoutes.post(
   "/create",
@@ -76,7 +77,8 @@ paypalSubscriptionsRoutes.post(
  *                 type: string
  *                 example: "I-ABCDEFG12345"
  *     responses:
- *       200: { description: Suscripción sincronizada }
+ *       200:
+ *         description: Suscripción sincronizada
  */
 paypalSubscriptionsRoutes.post(
   "/confirm",
@@ -100,7 +102,8 @@ paypalSubscriptionsRoutes.post(
  *         schema:
  *           type: string
  *     responses:
- *       200: { description: Detalle obtenido }
+ *       200:
+ *         description: Detalle obtenido
  */
 paypalSubscriptionsRoutes.get(
   "/:subscriptionId",
@@ -121,7 +124,8 @@ paypalSubscriptionsRoutes.get(
  *           schema:
  *             type: object
  *     responses:
- *       200: { description: Evento procesado }
+ *       200:
+ *         description: Evento procesado
  */
 paypalSubscriptionsRoutes.post(
   "/webhook",

@@ -244,25 +244,15 @@ const router = useRouter();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [purchasedProducts.length]);
-
+  console.log(user)
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold md:text-4xl">Hola 👋</h1>
         <p className="mt-2 text-white/70">Email: {email}</p>
-        <p className="mt-1 text-white/70">
-          Premium: {isPremium ? "Sí" : "No"}{" "}
-          {providerHint ? (
-            <span className="text-white/50">{providerHint}</span>
-          ) : null}
-        </p>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card title="Productos" desc="Ver y comprar recursos" href="/recursos" />
-        <Card title="Mis órdenes" desc="Historial de compras" href="/dashboard/orders" />
-        <Card title="Mi suscripción" desc="Estado y cancelación" href="#" onClick={refreshSubscription} />
-      </section>
+
 
 
 

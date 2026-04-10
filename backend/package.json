@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "paypal:create-plan": "tsx src/scripts/createPaypalProductAndPlan.ts",
     "db:clear": "tsx src/scripts/clearDatabase.ts",
     "db:seed": "tsx src/prisma/seed.ts",
     "db:reset-local": "npm run db:clear && npm run db:seed",

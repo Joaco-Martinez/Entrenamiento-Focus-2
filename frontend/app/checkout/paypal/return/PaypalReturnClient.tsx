@@ -33,8 +33,8 @@ export default function PaypalReturnClient() {
         setStatus("success");
 
         setTimeout(() => {
-          router.replace("/panel");
-        }, 3000);
+          router.replace("/dashboard");
+        }, 5000);
       } catch (err) {
         console.error("Error capturando pago PayPal", err);
         setStatus("error");

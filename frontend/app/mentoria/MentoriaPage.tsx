@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import PaypalSubscriptionButton from "./PaypalSubscriptionButton";
@@ -22,7 +22,6 @@ export default function MentoriaPage() {
     "Producción musical",
     "Mezcla y Mastering",
     "Marketing y networking",
-    "Organización y hábitos profesionales",
     "Feedback personalizado y soporte cercano",
   ];
 
@@ -50,17 +49,17 @@ export default function MentoriaPage() {
     },
   ];
 
-  const MP_PLAN_ID = "0c205caf4e1a4eb28df1e38b0a1d205c";
-  const MERCADOPAGO_PLAN_CHECKOUT = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}`;
-
-  // REEMPLAZAR POR EL ID REAL DEL PRODUCTO EN PRISMA
-  const PRODUCT_ID_MENTORIA = "mentoria-focus-product-id";
-
-  const PAYPAL_PLAN_ID = "P-78247559TD359713NNHKR2EI";
-
+  const MP_PLAN_ID = process.env.NEXT_PUBLIC_MP_PLAN_ID || "";
+  const PRODUCT_ID_MENTORIA =
+    process.env.NEXT_PUBLIC_PRODUCT_ID_MENTORIA || "";
+  const PAYPAL_PLAN_ID = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID || "";
   const PAYPAL_CLIENT_ID =
-    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ||
-    "AUexJ2kgXwlf00o6gSpFW0vXtIN9FoNvEBtI2u7owGXSLEjuby4WG5d2pxu6eXSpG5PiwWVRrpvN3LXi";
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
+
+  const MERCADOPAGO_PLAN_CHECKOUT = useMemo(() => {
+    if (!MP_PLAN_ID) return "";
+    return `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}`;
+  }, [MP_PLAN_ID]);
 
   const normalizedCountry = String(country ?? user?.country ?? "")
     .trim()
@@ -91,6 +90,30 @@ export default function MentoriaPage() {
     setError("");
 
     if (!ensureAuth()) return;
+
+    if (provider === "paypal") {
+      if (!PAYPAL_CLIENT_ID) {
+        setError("Falta configurar NEXT_PUBLIC_PAYPAL_CLIENT_ID");
+        return;
+      }
+
+      if (!PAYPAL_PLAN_ID) {
+        setError("Falta configurar NEXT_PUBLIC_PAYPAL_PLAN_ID");
+        return;
+      }
+    }
+
+    if (provider === "mercadopago") {
+      if (!MP_PLAN_ID) {
+        setError("Falta configurar NEXT_PUBLIC_MP_PLAN_ID");
+        return;
+      }
+
+      if (!PRODUCT_ID_MENTORIA) {
+        setError("Falta configurar NEXT_PUBLIC_PRODUCT_ID_MENTORIA");
+        return;
+      }
+    }
 
     setPendingProvider(provider);
     setShowEmailConfirmModal(true);

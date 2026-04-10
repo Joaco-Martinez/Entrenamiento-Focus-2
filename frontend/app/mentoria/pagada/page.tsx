@@ -1,23 +1,70 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { paymentsService } from "@/services/payments.service";
 import { CheckCircle2, MessageCircle, BellRing, Video } from "lucide-react";
 
+type SubscriptionState = {
+  subscriptionId: string | null;
+  subscriptionStartDate: string | null;
+  subscriptionEndDate: string | null;
+  hasActiveSubscription: boolean;
+} | null;
+
 export default function SuscripcionExitPage() {
-  const { user, isPremium, loading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    // ⛔ Si terminó de cargar y NO es premium → afuera
-    if (!loading && !isPremium) {
-      router.replace("/"); // o /login o /mentoria
-    }
-  }, [loading, isPremium, router]);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<SubscriptionState>(null);
 
-  // ⏳ Mientras carga → no mostrar nada
+  useEffect(() => {
+    let mounted = true;
+
+    const checkSubscription = async () => {
+      try {
+        const mp = await paymentsService.subscriptionStatus().catch(() => null);
+        const pp = await paymentsService
+          .paypalSubscriptionStatus()
+          .catch(() => null);
+
+        const best = (pp?.hasActiveSubscription ? pp : mp) ?? mp ?? pp;
+
+        if (!mounted) return;
+
+        if (best) {
+          setStatus({
+            subscriptionId: best.subscriptionId ?? null,
+            subscriptionStartDate: best.subscriptionStartDate ?? null,
+            subscriptionEndDate: best.subscriptionEndDate ?? null,
+            hasActiveSubscription: !!best.hasActiveSubscription,
+          });
+        } else {
+          setStatus(null);
+        }
+      } catch {
+        if (!mounted) return;
+        setStatus(null);
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    };
+
+    checkSubscription();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !status?.hasActiveSubscription) {
+      router.replace("/");
+    }
+  }, [loading, status, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -26,8 +73,7 @@ export default function SuscripcionExitPage() {
     );
   }
 
-  // ⛔ Bloqueo extra visual (por si tarda el redirect)
-  if (!isPremium) return null;
+  if (!status?.hasActiveSubscription) return null;
 
   return (
     <main className="mt-5 min-h-screen bg-black text-white flex items-center justify-center px-6 py-12">
@@ -56,6 +102,12 @@ export default function SuscripcionExitPage() {
               </span>{" "}
               para recibir toda la información importante.
             </p>
+
+            {status.subscriptionId ? (
+              <p className="mt-4 text-sm text-white/45">
+                ID de suscripción: {status.subscriptionId}
+              </p>
+            ) : null}
           </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-3">

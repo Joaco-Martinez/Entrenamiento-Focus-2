@@ -25,9 +25,7 @@ function loadPaypalSdk(clientId: string) {
   }
 
   if (!clientId) {
-    return Promise.reject(
-      new Error("Falta NEXT_PUBLIC_PAYPAL_CLIENT_ID")
-    );
+    return Promise.reject(new Error("Falta NEXT_PUBLIC_PAYPAL_CLIENT_ID"));
   }
 
   if (window.paypal) {
@@ -108,6 +106,7 @@ export default function PaypalSubscriptionButton({
 
   useEffect(() => {
     destroyedRef.current = false;
+    renderedRef.current = false;
 
     const renderButton = async () => {
       try {
@@ -122,7 +121,6 @@ export default function PaypalSubscriptionButton({
         }
 
         containerRef.current.innerHTML = "";
-
         renderedRef.current = true;
 
         await window.paypal
@@ -146,6 +144,10 @@ export default function PaypalSubscriptionButton({
             },
 
             createSubscription: (_data: any, actions: any) => {
+              if (!planId) {
+                throw new Error("Falta NEXT_PUBLIC_PAYPAL_PLAN_ID");
+              }
+
               return actions.subscription.create({
                 plan_id: planId,
               });

@@ -16,11 +16,9 @@ export default function PaypalReturnClient() {
       return;
     }
 
-    // Acá llamás a tu backend para capturar la orden
-    // Ejemplo:
-    // apiService.post("/payments/paypal/capture", { orderId: token, payerId })
-    //   .then(() => router.replace("/checkout?success=paypal"))
-    //   .catch(() => router.replace("/checkout?error=paypal_capture_failed"));
+    setTimeout(() => {
+      router.replace("/");
+    }, 3000);
 
     console.log("PayPal return", { token, payerId });
   }, [searchParams, router]);

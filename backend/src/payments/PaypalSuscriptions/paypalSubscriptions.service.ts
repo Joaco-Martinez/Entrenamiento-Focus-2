@@ -5,6 +5,23 @@ import { ApiError } from "../../common/errors/ApiError";
 
 type RawHeaders = Record<string, string | string[] | undefined>;
 
+type PaypalSubscriptionDetails = {
+  id?: string;
+  status?: string | null;
+  custom_id?: string | null;
+  plan_id?: string | null;
+  subscriber?: {
+    email_address?: string | null;
+    payer_id?: string | null;
+  } | null;
+  billing_info?: {
+    next_billing_time?: string | null;
+    last_payment?: {
+      time?: string | null;
+    } | null;
+  } | null;
+};
+
 function getPaypalSuscriptionConfig() {
   return {
     clientId: env.PAYPAL_SUSCRIPTION_CLIENT_ID,
@@ -33,6 +50,43 @@ function getHeader(headers: RawHeaders, key: string) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function parseCustomId(customIdRaw?: string | null): { userId: string | null; productId: string | null } {
+  const customId = String(customIdRaw ?? "").trim();
+
+  if (!customId) {
+    return { userId: null, productId: null };
+  }
+
+  if (customId.includes(":")) {
+    const [userId, productId] = customId.split(":");
+    return {
+      userId: userId || null,
+      productId: productId || null,
+    };
+  }
+
+  return { userId: null, productId: null };
+}
+
+function mapDate(value?: string | null) {
+  return value ? new Date(value) : null;
+}
+
+export function mapPaypalSubscriptionStatus(statusRaw?: string | null) {
+  const normalized = String(statusRaw ?? "").toUpperCase();
+
+  if (normalized === "ACTIVE") return "ACTIVE" as const;
+  if (normalized === "CANCELLED") return "CANCELLED" as const;
+  if (normalized === "SUSPENDED") return "SUSPENDED" as const;
+  if (normalized === "EXPIRED") return "EXPIRED" as const;
+
+  if (normalized === "APPROVAL_PENDING") return "PAST_DUE" as const;
+  if (normalized === "APPROVED") return "PAST_DUE" as const;
+  if (normalized === "CREATED") return "PAST_DUE" as const;
+
+  return "PAST_DUE" as const;
+}
+
 export async function getPaypalAccessToken() {
   const config = getPaypalSuscriptionConfig();
 
@@ -41,6 +95,10 @@ export async function getPaypalAccessToken() {
       400,
       "Missing PayPal suscription credentials. Check PAYPAL_SUSCRIPTION_CLIENT_ID and PAYPAL_SUSCRIPTION_CLIENT_SECRET"
     );
+  }
+
+  if (!config.baseUrl) {
+    throw new ApiError(400, "Missing PAYPAL_SUSCRIPTION_BASE_URL");
   }
 
   const basic = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64");
@@ -59,17 +117,134 @@ export async function getPaypalAccessToken() {
   return response.data.access_token as string;
 }
 
-export function mapPaypalSubscriptionStatus(statusRaw?: string | null) {
-  const normalized = String(statusRaw ?? "").toUpperCase();
+async function grantAccessIfNeeded(userId: string, productId: string) {
+  const existingGrant = await prisma.accessGrant.findFirst({
+    where: {
+      userId,
+      productId,
+    },
+  });
 
-  if (normalized === "APPROVAL_PENDING") return "PAST_DUE" as const;
-  if (normalized === "APPROVED") return "PAST_DUE" as const;
-  if (normalized === "ACTIVE") return "ACTIVE" as const;
-  if (normalized === "CANCELLED") return "CANCELLED" as const;
-  if (normalized === "SUSPENDED") return "SUSPENDED" as const;
-  if (normalized === "EXPIRED") return "EXPIRED" as const;
+  if (existingGrant) return existingGrant;
 
-  return "PAST_DUE" as const;
+  return prisma.accessGrant.create({
+    data: {
+      userId,
+      productId,
+    },
+  });
+}
+
+async function revokeAccessIfExists(userId: string, productId: string) {
+  const existingGrant = await prisma.accessGrant.findFirst({
+    where: {
+      userId,
+      productId,
+    },
+  });
+
+  if (!existingGrant) return;
+
+  await prisma.accessGrant.delete({
+    where: {
+      id: existingGrant.id,
+    },
+  });
+}
+
+async function persistPaypalSubscriptionForUser(params: {
+  userId: string;
+  productId?: string | null;
+  paypalSubscription: PaypalSubscriptionDetails;
+}) {
+  const { userId, productId, paypalSubscription } = params;
+
+  const mappedStatus = mapPaypalSubscriptionStatus(paypalSubscription?.status);
+
+  const subscription = await prisma.subscription.upsert({
+    where: { userId },
+    create: {
+      userId,
+      provider: "PAYPAL",
+      status: mappedStatus,
+      externalId: String(paypalSubscription.id),
+      currentPeriodStart: mapDate(paypalSubscription?.billing_info?.last_payment?.time),
+      currentPeriodEnd: mapDate(paypalSubscription?.billing_info?.next_billing_time),
+      cancelAtPeriodEnd: false,
+    },
+    update: {
+      provider: "PAYPAL",
+      status: mappedStatus,
+      externalId: String(paypalSubscription.id),
+      currentPeriodStart: mapDate(paypalSubscription?.billing_info?.last_payment?.time),
+      currentPeriodEnd: mapDate(paypalSubscription?.billing_info?.next_billing_time),
+      cancelAtPeriodEnd: false,
+    },
+  });
+
+  if (productId) {
+    if (mappedStatus === "ACTIVE") {
+      await grantAccessIfNeeded(userId, productId);
+    } else if (mappedStatus === "CANCELLED" || mappedStatus === "EXPIRED") {
+      await revokeAccessIfExists(userId, productId);
+    }
+  }
+
+  return subscription;
+}
+
+async function resolveProductIdFromSubscription(
+  paypalSubscription: PaypalSubscriptionDetails,
+  fallbackExternalId?: string | null
+) {
+  const parsed = parseCustomId(paypalSubscription?.custom_id);
+  if (parsed.productId) return parsed.productId;
+
+  if (fallbackExternalId) {
+    const productByExternalId = await prisma.product.findFirst({
+      where: {
+        paypalPlanId: fallbackExternalId,
+      },
+      select: { id: true },
+    });
+
+    if (productByExternalId?.id) return productByExternalId.id;
+  }
+
+  if (paypalSubscription?.plan_id) {
+    const productByPlan = await prisma.product.findFirst({
+      where: {
+        paypalPlanId: String(paypalSubscription.plan_id),
+      },
+      select: { id: true },
+    });
+
+    if (productByPlan?.id) return productByPlan.id;
+  }
+
+  return null;
+}
+
+async function resolveUserIdFromSubscription(
+  paypalSubscription: PaypalSubscriptionDetails,
+  subscriptionId?: string | null
+) {
+  const parsed = parseCustomId(paypalSubscription?.custom_id);
+  if (parsed.userId) return parsed.userId;
+
+  if (subscriptionId) {
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: {
+        externalId: subscriptionId,
+        provider: "PAYPAL",
+      },
+      select: { userId: true },
+    });
+
+    if (existingSubscription?.userId) return existingSubscription.userId;
+  }
+
+  return null;
 }
 
 export async function createPaypalSubscription(
@@ -79,18 +254,28 @@ export async function createPaypalSubscription(
   cancelUrl?: string
 ) {
   const config = getPaypalSuscriptionConfig();
+
   const finalReturnUrl = resolveUrl(
     returnUrl,
     config.defaultReturnUrl,
     "PAYPAL_SUSCRIPTION_RETURN_URL"
   );
+
   const finalCancelUrl = resolveUrl(
     cancelUrl,
     config.defaultCancelUrl,
     "PAYPAL_SUSCRIPTION_CANCEL_URL"
   );
 
-  const product = await prisma.product.findUnique({ where: { id: productId } });
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: {
+      id: true,
+      title: true,
+      isSubscription: true,
+      paypalPlanId: true,
+    },
+  });
 
   if (!product) throw new ApiError(404, "Product not found");
   if (!product.isSubscription) {
@@ -101,6 +286,7 @@ export async function createPaypalSubscription(
   }
 
   const token = await getPaypalAccessToken();
+
   const response = await axios.post(
     `${config.baseUrl}/v1/billing/subscriptions`,
     {
@@ -150,65 +336,47 @@ export async function createPaypalSubscription(
 }
 
 export async function fetchPaypalSubscription(subscriptionId: string) {
+  if (!subscriptionId) {
+    throw new ApiError(400, "Missing subscriptionId");
+  }
+
   const config = getPaypalSuscriptionConfig();
   const token = await getPaypalAccessToken();
 
-  const response = await axios.get(
-    `${config.baseUrl}/v1/billing/subscriptions/${subscriptionId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await axios.get(`${config.baseUrl}/v1/billing/subscriptions/${subscriptionId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
-  return response.data;
+  return response.data as PaypalSubscriptionDetails;
 }
 
-export async function syncPaypalSubscriptionForUser(
-  userId: string,
-  subscriptionId: string
-) {
-  const paypalSubscription = await fetchPaypalSubscription(subscriptionId);
-
-  const customId = String(paypalSubscription?.custom_id ?? "");
-  if (customId && customId.includes(":")) {
-    const [ownerUserId] = customId.split(":");
-    if (ownerUserId && ownerUserId !== userId) {
-      throw new ApiError(403, "This subscription does not belong to this user");
-    }
+export async function syncPaypalSubscriptionForUser(userId: string, subscriptionId: string) {
+  if (!userId) {
+    throw new ApiError(401, "Unauthorized");
   }
 
-  const mappedStatus = mapPaypalSubscriptionStatus(paypalSubscription?.status);
+  if (!subscriptionId) {
+    throw new ApiError(400, "Missing subscriptionId");
+  }
 
-  const subscription = await prisma.subscription.upsert({
-    where: { userId },
-    create: {
-      userId,
-      provider: "PAYPAL",
-      status: mappedStatus,
-      externalId: String(paypalSubscription.id),
-      currentPeriodStart: paypalSubscription?.billing_info?.last_payment?.time
-        ? new Date(paypalSubscription.billing_info.last_payment.time)
-        : null,
-      currentPeriodEnd: paypalSubscription?.billing_info?.next_billing_time
-        ? new Date(paypalSubscription.billing_info.next_billing_time)
-        : null,
-      cancelAtPeriodEnd: false,
-    },
-    update: {
-      provider: "PAYPAL",
-      status: mappedStatus,
-      externalId: String(paypalSubscription.id),
-      currentPeriodStart: paypalSubscription?.billing_info?.last_payment?.time
-        ? new Date(paypalSubscription.billing_info.last_payment.time)
-        : null,
-      currentPeriodEnd: paypalSubscription?.billing_info?.next_billing_time
-        ? new Date(paypalSubscription.billing_info.next_billing_time)
-        : null,
-      cancelAtPeriodEnd: false,
-    },
+  const paypalSubscription = await fetchPaypalSubscription(subscriptionId);
+
+  const parsed = parseCustomId(paypalSubscription?.custom_id);
+
+  if (parsed.userId && parsed.userId !== userId) {
+    throw new ApiError(403, "This subscription does not belong to this user");
+  }
+
+  const productId =
+    parsed.productId || (await resolveProductIdFromSubscription(paypalSubscription));
+
+  const subscription = await persistPaypalSubscriptionForUser({
+    userId,
+    productId,
+    paypalSubscription,
   });
 
   return {
@@ -217,10 +385,11 @@ export async function syncPaypalSubscriptionForUser(
   };
 }
 
-export async function cancelPaypalSubscriptionAtProvider(
-  externalId: string,
-  reason: string
-) {
+export async function cancelPaypalSubscriptionAtProvider(externalId: string, reason: string) {
+  if (!externalId) {
+    throw new ApiError(400, "Missing PayPal external subscription id");
+  }
+
   const config = getPaypalSuscriptionConfig();
   const token = await getPaypalAccessToken();
 
@@ -275,53 +444,44 @@ export async function handlePaypalSubscriptionWebhook(body: unknown, headers: Ra
   }
 
   const eventType = String((body as { event_type?: string } | null)?.event_type ?? "");
+
   if (!eventType.startsWith("BILLING.SUBSCRIPTION")) {
     return { ok: true, ignored: true };
   }
 
-  const resource = ((body as { resource?: Record<string, unknown> } | null)?.resource ?? {}) as Record<string, unknown>;
-  const subscriptionId = resource.id ? String(resource.id) : null;
-  const customId = resource.custom_id ? String(resource.custom_id) : "";
-  const userId = customId.includes(":") ? customId.split(":")[0] : null;
+  const resource = ((body as { resource?: Record<string, unknown> } | null)?.resource ??
+    {}) as Record<string, unknown>;
 
-  if (!subscriptionId || !userId) {
+  const subscriptionId = resource.id ? String(resource.id) : null;
+
+  if (!subscriptionId) {
     return { ok: true, ignored: true };
   }
 
-  const billingInfo = (resource.billing_info ?? {}) as Record<string, unknown>;
-  const lastPayment = (billingInfo.last_payment ?? {}) as Record<string, unknown>;
-  const mappedStatus = mapPaypalSubscriptionStatus(
-    typeof resource.status === "string" ? resource.status : null
-  );
+  // IMPORTANTE:
+  // el webhook de PayPal a veces no trae todo el contexto necesario.
+  // Por eso SIEMPRE rehidratamos desde la API oficial.
+  const paypalSubscription = await fetchPaypalSubscription(subscriptionId);
 
-  await prisma.subscription.upsert({
-    where: { userId },
-    create: {
-      userId,
-      provider: "PAYPAL",
-      status: mappedStatus,
-      externalId: subscriptionId,
-      currentPeriodStart:
-        typeof lastPayment.time === "string" ? new Date(lastPayment.time) : null,
-      currentPeriodEnd:
-        typeof billingInfo.next_billing_time === "string"
-          ? new Date(billingInfo.next_billing_time)
-          : null,
-      cancelAtPeriodEnd: false,
-    },
-    update: {
-      provider: "PAYPAL",
-      status: mappedStatus,
-      externalId: subscriptionId,
-      currentPeriodStart:
-        typeof lastPayment.time === "string" ? new Date(lastPayment.time) : null,
-      currentPeriodEnd:
-        typeof billingInfo.next_billing_time === "string"
-          ? new Date(billingInfo.next_billing_time)
-          : null,
-      cancelAtPeriodEnd: false,
-    },
+  const resolvedUserId = await resolveUserIdFromSubscription(paypalSubscription, subscriptionId);
+  if (!resolvedUserId) {
+    return { ok: true, ignored: true };
+  }
+
+  const resolvedProductId = await resolveProductIdFromSubscription(paypalSubscription);
+
+  const subscription = await persistPaypalSubscriptionForUser({
+    userId: resolvedUserId,
+    productId: resolvedProductId,
+    paypalSubscription,
   });
 
-  return { ok: true };
+  return {
+    ok: true,
+    eventType,
+    subscriptionId,
+    userId: resolvedUserId,
+    productId: resolvedProductId,
+    status: subscription.status,
+  };
 }

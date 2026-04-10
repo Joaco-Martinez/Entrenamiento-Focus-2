@@ -83,7 +83,7 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Button onClick={() => go(dashboardHref)}>Panel de usuario</Button>
+                <Button onClick={() => go(dashboardHref)}>Mis Compras</Button>
                 <Button variant="ghost" onClick={handleLogout}>Cerrar sesión</Button>
               </div>
             )}
@@ -144,7 +144,7 @@ export function Navbar() {
                   </>
                 ) : (
                   <>
-                    <button onClick={() => go(dashboardHref)} className="block w-full py-2 text-left font-medium">Dashboard</button>
+                    <button onClick={() => go(dashboardHref)} className="block w-full py-2 text-left font-medium">Mis Compras</button>
                     <button onClick={handleLogout} className="block w-full py-2 text-left font-medium text-red-400">Cerrar sesión</button>
                   </>
                 )}
