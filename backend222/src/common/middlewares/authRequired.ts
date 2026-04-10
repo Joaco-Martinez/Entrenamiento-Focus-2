@@ -21,27 +21,13 @@ export function authRequired(
   res: Response,
   next: NextFunction
 ) {
-  // Log cookies for debugging – this can be removed in production
   console.log("req.headers.cookie:", req.headers.cookie);
   console.log("req.cookies:", req.cookies);
 
-  // Extract token from cookie or Authorization header
-  // Support both Cookie-based auth (token cookie) and Bearer tokens in the Authorization header
-  let token: string | undefined = undefined;
-  // Prefer cookie token if present
-  if (req.cookies && typeof req.cookies.token === "string") {
-    token = req.cookies.token;
-  } else if (typeof req.headers.authorization === "string") {
-    const authHeader = req.headers.authorization.trim();
-    if (authHeader.toLowerCase().startsWith("bearer ")) {
-      token = authHeader.slice(7).trim();
-    }
-  }
-
+  const token = req.cookies?.token;
   console.log("authRequired token:", token);
 
   if (!token) {
-    // No token provided – unauthenticated
     return res.status(401).json({ message: "No autenticado" });
   }
 
@@ -51,14 +37,11 @@ export function authRequired(
       process.env.JWT_SECRET as string
     ) as JwtUserPayload;
 
-    // Attach user payload to request for downstream middlewares/controllers
     req.user = payload;
     console.log("authRequired user:", payload);
 
     next();
-  } catch (error) {
-    // Token present but invalid or expired
-    console.log("authRequired error verifying token:", error);
+  } catch {
     return res.status(401).json({ message: "Token inválido" });
   }
 }

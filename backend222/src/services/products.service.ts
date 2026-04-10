@@ -67,30 +67,13 @@ export async function getAccess(userId: string, productId: string) {
     where: { userId_productId: { userId, productId } },
   });
 
-  // If user has a direct access grant, allow access
   if (grant) return { resourceUrl: product.resourceUrl };
 
-  // Check if the user has an active subscription
   const sub = await prisma.subscription.findUnique({ where: { userId } });
-  const hasActiveSubscription = sub?.status === "ACTIVE";
+  const hasPremium = sub?.status === "ACTIVE";
 
-  // If user is subscribed, allow access either when the product requires premium
-  // content or when the product itself is a subscription (e.g. mentoring product)
-  if (hasActiveSubscription) {
-    // If subscription is tied to a specific product (productId not null), ensure
-    // the user is subscribed to the same product. Otherwise, treat it as a
-    // generic premium subscription.
-    if (
-      sub.productId &&
-      sub.productId !== product.id
-    ) {
-      // Subscribed to a different product – deny access
-      throw new ApiError(403, "No access");
-    }
-
-    if (product.requiresPremium || product.isSubscription) {
-      return { resourceUrl: product.resourceUrl };
-    }
+  if (hasPremium && product.requiresPremium) {
+    return { resourceUrl: product.resourceUrl };
   }
 
   throw new ApiError(403, "No access");
