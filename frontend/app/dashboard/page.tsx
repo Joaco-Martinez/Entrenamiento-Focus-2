@@ -297,13 +297,6 @@ const router = useRouter();
         {loading ? "Cargando..." : "Actualizar"}
       </button>
 
-      <button
-        onClick={cancel}
-        disabled={loading || !status?.hasActiveSubscription}
-        className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-sm text-red-200 hover:bg-red-500/15 disabled:opacity-60"
-      >
-        Cancelar
-      </button>
 
       {/* 👇 NUEVO BOTÓN */}
       {status?.hasActiveSubscription && (

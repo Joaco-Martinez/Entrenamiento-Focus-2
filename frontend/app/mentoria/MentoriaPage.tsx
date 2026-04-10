@@ -7,12 +7,16 @@ import PaypalSubscriptionButton from "./PaypalSubscriptionButton";
 import MercadoPagoSubscriptionButton from "./MercadoPagoSubscriptionButton";
 import MouseGlowBackground from "@/components/mouse-glow-background";
 
+type ProviderType = "paypal" | "mercadopago" | null;
+
 export default function MentoriaPage() {
   const router = useRouter();
   const { user, loading: authLoading, country } = useAuth();
 
-  const [loadingProvider, setLoadingProvider] = useState<"paypal" | "mercadopago" | null>(null);
   const [error, setError] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderType>(null);
+  const [pendingProvider, setPendingProvider] = useState<ProviderType>(null);
+  const [showEmailConfirmModal, setShowEmailConfirmModal] = useState(false);
 
   const pillars = [
     "Producción musical",
@@ -49,7 +53,7 @@ export default function MentoriaPage() {
   const MP_PLAN_ID = "0c205caf4e1a4eb28df1e38b0a1d205c";
   const MERCADOPAGO_PLAN_CHECKOUT = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${MP_PLAN_ID}`;
 
-  // PONÉ ACÁ EL ID REAL DE PRISMA
+  // REEMPLAZAR POR EL ID REAL DEL PRODUCTO EN PRISMA
   const PRODUCT_ID_MENTORIA = "mentoria-focus-product-id";
 
   const PAYPAL_PLAN_ID = "P-78247559TD359713NNHKR2EI";
@@ -81,6 +85,28 @@ export default function MentoriaPage() {
     }
 
     return true;
+  };
+
+  const handleSelectProvider = (provider: Exclude<ProviderType, null>) => {
+    setError("");
+
+    if (!ensureAuth()) return;
+
+    setPendingProvider(provider);
+    setShowEmailConfirmModal(true);
+  };
+
+  const confirmProviderSelection = () => {
+    if (!pendingProvider) return;
+
+    setSelectedProvider(pendingProvider);
+    setPendingProvider(null);
+    setShowEmailConfirmModal(false);
+  };
+
+  const closeModal = () => {
+    setPendingProvider(null);
+    setShowEmailConfirmModal(false);
   };
 
   return (
@@ -291,7 +317,7 @@ export default function MentoriaPage() {
               <p className="mt-6 text-sm font-medium text-red-400">{error}</p>
             )}
 
-            <div className="mt-8 flex flex-col items-center justify-center gap-4">
+            <div className="mt-8 flex flex-col items-center justify-center gap-6">
               {!authLoading && !user ? (
                 <>
                   <p className="text-sm font-medium text-[#f4d97c]">
@@ -308,28 +334,84 @@ export default function MentoriaPage() {
                 </>
               ) : (
                 <>
-                  <PaypalSubscriptionButton
-                    planId={PAYPAL_PLAN_ID}
-                    clientId={PAYPAL_CLIENT_ID}
-                    disabled={authLoading || loadingProvider === "mercadopago"}
-                    onRequireAuth={ensureAuth}
-                    onError={(message) => setError(message)}
-                  />
+                  <div className="grid w-full max-w-3xl gap-4 md:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectProvider("paypal")}
+                      className={`rounded-[24px] border p-5 text-left transition ${
+                        selectedProvider === "paypal"
+                          ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.15)]"
+                          : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]"
+                      }`}
+                    >
+                      <p className="text-sm uppercase tracking-[0.2em] text-[#D4AF37]">
+                        Método de pago
+                      </p>
+                      <h3 className="mt-2 text-xl font-semibold text-white">
+                        PayPal
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-white/65">
+                        Ideal para usuarios fuera de Argentina. Suscripción
+                        mensual automática.
+                      </p>
+                    </button>
 
-                  <div>
-                    <p className="text-sm font-medium text-[#f4d97c]">O</p>
+                    {isArgentina && (
+                      <button
+                        type="button"
+                        onClick={() => handleSelectProvider("mercadopago")}
+                        className={`rounded-[24px] border p-5 text-left transition ${
+                          selectedProvider === "mercadopago"
+                            ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.15)]"
+                            : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]"
+                        }`}
+                      >
+                        <p className="text-sm uppercase tracking-[0.2em] text-[#D4AF37]">
+                          Método de pago
+                        </p>
+                        <h3 className="mt-2 text-xl font-semibold text-white">
+                          Mercado Pago
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-white/65">
+                          Disponible para Argentina. Suscripción mensual
+                          automática.
+                        </p>
+                      </button>
+                    )}
                   </div>
 
-                  {isArgentina && (
-                    <MercadoPagoSubscriptionButton
-                      disabled={authLoading || loadingProvider === "paypal"}
-                      onRequireAuth={ensureAuth}
-                      onError={(message) => setError(message)}
-                      checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
-                      productId={PRODUCT_ID_MENTORIA}
-                      planId={MP_PLAN_ID}
-                    />
-                  )}
+                  <div className="w-full max-w-3xl">
+                    {selectedProvider && (
+                      <div className="rounded-[28px] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6 md:p-8">
+                        <p className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-[#D4AF37]">
+                          Completar suscripción
+                        </p>
+
+                        <div className="flex justify-center">
+                          {selectedProvider === "paypal" && (
+                            <PaypalSubscriptionButton
+                              planId={PAYPAL_PLAN_ID}
+                              clientId={PAYPAL_CLIENT_ID}
+                              disabled={authLoading}
+                              onRequireAuth={ensureAuth}
+                              onError={(message) => setError(message)}
+                            />
+                          )}
+
+                          {selectedProvider === "mercadopago" && isArgentina && (
+                            <MercadoPagoSubscriptionButton
+                              disabled={authLoading}
+                              onRequireAuth={ensureAuth}
+                              onError={(message) => setError(message)}
+                              checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
+                              productId={PRODUCT_ID_MENTORIA}
+                              planId={MP_PLAN_ID}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -343,9 +425,9 @@ export default function MentoriaPage() {
               </a>
             </div>
 
-            <p className="mt-4 text-xs text-[#f4d97c]/80">
-              Importante: hacé la suscripción con el mismo email de tu cuenta
-              para activar el acceso automáticamente.
+            <p className="mt-4 text-lg text-[#f4d97c]/80">
+              Importante: el correo de tu cuenta de Entrenamiento Focus tiene que
+              coincidir con el correo de PayPal o Mercado Pago.
             </p>
 
             <p className="mt-5 text-xs text-white/45">
@@ -358,6 +440,48 @@ export default function MentoriaPage() {
           </div>
         </div>
       </section>
+
+      {showEmailConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111111] p-6 shadow-2xl">
+            <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
+              Confirmación
+            </p>
+
+            <h3 className="mt-3 text-2xl font-semibold text-white">
+              Antes de continuar
+            </h3>
+
+            <p className="mt-4 text-sm leading-7 text-white/75">
+              ¿Corroboraste que el correo de tu cuenta de Entrenamiento Focus sea
+              el mismo que el de la cuenta con la que vas a pagar?
+            </p>
+
+            <p className="mt-3 text-sm leading-7 text-white/60">
+              Esto es importante para que podamos identificar correctamente tu
+              suscripción y darte acceso sin problemas.
+            </p>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="inline-flex flex-1 items-center justify-center rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
+              >
+                Todavía no
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmProviderSelection}
+                className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.02]"
+              >
+                Sí, continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
