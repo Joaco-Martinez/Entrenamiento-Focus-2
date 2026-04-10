@@ -77,6 +77,9 @@ export async function processPayment(data: ProcessPaymentInput) {
 
 export async function createPreference(data: CreatePreferenceInput) {
   const frontendUrl = process.env.CORS_ORIGIN || "http://localhost:3000";
+  const notificationUrl =
+    process.env.MP_NOTIFICATION_URL ||
+    "https://www.api.entrenamientofocus.com.ar/mercadopago_checkout/webhook";
 
   const response = await preferenceClient.create({
     body: {
@@ -100,6 +103,7 @@ export async function createPreference(data: CreatePreferenceInput) {
       metadata: {
         orderId: data.orderId,
       },
+      notification_url: notificationUrl,
       back_urls: {
         success: `${frontendUrl}/checkout/success`,
         failure: `${frontendUrl}/checkout/failure`,
