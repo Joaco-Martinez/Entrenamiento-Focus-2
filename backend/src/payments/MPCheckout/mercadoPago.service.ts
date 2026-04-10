@@ -118,6 +118,48 @@ export async function createPreference(data: CreatePreferenceInput) {
 
 import crypto from "crypto";
 
+export async function confirmPayment(input: {
+  paymentId?: string;
+  externalReference?: string;
+}) {
+  const paymentId = String(input.paymentId || "").trim();
+  const externalReference = String(input.externalReference || "").trim();
+
+  if (!paymentId && !externalReference) {
+    throw new Error("Falta paymentId o externalReference");
+  }
+
+  let paymentData: any = null;
+
+  if (paymentId) {
+    const payment = await paymentClient.get({
+      id: paymentId,
+    });
+
+    paymentData = unwrapMpResponse(payment);
+  }
+
+  const resolvedOrderId =
+    paymentData?.external_reference ||
+    paymentData?.metadata?.orderId ||
+    externalReference;
+
+  if (!resolvedOrderId) {
+    throw new Error("No se pudo resolver el orderId");
+  }
+
+  const status = String(paymentData?.status || "").toLowerCase();
+
+  return {
+    ok: true,
+    orderId: resolvedOrderId,
+    paymentId: paymentData?.id ? String(paymentData.id) : paymentId || null,
+    status,
+    statusDetail: paymentData?.status_detail || null,
+    raw: paymentData || null,
+  };
+}
+
 export async function processWebhook(
   body: any,
   query: any,

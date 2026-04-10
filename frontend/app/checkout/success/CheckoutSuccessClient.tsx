@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
@@ -12,10 +12,18 @@ import {
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+
 export default function CheckoutSuccessClient() {
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
+
   const didClearCartRef = useRef(false);
+  const didConfirmRef = useRef(false);
+
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
 
   const data = useMemo(() => {
     return {
@@ -38,14 +46,92 @@ export default function CheckoutSuccessClient() {
     ""
   ).toLowerCase();
 
+  useEffect(() => {
+    const run = async () => {
+      if (didConfirmRef.current) return;
+      if (normalizedStatus !== "approved") return;
+
+      const paymentId = data.paymentId || data.collectionId;
+      const externalReference = data.externalReference;
+
+      if (!paymentId && !externalReference) return;
+
+      didConfirmRef.current = true;
+      setConfirming(true);
+      setConfirmError("");
+
+      try {
+        const res = await fetch(
+          `${API_URL}/mercadopago_checkout/mercadopago/confirm-payment`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              paymentId,
+              externalReference,
+            }),
+          }
+        );
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(json?.message || "No se pudo confirmar el pago");
+        }
+
+        if (json?.approved) {
+          setConfirmed(true);
+        } else {
+          setConfirmError(
+            json?.message || "El pago todavía no quedó aprobado en el backend"
+          );
+        }
+      } catch (error: any) {
+        console.error("Error confirmando pago de Mercado Pago:", error);
+        setConfirmError(
+          error?.message || "Ocurrió un error al confirmar el pago"
+        );
+      } finally {
+        setConfirming(false);
+      }
+    };
+
+    run();
+  }, [
+    normalizedStatus,
+    data.paymentId,
+    data.collectionId,
+    data.externalReference,
+  ]);
+
+  useEffect(() => {
+    if (
+      normalizedStatus === "approved" &&
+      !didClearCartRef.current &&
+      (confirmed || !confirming)
+    ) {
+      didClearCartRef.current = true;
+      clearCart();
+    }
+  }, [normalizedStatus, confirmed, confirming, clearCart]);
+
   const statusConfig = useMemo(() => {
     if (normalizedStatus === "approved") {
       return {
         title: "¡Pago aprobado!",
         description:
-          "Tu pago fue procesado correctamente. En breve vas a poder ver tu compra reflejada en tu cuenta.",
+          confirmed
+            ? "Tu pago fue confirmado y tu compra ya quedó impactada correctamente en tu cuenta."
+            : confirming
+            ? "Tu pago fue aprobado. Estamos terminando de confirmar la compra para habilitar tu acceso."
+            : confirmError
+            ? "El pago fue aprobado, pero hubo un problema al terminar de acreditarlo en tu cuenta."
+            : "Tu pago fue procesado correctamente. En breve vas a poder ver tu compra reflejada en tu cuenta.",
         icon: <CheckCircle2 className="h-14 w-14 text-green-400" />,
-        badge: "Aprobado",
+        badge: confirmed ? "Confirmado" : "Aprobado",
         badgeClass: "border-green-500/30 bg-green-500/10 text-green-300",
       };
     }
@@ -69,14 +155,7 @@ export default function CheckoutSuccessClient() {
       badge: "No aprobado",
       badgeClass: "border-red-500/30 bg-red-500/10 text-red-300",
     };
-  }, [normalizedStatus]);
-
-  useEffect(() => {
-    if (normalizedStatus === "approved" && !didClearCartRef.current) {
-      didClearCartRef.current = true;
-      clearCart();
-    }
-  }, [normalizedStatus]);
+  }, [normalizedStatus, confirmed, confirming, confirmError]);
 
   return (
     <main className="min-h-screen bg-[#070707] px-4 py-10 text-white md:px-6">
@@ -104,6 +183,18 @@ export default function CheckoutSuccessClient() {
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65 md:text-base">
                   {statusConfig.description}
                 </p>
+
+                {confirming && (
+                  <p className="mt-3 text-sm text-yellow-300">
+                    Confirmando pago con Mercado Pago...
+                  </p>
+                )}
+
+                {!!confirmError && (
+                  <p className="mt-3 text-sm text-red-300">
+                    {confirmError}
+                  </p>
+                )}
               </div>
             </div>
           </div>
