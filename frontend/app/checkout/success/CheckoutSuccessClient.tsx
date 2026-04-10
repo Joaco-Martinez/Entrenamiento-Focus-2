@@ -62,7 +62,7 @@ export default function CheckoutSuccessClient() {
 
       try {
         const res = await fetch(
-          `${API_URL}/mercadopago_checkout/mercadopago/confirm-payment`,
+          `${API_URL}/mercadopago_checkout/confirm-payment`,
           {
             method: "POST",
             headers: {
