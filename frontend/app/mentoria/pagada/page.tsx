@@ -1,9 +1,36 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { CheckCircle2, MessageCircle, BellRing, Video } from "lucide-react";
 
 export default function SuscripcionExitPage() {
+  const { user, isPremium, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // ⛔ Si terminó de cargar y NO es premium → afuera
+    if (!loading && !isPremium) {
+      router.replace("/"); // o /login o /mentoria
+    }
+  }, [loading, isPremium, router]);
+
+  // ⏳ Mientras carga → no mostrar nada
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        Cargando...
+      </div>
+    );
+  }
+
+  // ⛔ Bloqueo extra visual (por si tarda el redirect)
+  if (!isPremium) return null;
+
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center px-6 py-12">
+    <main className="mt-5 min-h-screen bg-black text-white flex items-center justify-center px-6 py-12">
       <section className="w-full max-w-3xl rounded-3xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#111111] to-[#050505] shadow-[0_0_40px_rgba(212,175,55,0.12)] overflow-hidden">
         <div className="h-2 w-full bg-gradient-to-r from-[#D4AF37] via-[#f4d97c] to-[#D4AF37]" />
 

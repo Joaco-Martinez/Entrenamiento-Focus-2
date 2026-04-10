@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -31,7 +31,7 @@ export default function UserDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [accessLoading, setAccessLoading] = useState(false);
-
+const router = useRouter();
   const [status, setStatus] = useState<{
     subscriptionId: string | null;
     subscriptionStartDate: string | null;
@@ -264,53 +264,65 @@ export default function UserDashboardPage() {
         <Card title="Mi suscripción" desc="Estado y cancelación" href="#" onClick={refreshSubscription} />
       </section>
 
-      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-lg font-bold">Suscripción</p>
-            <p className="text-sm text-white/60">
-              {status?.hasActiveSubscription ? "Activa" : "Inactiva"}
-              {status?.subscriptionId ? ` · ID: ${status.subscriptionId}` : ""}
-            </p>
 
-            {status?.subscriptionStartDate ? (
-              <p className="mt-1 text-xs text-white/50">
-                Inicio: {new Date(status.subscriptionStartDate).toLocaleString("es-AR")}
-              </p>
-            ) : null}
 
-            {status?.subscriptionEndDate ? (
-              <p className="mt-1 text-xs text-white/50">
-                Fin: {new Date(status.subscriptionEndDate).toLocaleString("es-AR")}
-              </p>
-            ) : null}
-          </div>
+<section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p className="text-lg font-bold">Suscripción</p>
+      <p className="text-sm text-white/60">
+        {status?.hasActiveSubscription ? "Activa" : "Inactiva"}
+        {status?.subscriptionId ? ` · ID: ${status.subscriptionId}` : ""}
+      </p>
 
-          <div className="flex gap-3">
-            <button
-              onClick={refreshSubscription}
-              disabled={loading}
-              className="rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2 text-sm hover:bg-white/[0.07] disabled:opacity-60"
-            >
-              {loading ? "Cargando..." : "Actualizar"}
-            </button>
+      {status?.subscriptionStartDate ? (
+        <p className="mt-1 text-xs text-white/50">
+          Inicio: {new Date(status.subscriptionStartDate).toLocaleString("es-AR")}
+        </p>
+      ) : null}
 
-            <button
-              onClick={cancel}
-              disabled={loading || !status?.hasActiveSubscription}
-              className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-sm text-red-200 hover:bg-red-500/15 disabled:opacity-60"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
+      {status?.subscriptionEndDate ? (
+        <p className="mt-1 text-xs text-white/50">
+          Fin: {new Date(status.subscriptionEndDate).toLocaleString("es-AR")}
+        </p>
+      ) : null}
+    </div>
 
-        {error ? (
-          <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {error}
-          </div>
-        ) : null}
-      </section>
+    <div className="flex gap-3">
+      <button
+        onClick={refreshSubscription}
+        disabled={loading}
+        className="rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2 text-sm hover:bg-white/[0.07] disabled:opacity-60"
+      >
+        {loading ? "Cargando..." : "Actualizar"}
+      </button>
+
+      <button
+        onClick={cancel}
+        disabled={loading || !status?.hasActiveSubscription}
+        className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-2 text-sm text-red-200 hover:bg-red-500/15 disabled:opacity-60"
+      >
+        Cancelar
+      </button>
+
+      {/* 👇 NUEVO BOTÓN */}
+      {status?.hasActiveSubscription && (
+        <button
+          onClick={() => router.push("/mentoria/pagada")}
+          className="rounded-xl border border-green-500/25 bg-green-500/10 px-4 py-2 text-sm text-green-200 hover:bg-green-500/15"
+        >
+          Ir a la mentoría
+        </button>
+      )}
+    </div>
+  </div>
+
+  {error ? (
+    <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+      {error}
+    </div>
+  ) : null}
+</section>
 
       <section className="rounded-2xl border border-white/10 bg-black/30 p-6">
         <div className="mb-5 flex items-center justify-between gap-3">
