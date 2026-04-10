@@ -27,6 +27,15 @@ type MercadoPagoPreapproval = {
   } | null;
 };
 
+type MercadoPagoSearchResponse = {
+  results?: MercadoPagoPreapproval[];
+  paging?: {
+    total?: number;
+    limit?: number;
+    offset?: number;
+  };
+};
+
 function mapSubscriptionStatus(mpStatus?: string) {
   const s = String(mpStatus || "").toLowerCase();
 
@@ -77,14 +86,136 @@ async function mpFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /**
- * OJO:
- * Esto NO crea nada en MP.
- * Solo consulta una suscripción ya creada desde el link genérico.
+ * Consulta una suscripción existente en MP por id
  */
 export async function getPreapprovalById(
   preapprovalId: string
 ): Promise<MercadoPagoPreapproval> {
   return mpFetch<MercadoPagoPreapproval>(`/preapproval/${preapprovalId}`);
+}
+
+/**
+ * Busca suscripciones en MP por payer_email + planId
+ */
+async function searchPreapprovalsByEmailAndPlan(
+  payerEmail: string,
+  planId: string
+): Promise<MercadoPagoPreapproval[]> {
+  const query = new URLSearchParams({
+    payer_email: payerEmail,
+    preapproval_plan_id: planId,
+    limit: "100",
+    offset: "0",
+  });
+
+  const data = await mpFetch<MercadoPagoSearchResponse>(
+    `/preapproval/search?${query.toString()}`
+  );
+
+  return Array.isArray(data?.results) ? data.results : [];
+}
+
+function pickBestPreapproval(
+  results: MercadoPagoPreapproval[]
+): MercadoPagoPreapproval | null {
+  if (!results.length) return null;
+
+  const active =
+    results.find((s) => {
+      const status = String(s.status || "").toLowerCase();
+      return status === "authorized" || status === "active";
+    }) || null;
+
+  if (active) return active;
+
+  const paused =
+    results.find((s) => String(s.status || "").toLowerCase() === "paused") ||
+    null;
+
+  if (paused) return paused;
+
+  return results[0] || null;
+}
+
+async function upsertSubscriptionFromPreapproval(params: {
+  matchedIntent: {
+    id: string;
+    userId: string;
+    productId?: string | null;
+  };
+  mpPreapproval: MercadoPagoPreapproval;
+}) {
+  const { matchedIntent, mpPreapproval } = params;
+
+  const preapprovalId = String(mpPreapproval.id || "").trim();
+  const payerEmail = String(mpPreapproval.payer_email || "")
+    .trim()
+    .toLowerCase();
+  const mpStatus = String(mpPreapproval.status || "").trim().toLowerCase();
+  const mappedStatus = mapSubscriptionStatus(mpStatus);
+  const now = new Date();
+
+  const subscription = await prisma.subscription.upsert({
+    where: {
+      userId: matchedIntent.userId,
+    },
+    update: {
+      provider: "MERCADOPAGO",
+      status: mappedStatus as any,
+      externalId: preapprovalId || null,
+      providerStatus: mpStatus || null,
+      payerEmail: payerEmail || null,
+      productId: matchedIntent.productId ?? null,
+      raw: JSON.parse(JSON.stringify(mpPreapproval)),
+      currentPeriodStart: mpPreapproval.auto_recurring?.start_date
+        ? new Date(mpPreapproval.auto_recurring.start_date)
+        : null,
+      currentPeriodEnd: mpPreapproval.next_payment_date
+        ? new Date(mpPreapproval.next_payment_date)
+        : null,
+      cancelledAt: mpStatus === "cancelled" ? now : null,
+    },
+    create: {
+      userId: matchedIntent.userId,
+      provider: "MERCADOPAGO",
+      status: mappedStatus as any,
+      externalId: preapprovalId || null,
+      providerStatus: mpStatus || null,
+      payerEmail: payerEmail || null,
+      productId: matchedIntent.productId ?? null,
+      raw: JSON.parse(JSON.stringify(mpPreapproval)),
+      currentPeriodStart: mpPreapproval.auto_recurring?.start_date
+        ? new Date(mpPreapproval.auto_recurring.start_date)
+        : null,
+      currentPeriodEnd: mpPreapproval.next_payment_date
+        ? new Date(mpPreapproval.next_payment_date)
+        : null,
+      cancelledAt: mpStatus === "cancelled" ? now : null,
+    },
+  });
+
+  const updatedIntent = await prisma.subscriptionLinkIntent.update({
+    where: { id: matchedIntent.id },
+    data: {
+      status: mappedStatus === "ACTIVE" ? "ACTIVATED" : "MATCHED",
+      payerEmail: payerEmail || null,
+      mpPreapprovalId: preapprovalId || null,
+      mpStatus: mpStatus || null,
+      matchedAt: now,
+      activatedAt: mappedStatus === "ACTIVE" ? now : null,
+      lastWebhookAt: now,
+      raw: JSON.parse(JSON.stringify(mpPreapproval)),
+    },
+  });
+
+  return {
+    subscription,
+    updatedIntent,
+    mappedStatus,
+    mpStatus,
+    preapprovalId,
+    payerEmail,
+  };
 }
 
 export async function createMercadoPagoLinkIntent(input: CreateIntentInput) {
@@ -196,8 +327,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     return { ignored: true, reason: "Sin eventType" };
   }
 
-  // 1) Evento de pago de suscripción: NO es preapproval.
-  // No hay que llamar /preapproval/:id con este id porque rompe con 400.
+  // Evento de cobro de suscripción: no activa directamente
   if (typeLower.includes("authorized_payment")) {
     console.log(
       "IGNORED: subscription_authorized_payment no activa la suscripción directamente:",
@@ -212,7 +342,6 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     };
   }
 
-  // 2) Solo seguimos con eventos de suscripción/preapproval
   if (
     !typeLower.includes("preapproval") &&
     !typeLower.includes("subscription")
@@ -221,9 +350,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     return { ignored: true, reason: `Evento ignorado: ${eventType}` };
   }
 
-  // 3) Este sí debe ser el ID de preapproval
   const preapprovalId = String(resourceId);
-
   const mpPreapproval = await getPreapprovalById(preapprovalId);
 
   console.log("mpPreapproval:", JSON.stringify(mpPreapproval, null, 2));
@@ -295,7 +422,6 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     );
   }
 
-  // fallback: por email + plan aunque ya no esté en PENDING
   if (!matchedIntent) {
     matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
       where: {
@@ -314,7 +440,6 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     );
   }
 
-  // fallback: buscar usuario por email y luego intent por userId + planId
   if (!matchedIntent) {
     const user = await prisma.user.findUnique({
       where: { email: payerEmail },
@@ -352,75 +477,26 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     };
   }
 
-  const mappedStatus = mapSubscriptionStatus(mpStatus);
-
-  console.log("mappedStatus:", mappedStatus);
-  console.log("matchedIntent.userId:", matchedIntent.userId);
-
-  const subscription = await prisma.subscription.upsert({
-    where: {
+  const result = await upsertSubscriptionFromPreapproval({
+    matchedIntent: {
+      id: matchedIntent.id,
       userId: matchedIntent.userId,
-    },
-    update: {
-      provider: "MERCADOPAGO",
-      status: mappedStatus as any,
-      externalId: preapprovalId,
-      providerStatus: mpStatus || null,
-      payerEmail,
       productId: matchedIntent.productId ?? null,
-      raw: JSON.parse(JSON.stringify(mpPreapproval)),
-      currentPeriodStart: mpPreapproval.auto_recurring?.start_date
-        ? new Date(mpPreapproval.auto_recurring.start_date)
-        : null,
-      currentPeriodEnd: mpPreapproval.next_payment_date
-        ? new Date(mpPreapproval.next_payment_date)
-        : null,
-      cancelledAt: mpStatus === "cancelled" ? now : null,
     },
-    create: {
-      userId: matchedIntent.userId,
-      provider: "MERCADOPAGO",
-      status: mappedStatus as any,
-      externalId: preapprovalId,
-      providerStatus: mpStatus || null,
-      payerEmail,
-      productId: matchedIntent.productId ?? null,
-      raw: JSON.parse(JSON.stringify(mpPreapproval)),
-      currentPeriodStart: mpPreapproval.auto_recurring?.start_date
-        ? new Date(mpPreapproval.auto_recurring.start_date)
-        : null,
-      currentPeriodEnd: mpPreapproval.next_payment_date
-        ? new Date(mpPreapproval.next_payment_date)
-        : null,
-      cancelledAt: mpStatus === "cancelled" ? now : null,
-    },
+    mpPreapproval,
   });
 
   console.log("subscription upserted:", {
-    id: subscription.id,
-    userId: subscription.userId,
-    status: subscription.status,
-    externalId: subscription.externalId,
-  });
-
-  const updatedIntent = await prisma.subscriptionLinkIntent.update({
-    where: { id: matchedIntent.id },
-    data: {
-      status: mappedStatus === "ACTIVE" ? "ACTIVATED" : "MATCHED",
-      payerEmail,
-      mpPreapprovalId: preapprovalId,
-      mpStatus,
-      matchedAt: now,
-      activatedAt: mappedStatus === "ACTIVE" ? now : null,
-      lastWebhookAt: now,
-      raw: JSON.parse(JSON.stringify(mpPreapproval)),
-    },
+    id: result.subscription.id,
+    userId: result.subscription.userId,
+    status: result.subscription.status,
+    externalId: result.subscription.externalId,
   });
 
   console.log("intent updated:", {
-    id: updatedIntent.id,
-    status: updatedIntent.status,
-    mpPreapprovalId: updatedIntent.mpPreapprovalId,
+    id: result.updatedIntent.id,
+    status: result.updatedIntent.status,
+    mpPreapprovalId: result.updatedIntent.mpPreapprovalId,
   });
 
   console.log("========== MP LINK WEBHOOK OK ==========");
@@ -429,16 +505,105 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     ok: true,
     matchedIntentId: matchedIntent.id,
     userId: matchedIntent.userId,
-    preapprovalId,
-    payerEmail,
+    preapprovalId: result.preapprovalId,
+    payerEmail: result.payerEmail,
     planId,
-    mpStatus,
-    mappedStatus,
+    mpStatus: result.mpStatus,
+    mappedStatus: result.mappedStatus,
+  };
+}
+
+async function tryActivateFromLatestIntent(userId: string) {
+  const latestIntent = await prisma.subscriptionLinkIntent.findFirst({
+    where: {
+      userId,
+      provider: "MERCADOPAGO",
+      status: {
+        in: ["PENDING", "MATCHED"],
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  console.log("tryActivateFromLatestIntent.latestIntent:", latestIntent?.id);
+
+  if (!latestIntent) {
+    return {
+      activated: false,
+      reason: "No hay intent pendiente",
+    };
+  }
+
+  const payerEmail = String(latestIntent.email || "").trim().toLowerCase();
+  const planId = String(latestIntent.planId || "").trim();
+
+  console.log("tryActivateFromLatestIntent.payerEmail:", payerEmail);
+  console.log("tryActivateFromLatestIntent.planId:", planId);
+
+  if (!payerEmail || !planId) {
+    return {
+      activated: false,
+      reason: "Intent sin email o planId",
+    };
+  }
+
+  const results = await searchPreapprovalsByEmailAndPlan(payerEmail, planId);
+
+  console.log(
+    "tryActivateFromLatestIntent.search results:",
+    results.map((r) => ({
+      id: r.id,
+      status: r.status,
+      payer_email: r.payer_email,
+      preapproval_plan_id: r.preapproval_plan_id,
+    }))
+  );
+
+  const candidate = pickBestPreapproval(results);
+
+  if (!candidate?.id) {
+    return {
+      activated: false,
+      reason: "No se encontró preapproval en MP",
+      payerEmail,
+      planId,
+    };
+  }
+
+  const mpPreapproval = await getPreapprovalById(String(candidate.id));
+
+  console.log(
+    "tryActivateFromLatestIntent.selectedPreapproval:",
+    JSON.stringify(mpPreapproval, null, 2)
+  );
+
+  const result = await upsertSubscriptionFromPreapproval({
+    matchedIntent: {
+      id: latestIntent.id,
+      userId: latestIntent.userId,
+      productId: latestIntent.productId ?? null,
+    },
+    mpPreapproval,
+  });
+
+  return {
+    activated: result.mappedStatus === "ACTIVE",
+    reason:
+      result.mappedStatus === "ACTIVE"
+        ? "Suscripción activada desde fallback /me"
+        : "Suscripción encontrada pero no activa",
+    subscription: result.subscription,
+    latestIntent: result.updatedIntent,
+    mappedStatus: result.mappedStatus,
+    mpStatus: result.mpStatus,
+    preapprovalId: result.preapprovalId,
   };
 }
 
 export async function getMyMercadoPagoLinkSubscription(userId: string) {
-  const [subscription, latestIntent] = await Promise.all([
+  let [subscription, latestIntent] = await Promise.all([
     prisma.subscription.findUnique({
       where: { userId },
     }),
@@ -447,6 +612,42 @@ export async function getMyMercadoPagoLinkSubscription(userId: string) {
       orderBy: { createdAt: "desc" },
     }),
   ]);
+
+  console.log("getMyMercadoPagoLinkSubscription.initial:", {
+    subscriptionId: subscription?.id ?? null,
+    subscriptionStatus: subscription?.status ?? null,
+    latestIntentId: latestIntent?.id ?? null,
+    latestIntentStatus: latestIntent?.status ?? null,
+  });
+
+  if (!subscription || subscription.status !== "ACTIVE") {
+    try {
+      const recovered = await tryActivateFromLatestIntent(userId);
+
+      console.log("getMyMercadoPagoLinkSubscription.recovered:", recovered);
+
+      if (recovered.activated) {
+        [subscription, latestIntent] = await Promise.all([
+          prisma.subscription.findUnique({
+            where: { userId },
+          }),
+          prisma.subscriptionLinkIntent.findFirst({
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+          }),
+        ]);
+
+        console.log("✅ Suscripción recuperada desde /me", {
+          userId,
+          subscriptionId: subscription?.id ?? null,
+          externalId: subscription?.externalId ?? null,
+          status: subscription?.status ?? null,
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error recuperando suscripción desde /me:", error);
+    }
+  }
 
   return {
     subscription,
