@@ -1,48 +1,62 @@
-import AdminGuard from "@/components/admin/AdminGuard"
-import AdminSidebar from "@/components/admin/AdminSidebar"
+import AdminGuard from "@/components/admin/AdminGuard";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import { Sparkles, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-[#0B0B0B] text-white">
-        {/* glow */}
-        <div className="pointer-events-none fixed inset-0">
-          <div className="absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[120px]" />
-          <div className="absolute bottom-[-120px] right-[-120px] h-[420px] w-[420px] rounded-full bg-yellow-400/5 blur-[120px]" />
+      <div className="min-h-screen bg-[#060606] text-white">
+        {/* background glow */}
+        <div className="pointer-events-none fixed inset-0 overflow-hidden">
+          <div className="absolute left-1/2 top-[-180px] h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[140px]" />
+          <div className="absolute right-[-160px] top-[30%] h-[360px] w-[360px] rounded-full bg-yellow-400/5 blur-[130px]" />
+          <div className="absolute bottom-[-140px] left-[-120px] h-[320px] w-[320px] rounded-full bg-white/[0.04] blur-[120px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.03),transparent_35%)]" />
         </div>
 
-        <div className="relative z-10 grid min-h-screen md:grid-cols-[280px_1fr]">
-          <div className="hidden md:block">
-            <AdminSidebar />
-          </div>
+        <div className="relative z-10 lg:flex">
+          <AdminSidebar />
 
-          <div className="flex min-h-screen flex-col">
-            {/* header */}
-            <header className="border-b border-white/5 bg-black/30 backdrop-blur">
-              <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-                <div>
-                  <p className="text-sm font-bold">
-                    Panel <span className="text-yellow-400">Admin</span>
+          <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-30 border-b border-white/10 bg-black/35 backdrop-blur-2xl">
+              <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/40">
+                    <Sparkles className="h-3.5 w-3.5 text-yellow-400" />
+                    <span>Administración</span>
+                  </div>
+
+                  <h1 className="mt-1 truncate text-base font-semibold text-white sm:text-lg">
+                    Panel de control{" "}
+                    <span className="text-yellow-400">Focus</span>
+                  </h1>
+
+                  <p className="mt-1 hidden text-sm text-white/55 sm:block">
+                    Gestión de productos, órdenes y suscripciones.
                   </p>
-                  <p className="text-xs text-white/55">Gestión de productos, órdenes y suscripciones</p>
                 </div>
 
-                <a
+                <Link
                   href="/"
-                  className="text-sm text-white/70 underline decoration-yellow-400/70 underline-offset-4 hover:text-white"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/75 transition hover:bg-white/[0.07] hover:text-white"
                 >
+                  <ArrowLeft className="h-4 w-4" />
                   Volver al sitio
-                </a>
+                </Link>
               </div>
             </header>
 
-            {/* content */}
-            <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+            <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
               {children}
             </main>
           </div>
         </div>
       </div>
     </AdminGuard>
-  )
+  );
 }

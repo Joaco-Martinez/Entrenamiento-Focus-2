@@ -392,17 +392,25 @@ export default function RegisterPageClient() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white/85">
-                Contraseña
-              </label>
-              <input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                placeholder="MiPassword123"
-                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3"
-              />
-            </div>
+  <label className="mb-2 block text-sm font-semibold text-white/85">
+    Contraseña
+  </label>
+  <input
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    type="password"
+    placeholder="MiPassword123"
+    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
+  />
+
+  {/* RULES */}
+  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/65">
+    <Rule ok={checks.minLen} label="8+ caracteres" />
+    <Rule ok={checks.upper} label="1 mayúscula" />
+    <Rule ok={checks.lower} label="1 minúscula" />
+    <Rule ok={checks.number} label="1 número" />
+  </div>
+</div>
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-white/85">
