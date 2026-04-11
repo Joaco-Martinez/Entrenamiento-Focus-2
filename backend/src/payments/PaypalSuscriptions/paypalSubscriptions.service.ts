@@ -479,45 +479,96 @@ export async function verifyPaypalWebhook(headers: RawHeaders, body: unknown) {
   return response.data?.verification_status === "SUCCESS";
 }
 
-export async function handlePaypalSubscriptionWebhook(body: unknown, headers: RawHeaders) {
+export async function handlePaypalSubscriptionWebhook(
+  body: unknown,
+  headers: RawHeaders
+) {
+  console.log("📩 PAYPAL WEBHOOK RECIBIDO");
+  console.log("👉 event_type:", (body as any)?.event_type);
+  console.log("👉 resource:", JSON.stringify((body as any)?.resource, null, 2));
+
   const valid = await verifyPaypalWebhook(headers, body);
 
+  console.log("🔐 Firma webhook válida:", valid);
+
   if (!valid) {
+    console.error("❌ Firma inválida de PayPal");
     throw new ApiError(400, "Invalid PayPal webhook signature");
   }
 
-  const eventType = String((body as { event_type?: string } | null)?.event_type ?? "");
+  const eventType = String(
+    (body as { event_type?: string } | null)?.event_type ?? ""
+  );
 
-  if (!eventType.startsWith("BILLING.SUBSCRIPTION") && eventType !== "PAYMENT.SALE.COMPLETED") {
+  console.log("📌 Procesando eventType:", eventType);
+
+  if (
+    !eventType.startsWith("BILLING.SUBSCRIPTION") &&
+    eventType !== "PAYMENT.SALE.COMPLETED"
+  ) {
+    console.log("⏭ Evento ignorado:", eventType);
     return { ok: true, ignored: true };
   }
 
-  const resource = ((body as { resource?: Record<string, unknown> } | null)?.resource ??
-    {}) as Record<string, unknown>;
+  const resource = ((body as { resource?: Record<string, unknown> } | null)
+    ?.resource ?? {}) as Record<string, unknown>;
 
   const subscriptionId = resource.id ? String(resource.id) : null;
-  const billingAgreementId =
-    resource.billing_agreement_id ? String(resource.billing_agreement_id) : null;
+  const billingAgreementId = resource.billing_agreement_id
+    ? String(resource.billing_agreement_id)
+    : null;
+
   const resolvedSubscriptionId = subscriptionId || billingAgreementId;
 
+  console.log("🔎 subscriptionId:", subscriptionId);
+  console.log("🔎 billingAgreementId:", billingAgreementId);
+  console.log("🎯 resolvedSubscriptionId:", resolvedSubscriptionId);
+
   if (!resolvedSubscriptionId) {
+    console.warn("⚠️ No se pudo obtener subscriptionId");
     return { ok: true, ignored: true };
   }
 
-  const paypalSubscription = await fetchPaypalSubscription(resolvedSubscriptionId);
+  console.log("📡 Consultando PayPal...");
+  const paypalSubscription = await fetchPaypalSubscription(
+    resolvedSubscriptionId
+  );
 
-  const resolvedUserId = await resolveUserIdFromSubscription(paypalSubscription, resolvedSubscriptionId);
+  console.log(
+    "📦 Subscription PayPal:",
+    JSON.stringify(paypalSubscription, null, 2)
+  );
+
+  const resolvedUserId = await resolveUserIdFromSubscription(
+    paypalSubscription,
+    resolvedSubscriptionId
+  );
+
+  console.log("👤 userId resuelto:", resolvedUserId);
+
   if (!resolvedUserId) {
-    return { ok: true, ignored: true, reason: "user_not_resolved", subscriptionId: resolvedSubscriptionId };
+    console.warn("⚠️ No se pudo resolver userId");
+    return {
+      ok: true,
+      ignored: true,
+      reason: "user_not_resolved",
+      subscriptionId: resolvedSubscriptionId,
+    };
   }
 
-  const resolvedProductId = await resolveProductIdFromSubscription(paypalSubscription);
+  const resolvedProductId =
+    await resolveProductIdFromSubscription(paypalSubscription);
+
+  console.log("📦 productId resuelto:", resolvedProductId);
 
   const subscription = await persistPaypalSubscriptionForUser({
     userId: resolvedUserId,
     productId: resolvedProductId,
     paypalSubscription,
   });
+
+  console.log("✅ Suscripción guardada en DB:");
+  console.log("👉 status:", subscription.status);
 
   return {
     ok: true,
