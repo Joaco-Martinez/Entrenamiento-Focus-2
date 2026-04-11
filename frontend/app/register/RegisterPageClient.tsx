@@ -254,255 +254,187 @@ export default function RegisterPageClient() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#0B0B0B] text-white">
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-1/2 top-[-128px] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[120px]" />
-        <div className="absolute bottom-[-120px] right-[-120px] h-[420px] w-[420px] rounded-full bg-yellow-400/5 blur-[120px]" />
+  return  (
+  <div className="min-h-screen bg-[#0B0B0B] text-white">
+    {/* BG glow */}
+    <div className="pointer-events-none fixed inset-0">
+      <div className="absolute left-1/2 top-[-128px] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[120px]" />
+      <div className="absolute bottom-[-120px] right-[-120px] h-[420px] w-[420px] rounded-full bg-yellow-400/5 blur-[120px]" />
+    </div>
+
+    {/* MAIN */}
+    <main className="relative z-10 mx-auto grid max-w-6xl items-start gap-10 px-6 py-16 md:grid-cols-2">
+      
+      {/* LEFT */}
+      <div>
+        <h1 className="text-4xl font-extrabold leading-tight md:text-6xl">
+          Creá tu cuenta y <span className="text-yellow-400">empezá</span>
+          <br />
+          hoy mismo
+        </h1>
+
+        <div className="mt-6 h-[3px] w-16 rounded-full bg-yellow-400" />
+
+        <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70">
+          Registrate para acceder a cursos, recursos y a la parte premium si
+          tenés suscripción activa.
+        </p>
+
+        <div className="mt-6 flex flex-wrap gap-4 text-sm text-white/70">
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+            Acceso inmediato
+          </span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+            Contenido premium
+          </span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+            Soporte y recursos
+          </span>
+        </div>
       </div>
 
-      <header className="relative z-10 border-b border-white/5">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <div className="text-sm font-semibold tracking-[0.25em] text-white/90">
-            ENTRENAMIENTO <span className="text-yellow-400">FOCUS</span>
+      {/* RIGHT */}
+      <div className="mx-auto w-full max-w-md">
+        <div className="rounded-2xl border border-yellow-400/20 bg-white/[0.03] p-6 shadow-[0_0_0_1px_rgba(250,204,21,0.06),0_20px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur">
+          <div className="mb-5">
+            <h2 className="text-xl font-bold">Crear cuenta</h2>
+            <p className="mt-1 text-sm text-white/60">
+              Completá los datos para registrarte.
+            </p>
           </div>
 
-          <nav className="hidden gap-8 text-sm text-white/75 md:flex">
-            <Link className="hover:text-white" href="/">
-              Inicio
-            </Link>
-            <Link className="hover:text-white" href="/servicios">
-              Servicios
-            </Link>
-            <Link className="hover:text-white" href="/recursos">
-              Recursos
-            </Link>
-          </nav>
-        </div>
-      </header>
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              {error}
+            </div>
+          )}
 
-      <main className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 md:grid-cols-2">
-        <div>
-          <h1 className="text-4xl font-extrabold leading-tight md:text-6xl">
-            Creá tu cuenta y <span className="text-yellow-400">empezá</span>
-            <br />
-            hoy mismo
-          </h1>
+          {success && (
+            <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              {success}
+            </div>
+          )}
 
-          <div className="mt-6 h-[3px] w-16 rounded-full bg-yellow-400" />
-
-          <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70">
-            Registrate para acceder a cursos, recursos y a la parte premium si
-            tenés suscripción activa.
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-4 text-sm text-white/70">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              Acceso inmediato
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              Contenido premium
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              Soporte y recursos
-            </span>
-          </div>
-        </div>
-
-        <div className="mx-auto w-full max-w-md">
-          <div className="rounded-2xl border border-yellow-400/20 bg-white/[0.03] p-6 shadow-[0_0_0_1px_rgba(250,204,21,0.06),0_20px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur">
-            <div className="mb-5">
-              <h2 className="text-xl font-bold">Crear cuenta</h2>
-              <p className="mt-1 text-sm text-white/60">
-                Completá los datos para registrarte.
-              </p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white/85">
+                Nombre
+              </label>
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                type="text"
+                placeholder="Joaquin"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3"
+              />
             </div>
 
-            {error && (
-              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                {error}
-              </div>
-            )}
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white/85">
+                Apellido
+              </label>
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                type="text"
+                placeholder="Martinez"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3"
+              />
+            </div>
 
-            {success && (
-              <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-                {success}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Nombre
-                </label>
-                <input
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  type="text"
-                  autoComplete="given-name"
-                  placeholder="Joaquin"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Apellido
-                </label>
-                <input
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  type="text"
-                  autoComplete="family-name"
-                  placeholder="Martinez"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  País
-                </label>
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                >
-                  {countries.map((item) => (
-                    <option
-                      key={item.code}
-                      value={item.code}
-                      className="bg-[#111111] text-white"
-                    >
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Teléfono
-                </label>
-
-                <div className="flex overflow-hidden rounded-xl border border-white/10 bg-black/40 transition focus-within:border-yellow-400/50 focus-within:ring-2 focus-within:ring-yellow-400/15">
-                  <div className="flex items-center border-r border-white/10 px-4 text-white/70">
-                    +{dialCode}
-                  </div>
-
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(normalizePhone(e.target.value))}
-                    type="tel"
-                    autoComplete="tel-national"
-                    inputMode="numeric"
-                    placeholder={phonePlaceholder}
-                    className="w-full bg-transparent px-4 py-3 text-white placeholder:text-white/35 outline-none"
-                  />
-                </div>
-
-                <p className="mt-2 text-xs text-white/45">
-                  Se guardará como:{" "}
-                  <span className="text-white/70">
-                    {phone ? buildInternationalPhone(country, phone) : `+${dialCode}`}
-                  </span>
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Email
-                </label>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  autoComplete="email"
-                  placeholder="nuevo@example.com"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Contraseña
-                </label>
-                <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="MiPassword123"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                />
-
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/65">
-                  <Rule ok={checks.minLen} label="8+ caracteres" />
-                  <Rule ok={checks.upper} label="1 mayúscula" />
-                  <Rule ok={checks.lower} label="1 minúscula" />
-                  <Rule ok={checks.number} label="1 número" />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-white/85">
-                  Confirmar contraseña
-                </label>
-                <input
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Repetí tu contraseña"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                />
-
-                {confirmPassword.length > 0 && (
-                  <p
-                    className={`mt-2 text-xs ${
-                      checks.match ? "text-emerald-300" : "text-red-200"
-                    }`}
-                  >
-                    {checks.match ? "✅ Coinciden" : "❌ No coinciden"}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-400 px-4 py-3 font-bold text-black transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-60"
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white/85">
+                País
+              </label>
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3"
               >
-                {submitting ? "Creando..." : "Crear cuenta"}
-                <span className="transition group-hover:translate-x-0.5">→</span>
-              </button>
+                {countries.map((item) => (
+                  <option key={item.code} value={item.code}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div className="flex items-center justify-between pt-2 text-sm">
-                <Link
-                  href="/login"
-                  className="text-white/70 underline decoration-yellow-400/70 underline-offset-4 hover:text-white"
-                >
-                  Ya tengo cuenta
-                </Link>
-                <Link
-                  href="/forgot-password"
-                  className="text-white/70 underline decoration-yellow-400/70 underline-offset-4 hover:text-white"
-                >
-                  Olvidé mi contraseña
-                </Link>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white/85">
+                Teléfono
+              </label>
+
+              <div className="flex rounded-xl border border-white/10 bg-black/40">
+                <div className="flex items-center border-r border-white/10 px-4 text-white/70">
+                  +{dialCode}
+                </div>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(normalizePhone(e.target.value))}
+                  type="tel"
+                  placeholder={phonePlaceholder}
+                  className="w-full bg-transparent px-4 py-3"
+                />
               </div>
-            </form>
-          </div>
+            </div>
 
-          <p className="mt-4 text-center text-xs text-white/45">
-            © {new Date().getFullYear()} Entrenamiento Focus
-          </p>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white/85">
+                Email
+              </label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="nuevo@example.com"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white/85">
+                Contraseña
+              </label>
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                placeholder="MiPassword123"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white/85">
+                Confirmar contraseña
+              </label>
+              <input
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                type="password"
+                placeholder="Repetí tu contraseña"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-xl bg-yellow-400 px-4 py-3 font-bold text-black hover:bg-yellow-300"
+            >
+              {submitting ? "Creando..." : "Crear cuenta"}
+            </button>
+          </form>
         </div>
-      </main>
-    </div>
-  );
-}
 
+        <p className="mt-4 text-center text-xs text-white/45">
+          © {new Date().getFullYear()} Entrenamiento Focus
+        </p>
+      </div>
+    </main>
+  </div>
+);
+}
 function Rule({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
