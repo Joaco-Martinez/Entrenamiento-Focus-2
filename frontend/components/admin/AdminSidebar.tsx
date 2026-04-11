@@ -1,26 +1,27 @@
-"use client"
+"use client";
 
-import { usePathname } from "next/navigation"
-import { useAuth } from "@/context/AuthContext"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const links = [
   { label: "Dashboard", href: "/admin" },
   { label: "Productos", href: "/admin/products" },
   { label: "Órdenes", href: "/admin/orders" },
   { label: "Suscripciones", href: "/admin/subscriptions" },
-]
+];
 
 export default function AdminSidebar() {
-  const pathname = usePathname()
-  const { logout, user } = useAuth()
-    console.log("AdminSidebar user:", user) // Debug: Verificar el contenido de user
+  const pathname = usePathname();
+  const { logout, user } = useAuth();
+
   const fullName =
     user?.firstName && user?.lastName
       ? `${user.firstName} ${user.lastName}`
-      : user?.email
+      : user?.email;
 
   return (
-    <aside className="flex h-full w-full flex-col border-r border-white/5 bg-black/40 backdrop-blur">
+    <aside className="hidden h-full w-[280px] flex-col border-r border-white/5 bg-black/40 backdrop-blur lg:flex">
       <div className="p-6">
         <div className="text-xs font-semibold tracking-[0.25em] text-white/85">
           ENTRENAMIENTO <span className="text-yellow-400">FOCUS</span>
@@ -29,24 +30,19 @@ export default function AdminSidebar() {
         <div className="mt-5 rounded-xl border border-yellow-400/15 bg-white/[0.03] p-4">
           <p className="text-xs text-white/55">Admin</p>
 
-          {/* 👇 Nombre */}
-          <p className="mt-1 text-sm font-semibold text-white">
-            {fullName}
-          </p>
+          <p className="mt-1 text-sm font-semibold text-white">{fullName}</p>
 
-          {/* 👇 Email más chico */}
-          <p className="mt-1 text-xs text-white/45">
-            {user?.email}
-          </p>
+          <p className="mt-1 text-xs text-white/45">{user?.email}</p>
 
           <div className="mt-3 h-[2px] w-10 rounded-full bg-yellow-400/80" />
         </div>
 
         <nav className="mt-6 space-y-2">
           {links.map((l) => {
-            const active = pathname === l.href
+            const active = pathname === l.href;
+
             return (
-              <a
+              <Link
                 key={l.href}
                 href={l.href}
                 className={[
@@ -60,8 +56,8 @@ export default function AdminSidebar() {
                 <span className={active ? "text-yellow-300" : "text-white/35"}>
                   →
                 </span>
-              </a>
-            )
+              </Link>
+            );
           })}
         </nav>
       </div>
@@ -75,5 +71,5 @@ export default function AdminSidebar() {
         </button>
       </div>
     </aside>
-  )
+  );
 }
