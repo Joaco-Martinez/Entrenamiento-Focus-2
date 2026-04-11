@@ -61,10 +61,17 @@ function loadPaypalSdk(clientId: string) {
       return;
     }
 
+    const params = new URLSearchParams({
+      "client-id": clientId,
+      vault: "true",
+      intent: "subscription",
+      locale: "es_AR",
+      components: "buttons",
+      "disable-funding": "card,credit",
+    });
+
     const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
-      clientId
-    )}&vault=true&intent=subscription&locale=es_AR&disable-funding=credit,card`;
+    script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
     script.async = true;
     script.setAttribute("data-paypal-sdk", "subscription");
 
@@ -119,11 +126,13 @@ export default function PaypalSubscriptionButton({
 
         await window.paypal
           .Buttons({
+            fundingSource: window.paypal.FUNDING.PAYPAL,
             style: {
               shape: "pill",
-              color: "silver",
+              color: "gold",
               layout: "vertical",
-              label: "subscribe",
+              label: "paypal",
+              height: 45,
             },
 
             onClick: () => {
