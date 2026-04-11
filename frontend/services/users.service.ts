@@ -6,13 +6,10 @@ type RegisterPayload = {
   firstName: string;
   lastName: string;
   phone: string;
-  country: string; // ahora obligatorio
+  country: string;
 };
 
 export const usersService = {
-  /**
-   * Register a new user
-   */
   async register({
     email,
     password,
@@ -27,7 +24,7 @@ export const usersService = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       phone: phone.trim(),
-      country: country.toUpperCase(), // 🔥 normalizado
+      country: country.toUpperCase(),
     };
 
     return apiFetch("/auth/register", {
@@ -61,9 +58,9 @@ export const usersService = {
     return apiFetch(`/users/admin/users/${id}`);
   },
 
-  async adminCancelSubscription(userId: string) {
-    return apiFetch(`/subscriptions/admin/${userId}/cancel`, {
-      method: "POST",
+  async adminUnlinkSubscription(userId: string) {
+    return apiFetch(`/users/admin/users/${userId}/subscription`, {
+      method: "DELETE",
     });
   },
 };

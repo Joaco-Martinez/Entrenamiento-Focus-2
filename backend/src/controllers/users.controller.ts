@@ -45,3 +45,30 @@ export async function mySubscription(req: AuthedRequest, res: Response) {
   const subscription = await usersService.getMySubscription(userId);
   return res.json({ ok: true, subscription });
 }
+
+/* =========================
+   ADMIN
+========================= */
+
+export async function adminUsers(req: AuthedRequest, res: Response) {
+  const q = String(req.query.q ?? "").trim();
+  const users = await usersService.getAdminUsers(q);
+  return res.json({ ok: true, users });
+}
+
+export async function adminUserDetail(req: AuthedRequest, res: Response) {
+  const id = req.params.id;
+  const user = await usersService.getAdminUserDetail(id);
+  return res.json({ ok: true, user });
+}
+
+export async function unlinkUserSubscription(req: AuthedRequest, res: Response) {
+  const id = req.params.id;
+  const result = await usersService.unlinkUserSubscriptionByAdmin(id);
+
+  return res.json({
+    ok: true,
+    message: "Suscripción desvinculada correctamente",
+    ...result,
+  });
+}

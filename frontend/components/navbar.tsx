@@ -43,12 +43,17 @@ export function Navbar() {
       <nav className="fixed left-0 right-0 top-0 z-50 border-b border-primary/10 bg-background/85 backdrop-blur-md">
         <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <button
-            type="button"
-            onClick={() => go("/")}
-            className="text-xl font-bold text-foreground transition-colors hover:text-primary"
-          >
-            ENTRENAMIENTO <span className="text-primary">FOCUS</span>
-          </button>
+  type="button"
+  onClick={() => go("/")}
+  className="group text-xl font-bold transition-colors"
+>
+  <span className="text-foreground transition-colors group-hover:text-primary">
+    ENTRENAMIENTO
+  </span>{" "}
+  <span className="text-primary transition-colors group-hover:text-white">
+    FOCUS
+  </span>
+</button>
 
           <div className="hidden items-center gap-8 md:flex">
             {navItems.map((item) => (

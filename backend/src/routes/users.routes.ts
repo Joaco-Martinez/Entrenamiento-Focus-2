@@ -1,9 +1,7 @@
 import { Router } from "express";
-import { Prisma } from "@prisma/client";
 import { authRequired } from "../common/middlewares/authRequired";
 import { adminOnly } from "../common/middlewares/adminOnly";
 import { asyncHandler } from "../common/utils/asyncHandler";
-import { prisma } from "../prisma/client";
 import * as usersController from "../controllers/users.controller";
 
 export const usersRoutes = Router();
@@ -84,23 +82,20 @@ usersRoutes.get(
 );
 
 /**
- * ADMIN
- */
-
-/**
  * @openapi
  * /users/admin/users:
  *   get:
- *     summary: Admin - list users (optional search)
+ *     summary: Admin - list users with subscription
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: q
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *         required: false
- *         description: Search by email, firstName, lastName or phone
+ *         description: Search by email, firstName or lastName
  *     responses:
  *       200: { description: OK }
  *       401: { description: Missing/invalid token }
@@ -110,40 +105,7 @@ usersRoutes.get(
   "/admin/users",
   authRequired,
   adminOnly,
-  asyncHandler(async (req, res) => {
-    const q = String(req.query.q ?? "").trim();
-
-    const phoneNumber = Number(q);
-    const isNumericSearch = q !== "" && !Number.isNaN(phoneNumber);
-
-    const where: Prisma.UserWhereInput | undefined = q
-      ? {
-          OR: [
-            { email: { contains: q, mode: "insensitive" } },
-            { firstName: { contains: q, mode: "insensitive" } },
-            { lastName: { contains: q, mode: "insensitive" } },
-            ...(isNumericSearch ? [{ phone: { equals: phoneNumber } }] : []),
-          ],
-        }
-      : undefined;
-
-    const users = await prisma.user.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        firstName: true,
-        lastName: true,
-        phone: true,
-        country: true,
-        createdAt: true,
-      },
-    });
-
-    res.json({ ok: true, users });
-  })
+  asyncHandler(usersController.adminUsers)
 );
 
 /**
@@ -158,7 +120,8 @@ usersRoutes.get(
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     responses:
  *       200: { description: OK }
  *       401: { description: Missing/invalid token }
@@ -169,38 +132,32 @@ usersRoutes.get(
   "/admin/users/:id",
   authRequired,
   adminOnly,
-  asyncHandler(async (req, res) => {
-    const id = req.params.id;
+  asyncHandler(usersController.adminUserDetail)
+);
 
-    const user = await prisma.user.findUnique({
-      where: { id },
-      include: {
-        subscription: true,
-        accessGrants: {
-          include: {
-            product: true,
-          },
-        },
-        orders: {
-          include: {
-            items: {
-              include: {
-                product: true,
-              },
-            },
-            payments: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        ok: false,
-        message: "User not found",
-      });
-    }
-
-    res.json({ ok: true, user });
-  })
+/**
+ * @openapi
+ * /users/admin/users/{id}/subscription:
+ *   delete:
+ *     summary: Admin - unlink a user's subscription from the account
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200: { description: Subscription unlinked }
+ *       401: { description: Missing/invalid token }
+ *       403: { description: Admin only }
+ *       404: { description: User or subscription not found }
+ */
+usersRoutes.delete(
+  "/admin/users/:id/subscription",
+  authRequired,
+  adminOnly,
+  asyncHandler(usersController.unlinkUserSubscription)
 );

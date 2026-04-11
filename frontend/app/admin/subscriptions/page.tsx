@@ -1,80 +1,184 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usersService } from "@/services/users.service";
 import { useAuth } from "@/context/AuthContext";
 
-/**
- * Página de administración de suscripciones. Lista los usuarios y el estado de
- * su suscripción (activa o inactiva) y permite cancelar suscripciones
- * activas mediante el endpoint adminCancelSubscription.
- */
+type SubscriptionProduct = {
+  id: string;
+  title: string;
+  coverImageUrl?: string | null;
+};
+
+type UserSubscription = {
+  id: string;
+  provider: "MERCADOPAGO" | "PAYPAL";
+  status: "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "SUSPENDED";
+  providerStatus?: string | null;
+  externalId?: string | null;
+  payerEmail?: string | null;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  cancelledAt?: string | null;
+  createdAt?: string;
+  product?: SubscriptionProduct | null;
+};
+
+type AdminUser = {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  country?: string | null;
+  role?: string;
+  createdAt?: string;
+  subscription?: UserSubscription | null;
+};
+
+function formatDate(date?: string | null) {
+  if (!date) return "—";
+
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "—";
+
+  return parsed.toLocaleString("es-AR");
+}
+
+function getFullName(user: AdminUser) {
+  const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+  return fullName || "—";
+}
+
+function getSubscriptionBadge(subscription?: UserSubscription | null) {
+  if (!subscription) {
+    return {
+      label: "Sin suscripción",
+      className:
+        "border border-white/10 bg-white/5 text-white/60",
+    };
+  }
+
+  switch (subscription.status) {
+    case "ACTIVE":
+      return {
+        label: "Activa",
+        className:
+          "border border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
+      };
+    case "PAST_DUE":
+      return {
+        label: "Pago pendiente",
+        className:
+          "border border-amber-400/25 bg-amber-400/10 text-amber-200",
+      };
+    case "SUSPENDED":
+      return {
+        label: "Suspendida",
+        className:
+          "border border-orange-400/25 bg-orange-400/10 text-orange-200",
+      };
+    case "CANCELLED":
+      return {
+        label: "Cancelada",
+        className:
+          "border border-red-400/25 bg-red-400/10 text-red-200",
+      };
+    case "EXPIRED":
+      return {
+        label: "Expirada",
+        className:
+          "border border-zinc-400/25 bg-zinc-400/10 text-zinc-200",
+      };
+    default:
+      return {
+        label: subscription.status,
+        className:
+          "border border-white/10 bg-white/5 text-white/70",
+      };
+  }
+}
+
 export default function AdminSubscriptionsPage() {
   const { isAdmin } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [users, setUsers] = useState<{
-    id: string;
-    email: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    country?: string | null;
-    subscription?: any | null;
-  }[]>([]);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  const refresh = async () => {
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [unlinkingId, setUnlinkingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+
+  const loadUsers = async (query?: string, silent = false) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     setError(null);
-    setLoading(true);
+
     try {
-      // Primero traemos el listado de usuarios (sin detalles).
-      const res = await usersService.adminListUsers();
-      const list = res.users || [];
-      // Luego obtenemos para cada usuario sus detalles (que incluyen la suscripción).
-      const details = await Promise.all(
-        list.map((u: any) =>
-          usersService
-            .adminGetUser(u.id)
-            .then((d: any) => d.user)
-            .catch(() => null)
-        )
-      );
-      const combined = list.map((u: any, idx: number) => {
-        const detail = details[idx] as any;
-        return {
-          id: u.id,
-          email: u.email,
-          firstName: u.firstName ?? null,
-          lastName: u.lastName ?? null,
-          country: u.country ?? null,
-          subscription: detail?.subscription ?? null,
-        };
-      });
-      setUsers(combined);
+      const res = await usersService.adminListUsers(query?.trim() || undefined);
+      setUsers(res?.users || []);
     } catch (e: any) {
       setError(e?.message || "No se pudieron cargar los usuarios.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!isAdmin) return;
+    loadUsers();
+  }, [isAdmin]);
 
-  const cancelSub = async (userId: string) => {
-    const ok = confirm("¿Seguro que querés cancelar la suscripción de este usuario?");
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return users;
+
+    return users.filter((u) => {
+      const fullName = getFullName(u).toLowerCase();
+      return (
+        u.email.toLowerCase().includes(q) ||
+        fullName.includes(q) ||
+        (u.country || "").toLowerCase().includes(q) ||
+        (u.subscription?.payerEmail || "").toLowerCase().includes(q) ||
+        (u.subscription?.product?.title || "").toLowerCase().includes(q)
+      );
+    });
+  }, [users, search]);
+
+  const unlinkSubscription = async (userId: string, email: string) => {
+    const ok = window.confirm(
+      `¿Seguro que querés desvincular la suscripción de ${email}?\n\nEsto solo la elimina de tu sistema. No cancela realmente la suscripción en Mercado Pago o PayPal.`
+    );
+
     if (!ok) return;
-    setCancellingId(userId);
+
+    setUnlinkingId(userId);
+    setError(null);
+
     try {
-      await usersService.adminCancelSubscription(userId);
-      await refresh();
-      alert("La suscripción fue cancelada.");
+      await usersService.adminUnlinkSubscription(userId);
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                subscription: null,
+              }
+            : u
+        )
+      );
+
+      window.alert("La suscripción fue desvinculada correctamente.");
     } catch (e: any) {
-      setError(e?.message || "No se pudo cancelar la suscripción.");
+      setError(e?.message || "No se pudo desvincular la suscripción.");
     } finally {
-      setCancellingId(null);
+      setUnlinkingId(null);
     }
   };
 
@@ -88,7 +192,7 @@ export default function AdminSubscriptionsPage() {
         </h1>
         <div className="mt-4 h-[3px] w-16 rounded-full bg-yellow-400" />
         <p className="mt-4 text-white/70">
-          Lista de usuarios y sus suscripciones. Podés cancelar suscripciones activas.
+          Acá podés ver qué usuarios tienen suscripción vinculada y desvincularla manualmente del sistema.
         </p>
       </div>
 
@@ -99,75 +203,124 @@ export default function AdminSubscriptionsPage() {
       )}
 
       <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <input
+            type="text"
+            placeholder="Buscar por email, nombre, país o producto..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-yellow-400/40 md:max-w-md"
+          />
+
+          <button
+            onClick={() => loadUsers(undefined, true)}
+            disabled={refreshing}
+            className="rounded-xl border border-yellow-400/20 bg-yellow-400/10 px-4 py-3 text-sm font-medium text-yellow-200 transition hover:bg-yellow-400/15 disabled:opacity-50"
+          >
+            {refreshing ? "Actualizando..." : "Actualizar"}
+          </button>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[1200px] text-sm">
             <thead className="text-left text-white/60">
               <tr>
-                <th className="py-3 px-3">Email</th>
-                <th className="py-3 px-3">Nombre</th>
-                <th className="py-3 px-3">País</th>
-                <th className="py-3 px-3">Suscripción</th>
-                <th className="py-3 px-3">ID</th>
-                <th className="py-3 px-3">Inicio</th>
-                <th className="py-3 px-3">Fin</th>
-                <th className="py-3 px-3 text-right">Acciones</th>
+                <th className="px-3 py-3">Email</th>
+                <th className="px-3 py-3">Nombre</th>
+                <th className="px-3 py-3">País</th>
+                <th className="px-3 py-3">Estado</th>
+                <th className="px-3 py-3">Proveedor</th>
+                <th className="px-3 py-3">Producto</th>
+                <th className="px-3 py-3">Payer Email</th>
+                <th className="px-3 py-3">Inicio</th>
+                <th className="px-3 py-3">Fin</th>
+                <th className="px-3 py-3">Provider Status</th>
+                <th className="px-3 py-3 text-right">Acciones</th>
               </tr>
             </thead>
+
             <tbody>
               {loading ? (
                 <tr>
-                  <td className="py-6 px-3 text-white/60" colSpan={8}>
-                    Cargando...
+                  <td className="px-3 py-6 text-white/60" colSpan={11}>
+                    Cargando usuarios...
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td className="py-6 px-3 text-white/60" colSpan={8}>
+                  <td className="px-3 py-6 text-white/60" colSpan={11}>
                     No hay usuarios para mostrar.
                   </td>
                 </tr>
               ) : (
-                users.map((u) => {
-                  const sub = u.subscription;
-                  const isActive = !!sub && (sub.status === "ACTIVE" || sub.status === "APPROVED");
+                filteredUsers.map((user) => {
+                  const sub = user.subscription;
+                  const badge = getSubscriptionBadge(sub);
+                  const canUnlink = !!sub;
+
                   return (
-                    <tr key={u.id} className="border-t border-white/5">
-                      <td className="py-4 px-3">{u.email}</td>
-                      <td className="py-4 px-3">
-                        {u.firstName || u.lastName ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() : "—"}
+                    <tr key={user.id} className="border-t border-white/5">
+                      <td className="px-3 py-4 align-top">{user.email}</td>
+
+                      <td className="px-3 py-4 align-top">{getFullName(user)}</td>
+
+                      <td className="px-3 py-4 align-top">{user.country ?? "—"}</td>
+
+                      <td className="px-3 py-4 align-top">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs ${badge.className}`}
+                        >
+                          {badge.label}
+                        </span>
                       </td>
-                      <td className="py-4 px-3">{u.country ?? "—"}</td>
-                        <td className="py-4 px-3">
-                          {isActive ? (
-                            <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200">
-                              Activa
-                            </span>
+
+                      <td className="px-3 py-4 align-top">
+                        {sub?.provider ? (
+                          <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/80">
+                            {sub.provider}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+
+                      <td className="px-3 py-4 align-top">
+                        {sub?.product?.title ?? "—"}
+                      </td>
+
+                      <td className="px-3 py-4 align-top">
+                        {sub?.payerEmail ?? "—"}
+                      </td>
+
+                      <td className="px-3 py-4 align-top">
+                        {formatDate(sub?.currentPeriodStart)}
+                      </td>
+
+                      <td className="px-3 py-4 align-top">
+                        {formatDate(sub?.currentPeriodEnd)}
+                      </td>
+
+                      <td className="px-3 py-4 align-top">
+                        {sub?.providerStatus ?? "—"}
+                      </td>
+
+                      <td className="px-3 py-4 align-top">
+                        <div className="flex justify-end">
+                          {canUnlink ? (
+                            <button
+                              disabled={unlinkingId === user.id}
+                              onClick={() => unlinkSubscription(user.id, user.email)}
+                              className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {unlinkingId === user.id
+                                ? "Desvinculando..."
+                                : "Desvincular"}
+                            </button>
                           ) : (
-                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60">
-                              Inactiva
-                            </span>
+                            <span className="text-xs text-white/35">—</span>
                           )}
-                        </td>
-                        <td className="py-4 px-3">{sub?.id ?? "—"}</td>
-                        <td className="py-4 px-3">
-                          {sub?.startDate ? new Date(sub.startDate).toLocaleString("es-AR") : "—"}
-                        </td>
-                        <td className="py-4 px-3">
-                          {sub?.endDate ? new Date(sub.endDate).toLocaleString("es-AR") : "—"}
-                        </td>
-                        <td className="py-4 px-3">
-                          <div className="flex justify-end">
-                            {isActive ? (
-                              <button
-                                disabled={cancellingId === u.id}
-                                onClick={() => cancelSub(u.id)}
-                                className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/15 disabled:opacity-50"
-                              >
-                                {cancellingId === u.id ? "Cancelando..." : "Cancelar"}
-                              </button>
-                            ) : null}
-                          </div>
-                        </td>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })

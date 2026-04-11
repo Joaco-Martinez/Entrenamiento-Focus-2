@@ -162,10 +162,10 @@ export default function SuscripcionExitPage() {
 
           <div className="mt-8 text-center">
             <Link
-              href="/panel"
+              href="/dashboard"
               className="text-sm text-white/50 underline-offset-4 hover:text-white/80 hover:underline"
             >
-              Ir a mi panel
+              Ir a mis compras
             </Link>
           </div>
         </div>
