@@ -17,6 +17,13 @@ export const paymentsService = {
    * productId parameter is left for compatibility, but the caller should build
    * the correct payload.
    */
+
+  async verifyPaypalSubscriptionSuccess(subscriptionId: string) {
+    return apiFetch(`/paypal_suscription/verify-success/${subscriptionId}`, {
+      method: "GET",
+    });
+  },
+
   createSubscription(payload: any) {
     return apiFetch("/mercadopago_suscription/create", {
       method: "POST",

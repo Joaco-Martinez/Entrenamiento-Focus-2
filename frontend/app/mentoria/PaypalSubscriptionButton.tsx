@@ -48,11 +48,8 @@ function loadPaypalSdk(clientId: string) {
       }
 
       const handleLoad = () => {
-        if (window.paypal) {
-          resolve();
-        } else {
-          reject(new Error("PayPal SDK no disponible"));
-        }
+        if (window.paypal) resolve();
+        else reject(new Error("PayPal SDK no disponible"));
       };
 
       const handleError = () => {
@@ -67,16 +64,13 @@ function loadPaypalSdk(clientId: string) {
     const script = document.createElement("script");
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
       clientId
-    )}&vault=true&intent=subscription&locale=es_AR`;
+    )}&vault=true&intent=subscription&locale=es_AR&disable-funding=credit,card`;
     script.async = true;
     script.setAttribute("data-paypal-sdk", "subscription");
 
     script.onload = () => {
-      if (window.paypal) {
-        resolve();
-      } else {
-        reject(new Error("PayPal SDK no disponible"));
-      }
+      if (window.paypal) resolve();
+      else reject(new Error("PayPal SDK no disponible"));
     };
 
     script.onerror = () => {
@@ -162,7 +156,7 @@ export default function PaypalSubscriptionButton({
                 }
 
                 router.push(
-                  `/mentoria/success?provider=paypal&subscription_id=${subscriptionId}`
+                  `/subscription/paypal/return?subscription_id=${subscriptionId}`
                 );
               } catch (error) {
                 const message =
@@ -172,6 +166,10 @@ export default function PaypalSubscriptionButton({
 
                 onError?.(message);
               }
+            },
+
+            onCancel: () => {
+              router.push("/subscription/paypal/cancel");
             },
 
             onError: (err: any) => {

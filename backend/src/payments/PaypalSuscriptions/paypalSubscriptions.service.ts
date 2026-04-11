@@ -10,6 +10,7 @@ type PaypalSubscriptionDetails = {
   status?: string | null;
   custom_id?: string | null;
   plan_id?: string | null;
+  start_time?: string | null;
   subscriber?: {
     email_address?: string | null;
     payer_id?: string | null;
@@ -19,7 +20,13 @@ type PaypalSubscriptionDetails = {
     last_payment?: {
       time?: string | null;
     } | null;
+    failed_payments_count?: number | null;
   } | null;
+  links?: Array<{
+    href?: string;
+    rel?: string;
+    method?: string;
+  }> | null;
 };
 
 function getPaypalSuscriptionConfig() {
@@ -28,8 +35,12 @@ function getPaypalSuscriptionConfig() {
     clientSecret: env.PAYPAL_SUSCRIPTION_CLIENT_SECRET,
     webhookId: env.PAYPAL_SUSCRIPTION_WEBHOOK_ID,
     baseUrl: env.PAYPAL_SUSCRIPTION_BASE_URL,
-    defaultReturnUrl: env.PAYPAL_SUSCRIPTION_RETURN_URL,
-    defaultCancelUrl: env.PAYPAL_SUSCRIPTION_CANCEL_URL,
+    defaultReturnUrl:
+      env.PAYPAL_SUSCRIPTION_RETURN_URL ||
+      "https://www.entrenamientofocus.com.ar/paypal/succes",
+    defaultCancelUrl:
+      env.PAYPAL_SUSCRIPTION_CANCEL_URL ||
+      "https://www.entrenamientofocus.com.ar/paypal/cancel",
   };
 }
 
@@ -79,7 +90,6 @@ export function mapPaypalSubscriptionStatus(statusRaw?: string | null) {
   if (normalized === "CANCELLED") return "CANCELLED" as const;
   if (normalized === "SUSPENDED") return "SUSPENDED" as const;
   if (normalized === "EXPIRED") return "EXPIRED" as const;
-
   if (normalized === "APPROVAL_PENDING") return "PAST_DUE" as const;
   if (normalized === "APPROVED") return "PAST_DUE" as const;
   if (normalized === "CREATED") return "PAST_DUE" as const;
@@ -232,6 +242,15 @@ async function resolveUserIdFromSubscription(
   const parsed = parseCustomId(paypalSubscription?.custom_id);
   if (parsed.userId) return parsed.userId;
 
+  if (paypalSubscription?.subscriber?.email_address) {
+    const userByEmail = await prisma.user.findUnique({
+      where: { email: String(paypalSubscription.subscriber.email_address).toLowerCase().trim() },
+      select: { id: true },
+    });
+
+    if (userByEmail?.id) return userByEmail.id;
+  }
+
   if (subscriptionId) {
     const existingSubscription = await prisma.subscription.findFirst({
       where: {
@@ -293,7 +312,14 @@ export async function createPaypalSubscription(
       plan_id: product.paypalPlanId,
       custom_id: `${userId}:${productId}`,
       application_context: {
+        brand_name: "Entrenamiento Focus",
+        locale: "es-AR",
+        shipping_preference: "NO_SHIPPING",
         user_action: "SUBSCRIBE_NOW",
+        payment_method: {
+          payer_selected: "PAYPAL",
+          payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED",
+        },
         return_url: finalReturnUrl,
         cancel_url: finalCancelUrl,
       },
@@ -329,9 +355,12 @@ export async function createPaypalSubscription(
 
   return {
     id: String(response.data.id),
+    status: String(response.data.status ?? "CREATED"),
     approveUrl,
     returnUrl: finalReturnUrl,
     cancelUrl: finalCancelUrl,
+    productId,
+    planId: product.paypalPlanId,
   };
 }
 
@@ -380,8 +409,22 @@ export async function syncPaypalSubscriptionForUser(userId: string, subscription
   });
 
   return {
+    verified: subscription.status === "ACTIVE",
     subscription,
     raw: paypalSubscription,
+  };
+}
+
+export async function verifyPaypalSuccessForUser(userId: string, subscriptionId: string) {
+  const data = await syncPaypalSubscriptionForUser(userId, subscriptionId);
+
+  return {
+    ok: data.subscription.status === "ACTIVE",
+    verified: data.subscription.status === "ACTIVE",
+    status: data.subscription.status,
+    subscriptionId,
+    subscription: data.subscription,
+    raw: data.raw,
   };
 }
 
@@ -445,7 +488,7 @@ export async function handlePaypalSubscriptionWebhook(body: unknown, headers: Ra
 
   const eventType = String((body as { event_type?: string } | null)?.event_type ?? "");
 
-  if (!eventType.startsWith("BILLING.SUBSCRIPTION")) {
+  if (!eventType.startsWith("BILLING.SUBSCRIPTION") && eventType !== "PAYMENT.SALE.COMPLETED") {
     return { ok: true, ignored: true };
   }
 
@@ -453,19 +496,19 @@ export async function handlePaypalSubscriptionWebhook(body: unknown, headers: Ra
     {}) as Record<string, unknown>;
 
   const subscriptionId = resource.id ? String(resource.id) : null;
+  const billingAgreementId =
+    resource.billing_agreement_id ? String(resource.billing_agreement_id) : null;
+  const resolvedSubscriptionId = subscriptionId || billingAgreementId;
 
-  if (!subscriptionId) {
+  if (!resolvedSubscriptionId) {
     return { ok: true, ignored: true };
   }
 
-  // IMPORTANTE:
-  // el webhook de PayPal a veces no trae todo el contexto necesario.
-  // Por eso SIEMPRE rehidratamos desde la API oficial.
-  const paypalSubscription = await fetchPaypalSubscription(subscriptionId);
+  const paypalSubscription = await fetchPaypalSubscription(resolvedSubscriptionId);
 
-  const resolvedUserId = await resolveUserIdFromSubscription(paypalSubscription, subscriptionId);
+  const resolvedUserId = await resolveUserIdFromSubscription(paypalSubscription, resolvedSubscriptionId);
   if (!resolvedUserId) {
-    return { ok: true, ignored: true };
+    return { ok: true, ignored: true, reason: "user_not_resolved", subscriptionId: resolvedSubscriptionId };
   }
 
   const resolvedProductId = await resolveProductIdFromSubscription(paypalSubscription);
@@ -479,7 +522,7 @@ export async function handlePaypalSubscriptionWebhook(body: unknown, headers: Ra
   return {
     ok: true,
     eventType,
-    subscriptionId,
+    subscriptionId: resolvedSubscriptionId,
     userId: resolvedUserId,
     productId: resolvedProductId,
     status: subscription.status,

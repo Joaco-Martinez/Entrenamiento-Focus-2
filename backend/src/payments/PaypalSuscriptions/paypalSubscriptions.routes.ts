@@ -25,30 +25,6 @@ export const paypalSubscriptionsRoutes = Router();
  *     tags: [PayPal Suscription]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [productId]
- *             properties:
- *               productId:
- *                 type: string
- *                 example: "prod_123"
- *               returnUrl:
- *                 type: string
- *                 format: uri
- *                 nullable: true
- *                 example: "http://localhost:3000/subscription/paypal/return"
- *               cancelUrl:
- *                 type: string
- *                 format: uri
- *                 nullable: true
- *                 example: "http://localhost:3000/subscription/paypal/cancel"
- *     responses:
- *       200:
- *         description: Suscripción creada correctamente
  */
 paypalSubscriptionsRoutes.post(
   "/create",
@@ -65,20 +41,6 @@ paypalSubscriptionsRoutes.post(
  *     tags: [PayPal Suscription]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [subscriptionId]
- *             properties:
- *               subscriptionId:
- *                 type: string
- *                 example: "I-ABCDEFG12345"
- *     responses:
- *       200:
- *         description: Suscripción sincronizada
  */
 paypalSubscriptionsRoutes.post(
   "/confirm",
@@ -89,21 +51,27 @@ paypalSubscriptionsRoutes.post(
 
 /**
  * @openapi
+ * /paypal_suscription/verify-success/{subscriptionId}:
+ *   get:
+ *     summary: Verifica desde la página success si la suscripción quedó activa
+ *     tags: [PayPal Suscription]
+ *     security:
+ *       - bearerAuth: []
+ */
+paypalSubscriptionsRoutes.get(
+  "/verify-success/:subscriptionId",
+  authRequired,
+  asyncHandler(paypalSubscriptionsController.verifySuccess)
+);
+
+/**
+ * @openapi
  * /paypal_suscription/{subscriptionId}:
  *   get:
  *     summary: Ver detalle de una suscripción en PayPal
  *     tags: [PayPal Suscription]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: subscriptionId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Detalle obtenido
  */
 paypalSubscriptionsRoutes.get(
   "/:subscriptionId",
@@ -117,15 +85,6 @@ paypalSubscriptionsRoutes.get(
  *   post:
  *     summary: Webhook de PayPal para eventos de suscripción
  *     tags: [PayPal Suscription]
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Evento procesado
  */
 paypalSubscriptionsRoutes.post(
   "/webhook",

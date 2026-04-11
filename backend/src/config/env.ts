@@ -30,8 +30,10 @@ export const env = {
   PAYPAL_WEBHOOK_ID: process.env.PAYPAL_WEBHOOK_ID ?? "",
   PAYPAL_BASE_URL:
     process.env.PAYPAL_BASE_URL ?? "https://api-m.sandbox.paypal.com",
-  PAYPAL_RETURN_URL: process.env.PAYPAL_RETURN_URL ?? "",
-  PAYPAL_CANCEL_URL: process.env.PAYPAL_CANCEL_URL ?? "",
+  PAYPAL_RETURN_URL:
+    process.env.PAYPAL_RETURN_URL ?? "https://www.entrenamientofocus.com.ar/paypal/succes",
+  PAYPAL_CANCEL_URL:
+    process.env.PAYPAL_CANCEL_URL ?? "https://www.entrenamientofocus.com.ar/paypal/cancel",
   PAYPAL_WEBHOOK_URL: process.env.PAYPAL_WEBHOOK_URL ?? "",
 
   // Variables dedicadas para suscripciones PayPal.
@@ -47,9 +49,13 @@ export const env = {
     process.env.PAYPAL_BASE_URL ??
     "https://api-m.sandbox.paypal.com",
   PAYPAL_SUSCRIPTION_RETURN_URL:
-    process.env.PAYPAL_SUSCRIPTION_RETURN_URL ?? process.env.PAYPAL_RETURN_URL ?? "",
+    process.env.PAYPAL_SUSCRIPTION_RETURN_URL ??
+    process.env.PAYPAL_RETURN_URL ??
+    "https://www.entrenamientofocus.com.ar/paypal/succes",
   PAYPAL_SUSCRIPTION_CANCEL_URL:
-    process.env.PAYPAL_SUSCRIPTION_CANCEL_URL ?? process.env.PAYPAL_CANCEL_URL ?? "",
+    process.env.PAYPAL_SUSCRIPTION_CANCEL_URL ??
+    process.env.PAYPAL_CANCEL_URL ??
+    "https://www.entrenamientofocus.com.ar/paypal/cancel",
   PAYPAL_SUSCRIPTION_WEBHOOK_URL:
     process.env.PAYPAL_SUSCRIPTION_WEBHOOK_URL ?? process.env.PAYPAL_WEBHOOK_URL ?? "",
 };

@@ -52,9 +52,8 @@ export default function MentoriaPage() {
   const MP_PLAN_ID = process.env.NEXT_PUBLIC_MP_PLAN_ID || "";
   const PRODUCT_ID_MENTORIA =
     process.env.NEXT_PUBLIC_PRODUCT_ID_MENTORIA || "";
-  const PAYPAL_PLAN_ID = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID || "";
-  const PAYPAL_CLIENT_ID =
-    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
+const PAYPAL_PLAN_ID = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID || "";
+const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
 
   const MERCADOPAGO_PLAN_CHECKOUT = useMemo(() => {
     if (!MP_PLAN_ID) return "";
@@ -412,15 +411,15 @@ export default function MentoriaPage() {
                         </p>
 
                         <div className="flex justify-center">
-                          {selectedProvider === "paypal" && (
-                            <PaypalSubscriptionButton
-                              planId={PAYPAL_PLAN_ID}
-                              clientId={PAYPAL_CLIENT_ID}
-                              disabled={authLoading}
-                              onRequireAuth={ensureAuth}
-                              onError={(message) => setError(message)}
-                            />
-                          )}
+                         {selectedProvider === "paypal" && (
+  <PaypalSubscriptionButton
+    planId={PAYPAL_PLAN_ID}
+    clientId={PAYPAL_CLIENT_ID}
+    disabled={authLoading}
+    onRequireAuth={ensureAuth}
+    onError={(message) => setError(message)}
+  />
+)}
 
                           {selectedProvider === "mercadopago" && isArgentina && (
                             <MercadoPagoSubscriptionButton

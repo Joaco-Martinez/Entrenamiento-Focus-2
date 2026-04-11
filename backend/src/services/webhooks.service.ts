@@ -3,6 +3,7 @@ import { prisma } from "../prisma/client";
 import { env } from "../config/env";
 import { ApiError } from "../common/errors/ApiError";
 import * as ordersService from "./orders.service";
+import { handlePaypalSubscriptionWebhook } from "../payments/PaypalSuscriptions/paypalSubscriptions.service";
 
 export async function mercadoPagoWebhook(body: any) {
   console.log("========== MP WEBHOOK IN ==========");
@@ -406,56 +407,10 @@ export async function paypalWebhook(body: any, headers: any) {
   }
 
   // 2) Subscriptions events
-  const subId = resource?.id ? String(resource.id) : null;
-  const custom = resource?.custom_id ? String(resource.custom_id) : "";
-  const userId = custom.includes(":") ? custom.split(":")[0] : custom || null;
-
-  console.log("PAYPAL SUB ID:", subId);
-  console.log("PAYPAL CUSTOM ID:", custom);
-  console.log("PAYPAL USER ID:", userId);
-
-  if (subId && String(eventType).startsWith("BILLING.SUBSCRIPTION")) {
-    if (!userId) return { ok: true };
-
-    const statusRaw = String(resource?.status ?? "").toUpperCase();
-    const mapped =
-      statusRaw === "ACTIVE"
-        ? "ACTIVE"
-        : statusRaw === "CANCELLED"
-        ? "CANCELLED"
-        : statusRaw === "SUSPENDED"
-        ? "SUSPENDED"
-        : statusRaw === "EXPIRED"
-        ? "EXPIRED"
-        : "PAST_DUE";
-
-    await prisma.subscription.upsert({
-      where: { userId },
-      create: {
-        userId,
-        provider: "PAYPAL",
-        status: mapped as any,
-        externalId: subId,
-        currentPeriodStart: resource?.billing_info?.last_payment?.time
-          ? new Date(resource.billing_info.last_payment.time)
-          : null,
-        currentPeriodEnd: resource?.billing_info?.next_billing_time
-          ? new Date(resource.billing_info.next_billing_time)
-          : null,
-        cancelAtPeriodEnd: false,
-      },
-      update: {
-        provider: "PAYPAL",
-        status: mapped as any,
-        externalId: subId,
-        currentPeriodEnd: resource?.billing_info?.next_billing_time
-          ? new Date(resource.billing_info.next_billing_time)
-          : undefined,
-      },
-    });
-
+  if (String(eventType).startsWith("BILLING.SUBSCRIPTION") || eventType === "PAYMENT.SALE.COMPLETED") {
+    const result = await handlePaypalSubscriptionWebhook(body, headers);
     console.log("========== PAYPAL SUB OK ==========");
-    return { ok: true };
+    return result;
   }
 
   return { ok: true };
