@@ -26,13 +26,12 @@ export function CartDrawer({
     getSubtotalByCountry,
     getCurrencyByCountry,
   } = useCart()
-  console.log("CartDrawer render", { cart, totalItems })
+
   const { user, country } = useAuth()
   const router = useRouter()
 
   const resolvedCountry = useMemo<DrawerCountry>(() => {
     const c = (country || user?.country || "").toLowerCase()
-
     if (c === "arg" || c === "ar" || c === "argentina") return "arg"
     return "other"
   }, [country, user?.country])
@@ -61,50 +60,54 @@ export function CartDrawer({
     }).format(value)
   }
 
-function goToCheckout() {
-  onClose()
-  router.push("/checkout")
-}
+  function goToCheckout() {
+    onClose()
+    router.push("/checkout")
+  }
 
   return (
     <>
       <div
-        className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition ${
+        className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
       />
 
       <aside
-        className={`fixed right-0 top-0 z-[70] flex h-screen w-full max-w-md flex-col border-l border-primary/15 bg-[#0d0e12] shadow-2xl transition-transform duration-300 ${
+        className={`fixed right-0 top-0 z-[70] flex h-[100dvh] max-h-[100dvh] w-full flex-col border-l border-primary/15 bg-[#0d0e12] shadow-2xl transition-transform duration-300 sm:max-w-md ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <div>
-            <p className="text-lg font-bold text-white">Tu carrito</p>
-            <p className="text-sm text-white/50">
-              {totalItems} producto{totalItems === 1 ? "" : "s"}
-            </p>
-          </div>
+        <div className="shrink-0 border-b border-white/10 px-4 py-4 sm:px-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-base font-bold text-white sm:text-lg">Tu carrito</p>
+              <p className="text-sm text-white/50">
+                {totalItems} producto{totalItems === 1 ? "" : "s"}
+              </p>
+            </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-white/10 p-2 text-white/70 transition hover:bg-white/5 hover:text-white"
-            aria-label="Cerrar carrito"
-          >
-            <X className="h-5 w-5" />
-          </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="shrink-0 rounded-full border border-white/10 p-2 text-white/70 transition hover:bg-white/5 hover:text-white"
+              aria-label="Cerrar carrito"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {cart.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center px-6 pb-8 text-center">
             <div className="rounded-full border border-primary/20 bg-primary/10 p-4 text-primary">
               <ShoppingBag className="h-8 w-8" />
             </div>
 
-            <h3 className="mt-5 text-xl font-bold text-white">Tu carrito está vacío</h3>
+            <h3 className="mt-5 text-xl font-bold text-white">
+              Tu carrito está vacío
+            </h3>
 
             <p className="mt-2 max-w-xs text-sm text-white/55">
               Agregá un recurso para comprarlo después o ir directo al checkout.
@@ -113,95 +116,99 @@ function goToCheckout() {
             <Link
               href="/recursos"
               onClick={onClose}
-              className="mt-6 rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground transition hover:opacity-90"
+              className="mt-6 inline-flex min-h-[48px] w-full max-w-xs items-center justify-center rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground transition hover:opacity-90"
             >
               Ver recursos
             </Link>
           </div>
         ) : (
           <>
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-              {cart.map((item) => {
-                const unitPrice = getUnitPrice(item)
-                const lineTotal = unitPrice * item.quantity
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5">
+              <div className="space-y-4 pb-4">
+                {cart.map((item) => {
+                  const unitPrice = getUnitPrice(item)
+                  const lineTotal = unitPrice * item.quantity
 
-                return (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
-                  >
-                    <div className="flex gap-4">
-                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30">
-                        <Image
-                          src={item.coverImageUrl || "/placeholder.svg"}
-                          alt={item.title}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="line-clamp-2 font-semibold text-white">
-                              {item.title}
-                            </p>
-                            <p className="mt-1 text-sm text-primary">
-                              {formatMoney(unitPrice)}
-                            </p>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => removeFromCart(item.id)}
-                            className="text-sm text-red-300 transition hover:text-red-200"
-                          >
-                            Quitar
-                          </button>
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4"
+                    >
+                      <div className="flex gap-3 sm:gap-4">
+                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                          <Image
+                            src={item.coverImageUrl || "/placeholder.svg"}
+                            alt={item.title}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
                         </div>
 
-                        <div className="mt-4 flex items-center justify-between">
-                          <div className="inline-flex items-center rounded-full border border-white/10 bg-black/30">
-                            <button
-                              type="button"
-                              onClick={() => decreaseQuantity(item.id)}
-                              className="p-2 text-white/70 transition hover:text-white"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </button>
-
-                            <span className="min-w-10 text-center text-sm font-semibold text-white">
-                              {item.quantity}
-                            </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="line-clamp-2 text-sm font-semibold text-white sm:text-base">
+                                {item.title}
+                              </p>
+                              <p className="mt-1 text-sm text-primary">
+                                {formatMoney(unitPrice)}
+                              </p>
+                            </div>
 
                             <button
                               type="button"
-                              onClick={() => increaseQuantity(item.id)}
-                              className="p-2 text-white/70 transition hover:text-white"
+                              onClick={() => removeFromCart(item.id)}
+                              className="shrink-0 text-sm text-red-300 transition hover:text-red-200"
                             >
-                              <Plus className="h-4 w-4" />
+                              Quitar
                             </button>
                           </div>
 
-                          <p className="text-sm text-white/60">
-                            Subtotal:{" "}
-                            <span className="font-semibold text-white">
-                              {formatMoney(lineTotal)}
-                            </span>
-                          </p>
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <div className="inline-flex items-center rounded-full border border-white/10 bg-black/30">
+                              <button
+                                type="button"
+                                onClick={() => decreaseQuantity(item.id)}
+                                className="p-2 text-white/70 transition hover:text-white"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </button>
+
+                              <span className="min-w-10 text-center text-sm font-semibold text-white">
+                                {item.quantity}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => increaseQuantity(item.id)}
+                                className="p-2 text-white/70 transition hover:text-white"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </button>
+                            </div>
+
+                            <p className="text-sm text-white/60">
+                              Subtotal:{" "}
+                              <span className="font-semibold text-white">
+                                {formatMoney(lineTotal)}
+                              </span>
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
 
-            <div className="border-t border-white/10 px-5 py-5">
+            <div className="shrink-0 border-t border-white/10 bg-[#0d0e12] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-5 sm:py-5">
               <div className="flex items-center justify-between text-sm text-white/60">
                 <span>Total</span>
-                <span className="text-xl font-bold text-primary">{formattedSubtotal}</span>
+                <span className="text-xl font-bold text-primary">
+                  {formattedSubtotal}
+                </span>
               </div>
 
               <div className="mt-2 flex items-center justify-between text-xs text-white/40">
@@ -213,7 +220,7 @@ function goToCheckout() {
                 <Link
                   href="/recursos"
                   onClick={onClose}
-                  className="flex items-center justify-center rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground transition hover:opacity-90"
+                  className="flex min-h-[48px] items-center justify-center rounded-xl bg-primary px-5 py-3 text-center font-semibold text-primary-foreground transition hover:opacity-90"
                 >
                   Seguir comprando
                 </Link>
@@ -221,7 +228,7 @@ function goToCheckout() {
                 <button
                   type="button"
                   onClick={goToCheckout}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 font-medium text-white/80 transition hover:bg-white/[0.06]"
+                  className="flex min-h-[48px] items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-center font-medium text-white/80 transition hover:bg-white/[0.06]"
                 >
                   Finalizar compra
                 </button>
