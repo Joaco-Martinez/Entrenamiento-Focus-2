@@ -8,20 +8,25 @@ export async function register(data: {
   password: string;
   firstName?: string;
   lastName?: string;
+  phone?: string;
   country?: string;
 }) {
-  const exists = await prisma.user.findUnique({ where: { email: data.email } });
+  const exists = await prisma.user.findUnique({
+    where: { email: data.email.trim().toLowerCase() },
+  });
+
   if (exists) throw new ApiError(409, "Email already in use");
 
   const passwordHash = await hashPassword(data.password);
 
   const user = await prisma.user.create({
     data: {
-      email: data.email,
+      email: data.email.trim().toLowerCase(),
       passwordHash,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      country: data.country,
+      firstName: data.firstName?.trim() || null,
+      lastName: data.lastName?.trim() || null,
+      phone: data.phone?.trim() || null,
+      country: data.country?.trim().toUpperCase() || "AR",
     },
     select: {
       id: true,
@@ -29,6 +34,7 @@ export async function register(data: {
       role: true,
       firstName: true,
       lastName: true,
+      phone: true,
       country: true,
     },
   });

@@ -67,6 +67,7 @@ export default function MentoriaPage() {
 
   const isArgentina =
     normalizedCountry === "ar" ||
+    normalizedCountry === "AR" ||
     normalizedCountry === "arg" ||
     normalizedCountry === "argentina" ||
     normalizedCountry.startsWith("ar-");

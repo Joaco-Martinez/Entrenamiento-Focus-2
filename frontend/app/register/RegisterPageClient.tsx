@@ -13,14 +13,12 @@ const passwordRules = {
   number: (v: string) => /[0-9]/.test(v),
 };
 
-const normalizePhone = (value: string) => value.replace(/[^\d+]/g, "");
-
 const isValidEmail = (value: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 };
 
 const countries = [
-  { code: "arg", label: "🇦🇷 Argentina" },
+  { code: "AR", label: "🇦🇷 Argentina" },
   { code: "BO", label: "🇧🇴 Bolivia" },
   { code: "CL", label: "🇨🇱 Chile" },
   { code: "CO", label: "🇨🇴 Colombia" },
@@ -49,6 +47,78 @@ const countries = [
   { code: "GB", label: "🇬🇧 Reino Unido" },
 ];
 
+const countryDialCodes: Record<string, string> = {
+  AR: "54",
+  BO: "591",
+  CL: "56",
+  CO: "57",
+  CR: "506",
+  CU: "53",
+  DO: "1",
+  EC: "593",
+  SV: "503",
+  ES: "34",
+  GT: "502",
+  HN: "504",
+  MX: "52",
+  NI: "505",
+  PA: "507",
+  PY: "595",
+  PE: "51",
+  PR: "1",
+  UY: "598",
+  VE: "58",
+  US: "1",
+  BR: "55",
+  IT: "39",
+  FR: "33",
+  DE: "49",
+  CA: "1",
+  GB: "44",
+};
+
+const phonePlaceholders: Record<string, string> = {
+  AR: "3516763620",
+  BO: "71234567",
+  CL: "912345678",
+  CO: "3001234567",
+  CR: "88887777",
+  CU: "51234567",
+  DO: "8095551234",
+  EC: "0991234567",
+  SV: "70123456",
+  ES: "612345678",
+  GT: "51234567",
+  HN: "91234567",
+  MX: "5512345678",
+  NI: "81234567",
+  PA: "61234567",
+  PY: "981123456",
+  PE: "987654321",
+  PR: "7875551234",
+  UY: "91234567",
+  VE: "4121234567",
+  US: "3055551234",
+  BR: "11999999999",
+  IT: "3123456789",
+  FR: "612345678",
+  DE: "15123456789",
+  CA: "4165551234",
+  GB: "7123456789",
+};
+
+const normalizePhone = (value: string) => value.replace(/\D/g, "");
+
+const buildInternationalPhone = (country: string, phone: string) => {
+  const cleanPhone = normalizePhone(phone);
+  const dialCode = countryDialCodes[country] || "";
+
+  if (!cleanPhone) return "";
+  if (!dialCode) return cleanPhone;
+
+  return `+${dialCode}${cleanPhone}`;
+};
+
 export default function RegisterPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,6 +141,9 @@ export default function RegisterPageClient() {
     () => searchParams.get("redirect") || "/login",
     [searchParams]
   );
+
+  const dialCode = countryDialCodes[country] || "";
+  const phonePlaceholder = phonePlaceholders[country] || "123456789";
 
   useEffect(() => {
     if (!authLoading && isAuth) {
@@ -155,7 +228,7 @@ export default function RegisterPageClient() {
         password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        phone: normalizePhone(phone),
+        phone: buildInternationalPhone(country, phone),
         country: country.trim().toUpperCase(),
       });
 
@@ -311,17 +384,28 @@ export default function RegisterPageClient() {
                 <label className="mb-2 block text-sm font-semibold text-white/85">
                   Teléfono
                 </label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(normalizePhone(e.target.value))}
-                  type="tel"
-                  autoComplete="tel"
-                  inputMode="tel"
-                  placeholder="3516763620"
-                  className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                />
+
+                <div className="flex overflow-hidden rounded-xl border border-white/10 bg-black/40 transition focus-within:border-yellow-400/50 focus-within:ring-2 focus-within:ring-yellow-400/15">
+                  <div className="flex items-center border-r border-white/10 px-4 text-white/70">
+                    +{dialCode}
+                  </div>
+
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(normalizePhone(e.target.value))}
+                    type="tel"
+                    autoComplete="tel-national"
+                    inputMode="numeric"
+                    placeholder={phonePlaceholder}
+                    className="w-full bg-transparent px-4 py-3 text-white placeholder:text-white/35 outline-none"
+                  />
+                </div>
+
                 <p className="mt-2 text-xs text-white/45">
-                  Tip: poné tu número sin espacios.
+                  Se guardará como:{" "}
+                  <span className="text-white/70">
+                    {phone ? buildInternationalPhone(country, phone) : `+${dialCode}`}
+                  </span>
                 </p>
               </div>
 

@@ -24,7 +24,7 @@ export const usersService = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       phone: phone.trim(),
-      country: country.toUpperCase(),
+      country: country.trim().toUpperCase(),
     };
 
     return apiFetch("/auth/register", {
