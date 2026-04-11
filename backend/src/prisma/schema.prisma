@@ -103,6 +103,10 @@ model User {
   lastName  String?
   country   String? @default("arg")
 
+ resetPasswordCode          String?
+  resetPasswordCodeExpiresAt DateTime?
+  resetPasswordRequestedAt   DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 subscriptionLinkIntents SubscriptionLinkIntent[]

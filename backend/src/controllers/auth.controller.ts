@@ -73,3 +73,15 @@ export async function logout(_req: Request, res: Response) {
     message: "Logout successful",
   });
 }
+
+export async function forgotPassword(req: Request, res: Response) {
+  const result = await authService.forgotPassword(req.body);
+
+  return res.status(200).json(result);
+}
+
+export async function resetPassword(req: Request, res: Response) {
+  const result = await authService.resetPassword(req.body);
+
+  return res.status(200).json(result);
+}
