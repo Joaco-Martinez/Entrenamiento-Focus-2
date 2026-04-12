@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export interface JwtUserPayload {
   sub: string;
   role: string;
@@ -8,7 +10,6 @@ export interface JwtUserPayload {
   exp?: number;
   email?: string;
   id?: string;
-  [key: string]: any;
 }
 
 export type AuthedRequest = Request & {
@@ -20,13 +21,10 @@ export function authRequired(
   res: Response,
   next: NextFunction
 ) {
-  // Log cookies for debugging – sacar en producción si querés
-  console.log("req.headers.cookie:", req.headers.cookie);
-  console.log("req.cookies:", req.cookies);
+  let token: string | undefined;
 
-  let token: string | undefined = undefined;
-
-  if (req.cookies && typeof req.cookies.token === "string") {
+  // 1. Obtener token
+  if (req.cookies?.token) {
     token = req.cookies.token;
   } else if (typeof req.headers.authorization === "string") {
     const authHeader = req.headers.authorization.trim();
@@ -35,36 +33,34 @@ export function authRequired(
     }
   }
 
-  console.log("authRequired token:", token);
-
   if (!token) {
     return res.status(401).json({ message: "No autenticado" });
   }
 
   try {
+    // 2. Verificar token
     const payload = jwt.verify(
       token,
       process.env.JWT_SECRET as string
     ) as JwtUserPayload;
 
     req.user = payload;
-    console.log("authRequired user:", payload);
+    return next();
+  } catch (error) {
+    // 🔥 3. SI FALLA → BORRAR COOKIE
 
-    next();
-  } catch (error: any) {
-    console.log("authRequired error verifying token:", error);
-
-    // Si el token vino por cookie y es inválido/expiró/firma mala, la limpiamos
     if (req.cookies?.token) {
       res.clearCookie("token", {
         httpOnly: true,
-        secure: true, // en producción con HTTPS debería ser true si así la creás
-        sameSite: "lax",
+        secure: isProd,
+        sameSite: isProd ? "none" : "lax",
+        ...(isProd ? { domain: ".entrenamientofocus.com.ar" } : {}),
+        path: "/",
       });
     }
 
     return res.status(401).json({
-      message: "Token inválido",
+      message: "Token inválido o expirado",
     });
   }
 }
