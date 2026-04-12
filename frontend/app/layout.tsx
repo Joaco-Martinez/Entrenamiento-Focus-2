@@ -7,6 +7,7 @@ import { Navbar } from "@/components/navbar"
 import { AuthProvider } from "@/context/AuthContext"
 import { CartProvider } from "@/context/CartContext"
 import MaintenanceGate from "@/components/MaintenanceGate"
+import Footer from "@/components/footer"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -70,6 +71,7 @@ export default function RootLayout({
             {children}
             <Analytics />
              {/* </MaintenanceGate> */}
+             <Footer />
           </CartProvider>
         </AuthProvider>
       </body>
