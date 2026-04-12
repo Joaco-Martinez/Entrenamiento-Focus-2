@@ -1,0 +1,33 @@
+🚀 Iniciando creación de planes...
+
+========== PAYPAL ==========
+🔐 Obteniendo access token de PayPal...
+📦 Creando producto PayPal...
+✅ Producto PayPal creado
+   Product ID: PROD-01X16941GB374245F
+   Product Name: Entrenamiento Focus
+💳 Creando plan PayPal...
+✅ Plan PayPal creado
+   Product ID: PROD-01X16941GB374245F
+   Plan ID: P-4EN89323RN775751BNHN3MHA
+   Nombre: Plan mensual Focus
+   Precio: 15 USD
+
+====== MERCADO PAGO ======
+💳 Creando preapproval plan de Mercado Pago...
+✅ Plan Mercado Pago creado
+   Plan ID: a183a877e79d41ca9d83fad992d0104b
+   Reason: Entrenamiento Focus
+   Precio: 19500 ARS
+   Checkout URL: https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=a183a877e79d41ca9d83fad992d0104b
+
+✅ Producto local actualizado: Entrenamiento Focus
+   paypalPlanId: P-4EN89323RN775751BNHN3MHA
+🎉 Todo listo.
+
+===== RESULTADO FINAL =====
+PAYPAL PRODUCT ID: PROD-01X16941GB374245F
+PAYPAL PLAN ID: P-4EN89323RN775751BNHN3MHA
+MP PREAPPROVAL PLAN ID: a183a877e79d41ca9d83fad992d0104b
+MP CHECKOUT URL: https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=a183a877e79d41ca9d83fad992d0104b
+
