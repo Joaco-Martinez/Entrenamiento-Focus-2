@@ -58,7 +58,7 @@ export function authRequired(
     if (req.cookies?.token) {
       res.clearCookie("token", {
         httpOnly: true,
-        secure: false, // en producción con HTTPS debería ser true si así la creás
+        secure: true, // en producción con HTTPS debería ser true si así la creás
         sameSite: "lax",
       });
     }

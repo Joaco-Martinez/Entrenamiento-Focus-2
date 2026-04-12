@@ -1,7 +1,7 @@
 import { prisma } from "../prisma/client";
 import bcrypt from "bcrypt";
 
-const USER_ID = "17c524c7-2a20-41a5-82ea-ca70c921a9b9";
+const USER_ID = "bf2957aa-01a0-4678-8b1a-d70d9759a86d";
 const NEW_PASSWORD = "Joaco1907!";
 
 async function main() {
