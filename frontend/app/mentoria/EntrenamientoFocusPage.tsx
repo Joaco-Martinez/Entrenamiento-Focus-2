@@ -195,7 +195,7 @@ export default function EntrenamientoFocusPage() {
 
             <a
               href="#precio"
-              className="mt-10 inline-flex rounded-full bg-[#e3ae68] px-8 py-4 text-[22px] font-semibold text-black transition hover:scale-[1.02] hover:bg-[#efbb77]"
+              className="mt-10 inline-flex rounded-full bg-[#e3ae68] px-8 py-4 text-[15px] sm:text-[22px] font-semibold text-black transition hover:scale-[1.02] hover:bg-[#efbb77]"
             >
               Entrar al entrenamiento
             </a>
@@ -349,153 +349,173 @@ export default function EntrenamientoFocusPage() {
         </div>
       </section>
 
-      <section
-        id="precio"
-        className="mx-auto max-w-[1200px] px-6 pb-20 md:px-10 lg:px-12 lg:pb-28"
-      >
-        <div className="overflow-hidden rounded-[36px] border border-white/10 bg-[#050505]">
-          <div className="grid lg:grid-cols-2">
-            <div className="border-b border-white/10 p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
-              <p className="text-[11px] uppercase tracking-[0.28em] text-[#D4AF37]">
-                Te espero adentro
+<section
+  id="precio"
+  className="mx-auto max-w-[1200px] px-6 pb-20 md:px-10 lg:px-12 lg:pb-28"
+>
+  <div className="overflow-hidden rounded-[36px] border border-white/10 bg-[#050505]">
+    <div className="grid lg:grid-cols-2">
+      <div className="border-b border-white/10 p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-[#D4AF37]">
+          Te espero adentro
+        </p>
+
+        <h2 className="mt-4 text-[36px] font-light leading-[1.05] tracking-[-0.03em] sm:text-[48px] lg:text-[56px]">
+          <span className="block text-white">Sumate a</span>
+          <span className="block text-[#D4AF37]">Entrenamiento Focus</span>
+        </h2>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => handleSelectProvider("paypal")}
+            className={`group relative overflow-hidden rounded-[24px] border p-5 text-left cursor-pointer transition-all duration-300 active:scale-[0.98] hover:-translate-y-1 hover:scale-[1.03] ${
+              selectedProvider === "paypal"
+                ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.2)]"
+                : "border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/10 hover:shadow-[0_0_20px_rgba(212,175,55,0.15)]"
+            }`}
+          >
+            <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            </div>
+
+            <div className="relative z-10">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]">
+                Pago internacional
               </p>
 
-              <h2 className="mt-4 text-[36px] font-light leading-[1.05] tracking-[-0.03em] sm:text-[48px] lg:text-[56px]">
-                <span className="block text-white">Sumate a</span>
-                <span className="block text-[#D4AF37]">Entrenamiento Focus</span>
-              </h2>
-
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => handleSelectProvider("paypal")}
-                  className={`rounded-[24px] border p-5 text-left transition ${
-                    selectedProvider === "paypal"
-                      ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.15)]"
-                      : "border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] hover:border-[#D4AF37]/40"
-                  }`}
-                >
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Pago internacional
-                  </p>
-
-                  <div className="mt-3 flex items-end justify-between">
-                    <div className="flex items-end gap-1">
-                      <span className="text-[14px] text-white/50">USD</span>
-                      <span className="text-[36px] font-light text-white">15</span>
-                    </div>
-
-                    <span className="text-[20px] text-white/60">→</span>
-                  </div>
-
-                  <p className="mt-2 text-[13px] text-white/60">PayPal</p>
-                </button>
-
-                {isArgentina && (
-                  <button
-                    type="button"
-                    onClick={() => handleSelectProvider("mercadopago")}
-                    className={`rounded-[24px] border p-5 text-left transition ${
-                      selectedProvider === "mercadopago"
-                        ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.15)]"
-                        : "border-white/10 bg-white/[0.02] hover:border-white/20"
-                    }`}
-                  >
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]">
-                      Pago Argentina
-                    </p>
-
-                    <div className="mt-3 flex items-end justify-between">
-                      <div className="flex items-end gap-1">
-                        <span className="text-[14px] text-white/50">ARS</span>
-                        <span className="text-[36px] font-light text-white">19.500</span>
-                      </div>
-
-                      <span className="text-[20px] text-white/60">→</span>
-                    </div>
-
-                    <p className="mt-2 text-[13px] text-white/60">MercadoPago</p>
-                  </button>
-                )}
-              </div>
-
-              {error && (
-                <p className="mt-5 text-sm font-medium text-red-400">{error}</p>
-              )}
-
-              {selectedProvider && (
-                <div className="mt-6 rounded-[24px] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5 sm:p-6">
-                  <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-[#D4AF37]">
-                    Completar suscripción
-                  </p>
-
-                  <div className="flex justify-center">
-                    {selectedProvider === "paypal" && (
-                      <PaypalSubscriptionButton
-                        planId={PAYPAL_PLAN_ID}
-                        clientId={PAYPAL_CLIENT_ID}
-                        disabled={authLoading}
-                        onRequireAuth={ensureAuth}
-                        onError={(message) => setError(message)}
-                      />
-                    )}
-
-                    {selectedProvider === "mercadopago" && isArgentina && (
-                      <MercadoPagoSubscriptionButton
-                        disabled={authLoading}
-                        onRequireAuth={ensureAuth}
-                        onError={(message) => setError(message)}
-                        checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
-                        productId={PRODUCT_ID_MENTORIA}
-                        planId={MP_PLAN_ID}
-                      />
-                    )}
-                  </div>
+              <div className="mt-3 flex items-end justify-between">
+                <div className="flex items-end gap-1">
+                  <span className="text-[14px] text-white/50">USD</span>
+                  <span className="text-[36px] font-light text-white">15</span>
                 </div>
-              )}
 
-              <div className="mt-8 space-y-3">
-                <p className="max-w-[520px] text-[13px] leading-[1.7] text-white/50">
-                  <span className="text-[#D4AF37]">Importante:</span> el correo de tu cuenta
-                  debe coincidir con el de PayPal o Mercado Pago.
-                </p>
-
-                {!authLoading && !user && (
-                  <button
-                    type="button"
-                    onClick={goToLogin}
-                    className="inline-flex rounded-full border border-white/15 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/5"
-                  >
-                    Iniciar sesión para suscribirme
-                  </button>
-                )}
-
-                <p className="text-xs text-white/40">
-                  {!user
-                    ? "Para suscribirte, primero tenés que iniciar sesión."
-                    : isArgentina
-                    ? "Si estás en Argentina, podés suscribirte con PayPal o Mercado Pago."
-                    : "Si estás fuera de Argentina, la suscripción se realiza con PayPal."}
-                </p>
+                <span className="text-[20px] text-white/60 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white">
+                  →
+                </span>
               </div>
+
+              <p className="mt-2 text-[13px] text-white/60 transition-colors duration-300 group-hover:text-white/80">
+                PayPal
+              </p>
             </div>
+          </button>
 
-            <div className="flex items-center justify-center p-10 lg:p-12">
-              <div className="max-w-[260px] text-center">
-                <div className="mb-6 flex justify-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04]">
-                    <Calendar className="h-6 w-6 text-[#D4AF37]" strokeWidth={1.6} />
+          {isArgentina && (
+            <button
+              type="button"
+              onClick={() => handleSelectProvider("mercadopago")}
+              className={`group relative overflow-hidden rounded-[24px] border p-5 text-left cursor-pointer transition-all duration-300 active:scale-[0.98] hover:-translate-y-1 hover:scale-[1.03] ${
+                selectedProvider === "mercadopago"
+                  ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.2)]"
+                  : "border-white/10 bg-white/[0.02] hover:border-[#D4AF37]/40 hover:bg-white/[0.04] hover:shadow-[0_0_20px_rgba(212,175,55,0.12)]"
+              }`}
+            >
+              <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              </div>
+
+              <div className="relative z-10">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]">
+                  Pago Argentina
+                </p>
+
+                <div className="mt-3 flex items-end justify-between">
+                  <div className="flex items-end gap-1">
+                    <span className="text-[14px] text-white/50">ARS</span>
+                    <span className="text-[36px] font-light text-white">19.500</span>
                   </div>
+
+                  <span className="text-[20px] text-white/60 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white">
+                    →
+                  </span>
                 </div>
 
-                <p className="text-[18px] leading-[1.7] text-white/75 sm:text-[20px]">
-                  El pago se renueva automáticamente cada mes. Podés cancelar cuando quieras.
+                <p className="mt-2 text-[13px] text-white/60 transition-colors duration-300 group-hover:text-white/80">
+                  MercadoPago
                 </p>
               </div>
+            </button>
+          )}
+        </div>
+
+        {error && (
+          <p className="mt-5 text-sm font-medium text-red-400">{error}</p>
+        )}
+
+        {selectedProvider && (
+          <div className="mt-6 rounded-[24px] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5 sm:p-6">
+            <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-[#D4AF37]">
+              Completar suscripción
+            </p>
+
+            <div className="flex justify-center">
+              {selectedProvider === "paypal" && (
+                <PaypalSubscriptionButton
+                  planId={PAYPAL_PLAN_ID}
+                  clientId={PAYPAL_CLIENT_ID}
+                  disabled={authLoading}
+                  onRequireAuth={ensureAuth}
+                  onError={(message) => setError(message)}
+                />
+              )}
+
+              {selectedProvider === "mercadopago" && isArgentina && (
+                <MercadoPagoSubscriptionButton
+                  disabled={authLoading}
+                  onRequireAuth={ensureAuth}
+                  onError={(message) => setError(message)}
+                  checkoutUrl={MERCADOPAGO_PLAN_CHECKOUT}
+                  productId={PRODUCT_ID_MENTORIA}
+                  planId={MP_PLAN_ID}
+                />
+              )}
             </div>
           </div>
+        )}
+
+        <div className="mt-8 space-y-3">
+          <p className="max-w-[520px] text-[13px] leading-[1.7] text-white/50">
+            <span className="text-[#D4AF37]">Importante:</span> el correo de tu cuenta
+            debe coincidir con el de PayPal o Mercado Pago.
+          </p>
+
+          {!authLoading && !user && (
+            <button
+              type="button"
+              onClick={goToLogin}
+              className="inline-flex rounded-full border border-white/15 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/5"
+            >
+              Iniciar sesión para suscribirme
+            </button>
+          )}
+
+          <p className="text-xs text-white/40">
+            {!user
+              ? "Para suscribirte, primero tenés que iniciar sesión."
+              : isArgentina
+              ? "Si estás en Argentina, podés suscribirte con PayPal o Mercado Pago."
+              : "Si estás fuera de Argentina, la suscripción se realiza con PayPal."}
+          </p>
         </div>
-      </section>
+      </div>
+
+      <div className="flex items-center justify-center p-10 lg:p-12">
+        <div className="max-w-[260px] text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04]">
+              <Calendar className="h-6 w-6 text-[#D4AF37]" strokeWidth={1.6} />
+            </div>
+          </div>
+
+          <p className="text-[18px] leading-[1.7] text-white/75 sm:text-[20px]">
+            El pago se renueva automáticamente cada mes. Podés cancelar cuando quieras.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       {showEmailConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
@@ -509,13 +529,7 @@ export default function EntrenamientoFocusPage() {
             </h3>
 
             <p className="mt-4 text-sm leading-7 text-white/75">
-              ¿Corroboraste que el correo de tu cuenta de Entrenamiento Focus sea
-              el mismo que el de la cuenta con la que vas a pagar?
-            </p>
-
-            <p className="mt-3 text-sm leading-7 text-white/60">
-              Esto es importante para que podamos identificar correctamente tu
-              suscripción y darte acceso sin problemas.
+              Asegúrate de que el mail de tu cuenta Focus sea el mismo que usas en PayPal o Mercado Pago para no tener demoras en la activación.
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
