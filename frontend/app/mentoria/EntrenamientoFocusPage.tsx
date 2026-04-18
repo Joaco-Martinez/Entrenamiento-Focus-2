@@ -182,26 +182,26 @@ export default function EntrenamientoFocusPage() {
             <h1 className="text-[42px] font-light leading-[1.05] tracking-[-0.03em] sm:text-[56px] lg:text-[68px]">
               <span className="block">Entrenamiento</span>
               <span className="block">Profesional en</span>
-              <span className="block text-[#e2a650]">Mezcla &amp; Mastering</span>
+              <span className="block text-primary">Mezcla &amp; Mastering</span>
             </h1>
 
             <p className="mt-8 text-[24px] leading-[1.5] text-white/75 sm:text-[28px]">
               No es un curso grabado.
               <br />
-              <span className="font-medium text-[#e2a650]">Es un entrenamiento constante,</span>
+              <span className="font-medium text-primary">Es un entrenamiento constante,</span>
               <br />
               para definir tu criterio profesional.
             </p>
 
             <a
               href="#precio"
-              className="mt-10 inline-flex rounded-full bg-[#e3ae68] px-8 py-4 text-[15px] sm:text-[22px] font-semibold text-black transition hover:scale-[1.02] hover:bg-[#efbb77]"
+              className="mt-10 inline-flex rounded-full bg-primary px-8 py-4 text-[15px] sm:text-[22px] font-semibold text-black transition hover:scale-[1.02] hover:bg-[#efbb77]"
             >
               Entrar al entrenamiento
             </a>
 
             <p className="mt-10 text-[18px] uppercase tracking-[0.08em] text-white/60">
-              Liderado por <span className="font-semibold text-[#e2a650]">Matías Ledesma</span>
+              Liderado por <span className="font-semibold text-primary">Matías Ledesma</span>
             </p>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function EntrenamientoFocusPage() {
           <div className="text-center">
             <h2 className="text-[34px] font-light sm:text-[54px]">Qué vas a conseguir</h2>
             <p className="mt-3 text-[18px] text-white/75 sm:text-[28px]">
-              Tres beneficios <span className="font-semibold text-[#e2a650]">claros, sin vueltas.</span>
+              Tres beneficios <span className="font-semibold text-primary">claros, sin vueltas.</span>
             </p>
           </div>
           <div className="h-px max-w-[260px] flex-1 bg-[#aa7b2a]" />
@@ -229,7 +229,7 @@ export default function EntrenamientoFocusPage() {
                 className="rounded-[28px] border border-[#D4AF37]/20 bg-[#D4AF37]/7 px-6 py-7 text-center transition-all duration-300"
               >
                 <div className="mb-4 flex justify-center">
-                  <Icon className="h-7 w-7 text-[#e2a650]" strokeWidth={1.9} />
+                  <Icon className="h-7 w-7 text-primary" strokeWidth={1.9} />
                 </div>
 
                 <h3 className="text-[20px] font-light leading-tight tracking-[-0.02em] text-white sm:text-[24px]">
@@ -241,7 +241,7 @@ export default function EntrenamientoFocusPage() {
                     <span key={index}>
                       {part}
                       {index < arr.length - 1 && (
-                        <span className="font-medium text-[#e2a650]">
+                        <span className="font-medium text-primary">
                           {item.highlight[0]}
                         </span>
                       )}
@@ -258,12 +258,12 @@ export default function EntrenamientoFocusPage() {
         <div className="mx-auto max-w-[1280px] px-6 py-20 md:px-10 lg:px-12 lg:py-28">
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[13px] uppercase tracking-[0.3em] text-[#D4AF37]">
+              <p className="text-[13px] uppercase tracking-[0.3em] text-primary]">
                 Además
               </p>
               <h2 className="mt-4 text-[38px] font-light leading-[1.02] tracking-[-0.04em] sm:text-[58px]">
                 La formación no termina
-                <span className="block text-[#D4AF37]">en lo técnico.</span>
+                <span className="block text-primary">en lo técnico.</span>
               </h2>
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function EntrenamientoFocusPage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
                 <div className="absolute bottom-0 left-0 max-w-[620px] p-7 sm:p-9">
-                  <p className="text-[26px] font-medium leading-[1.2] text-[#D4AF37] sm:text-[34px]">
+                  <p className="text-[26px] font-medium leading-[1.2] text-primary sm:text-[34px]">
                     {extras[0].title}
                   </p>
                   <p className="mt-3 text-[18px] leading-[1.7] text-white/78 sm:text-[20px]">
@@ -323,11 +323,11 @@ export default function EntrenamientoFocusPage() {
 
       <section className="mx-auto max-w-[1180px] px-6 py-14 md:px-10 lg:px-12 lg:py-20">
         <div className="flex items-center justify-center gap-4 sm:gap-6">
-          <div className="h-px max-w-[220px] flex-1 bg-[#aa7b2a]" />
-          <h2 className="text-center text-[28px] font-light tracking-[0.12em] text-[#dfaa53] sm:text-[42px]">
+          <div className="h-px max-w-[220px] flex-1 bg-primary" />
+          <h2 className="text-center text-[28px] font-light tracking-[0.12em] text-primary sm:text-[42px]">
             MODALIDAD
           </h2>
-          <div className="h-px max-w-[220px] flex-1 bg-[#aa7b2a]" />
+          <div className="h-px max-w-[220px] flex-1 bg-primary" />
         </div>
 
         <div className="mx-auto mt-12 max-w-[880px] space-y-8 sm:space-y-10">
@@ -336,12 +336,12 @@ export default function EntrenamientoFocusPage() {
               key={idx}
               className="flex items-start gap-3 rounded-[28px] border border-[#D4AF37]/20 px-6 py-7 sm:gap-5"
             >
-              <div className="pt-[2px] text-[20px] text-[#e2a650] sm:text-[24px]">✓</div>
+              <div className="pt-[2px] text-[20px] text-primary sm:text-[24px]">✓</div>
 
               <p className="text-[18px] leading-[1.6] text-white/85 sm:text-[22px]">
                 <span className="font-medium text-white">{bullet.start}</span>
                 {bullet.rest}
-                {bullet.accent && <span className="text-[#e2a650]">{bullet.accent}</span>}
+                {bullet.accent && <span className="text-primary">{bullet.accent}</span>}
                 {bullet.end}
               </p>
             </div>
@@ -356,13 +356,13 @@ export default function EntrenamientoFocusPage() {
   <div className="overflow-hidden rounded-[36px] border border-white/10 bg-[#050505]">
     <div className="grid lg:grid-cols-2">
       <div className="border-b border-white/10 p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-[#D4AF37]">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-primary">
           Te espero adentro
         </p>
 
         <h2 className="mt-4 text-[36px] font-light leading-[1.05] tracking-[-0.03em] sm:text-[48px] lg:text-[56px]">
           <span className="block text-white">Sumate a</span>
-          <span className="block text-[#D4AF37]">Entrenamiento Focus</span>
+          <span className="block text-primary">Entrenamiento Focus</span>
         </h2>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
