@@ -72,3 +72,21 @@ export async function unlinkUserSubscription(req: AuthedRequest, res: Response) 
     ...result,
   });
 }
+
+export async function impersonateUser(req: AuthedRequest, res: Response) {
+  const adminId = req.user?.id || req.user?.sub;
+  const targetUserId = req.params.id;
+
+  if (!adminId) {
+    return res.status(401).json({ ok: false, message: "No autenticado" });
+  }
+
+  const result = await usersService.impersonateUserByAdmin(adminId, targetUserId);
+
+  return res.json({
+    ok: true,
+    message: "Impersonación iniciada correctamente",
+    token: result.token,
+    user: result.user,
+  });
+}

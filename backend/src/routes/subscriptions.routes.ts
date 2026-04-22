@@ -80,3 +80,24 @@ subscriptionsRoutes.post(
   adminOnly,
   asyncHandler(subsController.adminCancel)
 );
+
+/**
+ * @openapi
+ * /subscriptions/admin:
+ *   get:
+ *     summary: Get all subscriptions (admin)
+ *     tags: [Subscriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: OK }
+ *       401: { description: Missing/invalid token }
+ *       403: { description: Admin only }
+ */
+subscriptionsRoutes.get(
+  "/admin",
+  authRequired,
+  adminOnly,
+  asyncHandler(subsController.getAll)
+);
+

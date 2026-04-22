@@ -11,6 +11,10 @@ export async function get(req: Request, res: Response) {
   res.json({ ok: true, product });
 }
 
+export async function listSubscriptionOptions(req: Request, res: Response) {
+  const products = await productsService.listSubscriptionOptions();
+  res.json({ ok: true, products });
+}
 export async function create(req: Request, res: Response) {
   const product = await productsService.create(req.body);
   res.status(201).json({ ok: true, product });

@@ -181,3 +181,76 @@ export async function unlinkUserSubscriptionByAdmin(userId: string) {
     removedSubscriptionId: user.subscription.id,
   };
 }
+
+import { signToken } from "../common/utils/jwt";
+import { env } from "../config/env";
+
+export async function impersonateUserByAdmin(adminId: string, targetUserId: string) {
+  if (!adminId) {
+    throw new ApiError(401, "Admin no autenticado");
+  }
+
+  if (adminId === targetUserId) {
+    throw new ApiError(400, "No podés impersonarte a vos mismo");
+  }
+
+  const [admin, targetUser] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: adminId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+      },
+    }),
+    prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        country: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+
+  if (!admin) {
+    throw new ApiError(401, "Admin no encontrado");
+  }
+
+  if (admin.role !== "ADMIN") {
+    throw new ApiError(403, "Solo un admin puede impersonar usuarios");
+  }
+
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const token = signToken({
+    sub: targetUser.id,
+    email: targetUser.email,
+    role: targetUser.role,
+    impersonation: true,
+    impersonatedBy: admin.id,
+  });
+
+  return {
+    token,
+    user: targetUser,
+    cookieOptions: {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: env.NODE_ENV === "production" ? ("none" as const) : ("lax" as const),
+      domain:
+        env.NODE_ENV === "production"
+          ? ".entrenamientofocus.com.ar"
+          : undefined,
+      path: "/",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+  };
+}

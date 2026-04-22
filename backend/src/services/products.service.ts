@@ -30,6 +30,22 @@ export async function listAdmin() {
   });
 }
 
+export async function listSubscriptionOptions() {
+  return prisma.product.findMany({
+    where: {
+      isActive: true,
+      isSubscription: true,
+    },
+    orderBy: {
+      title: "asc",
+    },
+    select: {
+      id: true,
+      title: true,
+      coverImageUrl: true,
+    },
+  });
+}
 export async function getPublic(id: string) {
   const p = await prisma.product.findUnique({
     where: { id },

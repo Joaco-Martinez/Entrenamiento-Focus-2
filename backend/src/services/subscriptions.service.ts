@@ -75,3 +75,30 @@ export async function adminCancel(userId: string) {
     data: { status: "CANCELLED", cancelAtPeriodEnd: false }
   });
 }
+
+export async function getAll() {
+  return prisma.subscription.findMany({
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          country: true,
+        },
+      },
+      product: {
+  select: {
+    id: true,
+    title: true,
+    arPrice: true,
+    usdPrice: true,
+  },
+},
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}

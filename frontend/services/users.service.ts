@@ -9,6 +9,22 @@ type RegisterPayload = {
   country: string;
 };
 
+type ManualSubscriptionPayload = {
+  userId: string;
+  productId?: string | null;
+  provider: "MERCADOPAGO" | "PAYPAL";
+  status?: "ACTIVE" | "CANCELLED" | "EXPIRED" | "PAST_DUE" | "SUSPENDED";
+  externalId?: string | null;
+  providerStatus?: string | null;
+  payerEmail?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  cancelledAt?: string | null;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
+  grantAccess?: boolean;
+  notes?: string | null;
+};
+
 export const usersService = {
   async register({
     email,
@@ -49,8 +65,8 @@ export const usersService = {
     return apiFetch("/users/me/subscription");
   },
 
-  async adminListUsers(q?: string) {
-    const qs = q?.trim() ? `?q=${encodeURIComponent(q.trim())}` : "";
+  async adminListUsers(query?: string) {
+    const qs = query?.trim() ? `?q=${encodeURIComponent(query.trim())}` : "";
     return apiFetch(`/users/admin/users${qs}`);
   },
 
@@ -61,6 +77,13 @@ export const usersService = {
   async adminUnlinkSubscription(userId: string) {
     return apiFetch(`/users/admin/users/${userId}/subscription`, {
       method: "DELETE",
+    });
+  },
+
+  async adminCreateManualSubscription(payload: ManualSubscriptionPayload) {
+    return apiFetch("/manual_subscriptions/admin/manual", {
+      method: "POST",
+      body: JSON.stringify(payload),
     });
   },
 };

@@ -101,9 +101,14 @@ async function searchPreapprovalsByEmailAndPlan(
   payerEmail: string,
   planId: string
 ): Promise<MercadoPagoPreapproval[]> {
+  const safeEmail = String(payerEmail || "").trim().toLowerCase();
+  const safePlanId = String(planId || "").trim();
+
+  if (!safeEmail || !safePlanId) return [];
+
   const query = new URLSearchParams({
-    payer_email: payerEmail,
-    preapproval_plan_id: planId,
+    payer_email: safeEmail,
+    preapproval_plan_id: safePlanId,
     limit: "100",
     offset: "0",
   });
@@ -155,6 +160,16 @@ async function upsertSubscriptionFromPreapproval(params: {
   const mappedStatus = mapSubscriptionStatus(mpStatus);
   const now = new Date();
 
+  const currentPeriodStart = mpPreapproval.auto_recurring?.start_date
+    ? new Date(mpPreapproval.auto_recurring.start_date)
+    : null;
+
+  const currentPeriodEnd = mpPreapproval.next_payment_date
+    ? new Date(mpPreapproval.next_payment_date)
+    : null;
+
+  const serializedRaw = JSON.parse(JSON.stringify(mpPreapproval));
+
   const subscription = await prisma.subscription.upsert({
     where: {
       userId: matchedIntent.userId,
@@ -166,13 +181,9 @@ async function upsertSubscriptionFromPreapproval(params: {
       providerStatus: mpStatus || null,
       payerEmail: payerEmail || null,
       productId: matchedIntent.productId ?? null,
-      raw: JSON.parse(JSON.stringify(mpPreapproval)),
-      currentPeriodStart: mpPreapproval.auto_recurring?.start_date
-        ? new Date(mpPreapproval.auto_recurring.start_date)
-        : null,
-      currentPeriodEnd: mpPreapproval.next_payment_date
-        ? new Date(mpPreapproval.next_payment_date)
-        : null,
+      raw: serializedRaw,
+      currentPeriodStart,
+      currentPeriodEnd,
       cancelledAt: mpStatus === "cancelled" ? now : null,
     },
     create: {
@@ -183,13 +194,9 @@ async function upsertSubscriptionFromPreapproval(params: {
       providerStatus: mpStatus || null,
       payerEmail: payerEmail || null,
       productId: matchedIntent.productId ?? null,
-      raw: JSON.parse(JSON.stringify(mpPreapproval)),
-      currentPeriodStart: mpPreapproval.auto_recurring?.start_date
-        ? new Date(mpPreapproval.auto_recurring.start_date)
-        : null,
-      currentPeriodEnd: mpPreapproval.next_payment_date
-        ? new Date(mpPreapproval.next_payment_date)
-        : null,
+      raw: serializedRaw,
+      currentPeriodStart,
+      currentPeriodEnd,
       cancelledAt: mpStatus === "cancelled" ? now : null,
     },
   });
@@ -204,7 +211,7 @@ async function upsertSubscriptionFromPreapproval(params: {
       matchedAt: now,
       activatedAt: mappedStatus === "ACTIVE" ? now : null,
       lastWebhookAt: now,
-      raw: JSON.parse(JSON.stringify(mpPreapproval)),
+      raw: serializedRaw,
     },
   });
 
@@ -224,6 +231,8 @@ export async function createMercadoPagoLinkIntent(input: CreateIntentInput) {
   if (!userId) throw new ApiError(400, "userId requerido");
   if (!email) throw new ApiError(400, "email requerido");
   if (!checkoutUrl) throw new ApiError(400, "checkoutUrl requerido");
+
+  const normalizedEmail = email.toLowerCase().trim();
 
   const planId =
     input.planId ||
@@ -263,6 +272,7 @@ export async function createMercadoPagoLinkIntent(input: CreateIntentInput) {
   await prisma.subscriptionLinkIntent.updateMany({
     where: {
       userId,
+      provider: "MERCADOPAGO",
       status: "PENDING",
     },
     data: {
@@ -277,7 +287,7 @@ export async function createMercadoPagoLinkIntent(input: CreateIntentInput) {
       provider: "MERCADOPAGO",
       planId,
       checkoutUrl,
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       status: "PENDING",
       openedAt: now,
       expiresAt,
@@ -366,11 +376,11 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
   console.log("planId:", planId);
   console.log("mpStatus:", mpStatus);
 
-  if (!payerEmail || !planId) {
-    console.log("IGNORED: falta payer_email o preapproval_plan_id");
+  if (!planId) {
+    console.log("IGNORED: falta preapproval_plan_id");
     return {
       ignored: true,
-      reason: "La suscripción no tiene payer_email o preapproval_plan_id",
+      reason: "La suscripción no tiene preapproval_plan_id",
       preapprovalId,
       payerEmail,
       planId,
@@ -387,24 +397,34 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
 
   console.log("existingByExternalId:", existingByExternalId?.id ?? null);
 
-  let matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
-    where: {
-      provider: "MERCADOPAGO",
-      planId,
-      email: payerEmail,
-      status: "PENDING",
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  let matchedIntent = null as Awaited<
+    ReturnType<typeof prisma.subscriptionLinkIntent.findFirst>
+  > | null;
 
-  console.log(
-    "matchedIntent by pending+email+plan:",
-    matchedIntent?.id ?? null
-  );
+  // 1) Buscar por email + plan SOLO si hay email
+  if (payerEmail) {
+    matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
+      where: {
+        provider: "MERCADOPAGO",
+        planId,
+        email: payerEmail,
+        status: "PENDING",
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
+    console.log(
+      "matchedIntent by pending+email+plan:",
+      matchedIntent?.id ?? null
+    );
+  } else {
+    console.log("matchedIntent by pending+email+plan: skipped, payerEmail vacío");
+  }
+
+  // 2) Si ya existe una suscripción con ese externalId, usar ese userId
   if (!matchedIntent && existingByExternalId?.userId) {
     matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
       where: {
@@ -422,7 +442,30 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     );
   }
 
+  // 3) Fallback fuerte: último intent vigente para ese plan
   if (!matchedIntent) {
+    matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
+      where: {
+        provider: "MERCADOPAGO",
+        planId,
+        status: {
+          in: ["PENDING", "MATCHED"],
+        },
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    console.log(
+      "matchedIntent by latest pending/matched planId:",
+      matchedIntent?.id ?? null
+    );
+  }
+
+  // 4) Buscar por cualquier estado con email + plan SOLO si hay email
+  if (!matchedIntent && payerEmail) {
     matchedIntent = await prisma.subscriptionLinkIntent.findFirst({
       where: {
         provider: "MERCADOPAGO",
@@ -440,7 +483,8 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     );
   }
 
-  if (!matchedIntent) {
+  // 5) Buscar user por email SOLO si hay email
+  if (!matchedIntent && payerEmail) {
     const user = await prisma.user.findUnique({
       where: { email: payerEmail },
       select: { id: true, email: true },
@@ -470,7 +514,7 @@ export async function processMercadoPagoLinkWebhook(payload: any, query: any) {
     console.log("IGNORED: no se encontró intent");
     return {
       ignored: true,
-      reason: "No se encontró intent para ese email + plan",
+      reason: "No se encontró intent para esa suscripción",
       payerEmail,
       planId,
       preapprovalId,

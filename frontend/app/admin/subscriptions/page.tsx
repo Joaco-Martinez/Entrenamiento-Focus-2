@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usersService } from "@/services/users.service";
+import { productsService } from "@/services/products.service";
 import { useAuth } from "@/context/AuthContext";
 import {
   BadgeCheck,
@@ -18,12 +19,19 @@ import {
   Link2Off,
   Layers3,
   ChevronRight,
+  Plus,
+  X,
 } from "lucide-react";
 
 type SubscriptionProduct = {
   id: string;
   title: string;
   coverImageUrl?: string | null;
+};
+
+type ProductOption = {
+  id: string;
+  title: string;
 };
 
 type UserSubscription = {
@@ -51,6 +59,99 @@ type AdminUser = {
   createdAt?: string;
   subscription?: UserSubscription | null;
 };
+
+type ProviderType = "MERCADOPAGO" | "PAYPAL";
+type SubscriptionStatusType =
+  | "ACTIVE"
+  | "CANCELLED"
+  | "EXPIRED"
+  | "PAST_DUE"
+  | "SUSPENDED";
+
+type ManualSubscriptionForm = {
+  userId: string;
+  productId: string;
+  provider: ProviderType;
+  status: SubscriptionStatusType;
+  externalId: string;
+  providerStatus: string;
+  payerEmail: string;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  grantAccess: boolean;
+  notes: string;
+};
+
+const STATUS_OPTIONS: SubscriptionStatusType[] = [
+  "ACTIVE",
+  "PAST_DUE",
+  "SUSPENDED",
+  "CANCELLED",
+  "EXPIRED",
+];
+
+const PROVIDER_OPTIONS: ProviderType[] = ["MERCADOPAGO", "PAYPAL"];
+
+function getProviderStatusOptions(
+  provider: ProviderType,
+  status: SubscriptionStatusType
+) {
+  if (provider === "MERCADOPAGO") {
+    switch (status) {
+      case "ACTIVE":
+        return ["authorized", "active"];
+      case "PAST_DUE":
+        return ["pending", "payment_required"];
+      case "SUSPENDED":
+        return ["paused"];
+      case "CANCELLED":
+        return ["cancelled"];
+      case "EXPIRED":
+        return ["expired"];
+      default:
+        return ["pending"];
+    }
+  }
+
+  switch (status) {
+    case "ACTIVE":
+      return ["ACTIVE", "APPROVED"];
+    case "PAST_DUE":
+      return ["PAST_DUE"];
+    case "SUSPENDED":
+      return ["SUSPENDED"];
+    case "CANCELLED":
+      return ["CANCELLED"];
+    case "EXPIRED":
+      return ["EXPIRED"];
+    default:
+      return ["ACTIVE"];
+  }
+}
+
+function getDefaultProviderStatus(
+  provider: ProviderType,
+  status: SubscriptionStatusType
+) {
+  return getProviderStatusOptions(provider, status)[0] || "";
+}
+
+function buildAutomaticExternalId(
+  provider: ProviderType,
+  userId: string,
+  productId: string
+) {
+  const shortUser = userId.slice(0, 8);
+  const shortProduct = productId ? productId.slice(0, 8) : "no-product";
+  const timestamp = Date.now();
+
+  if (provider === "PAYPAL") {
+    return `manual-paypal-${shortUser}-${shortProduct}-${timestamp}`;
+  }
+
+  return `manual-mp-${shortUser}-${shortProduct}-${timestamp}`;
+}
 
 function formatDate(date?: string | null) {
   if (!date) return "—";
@@ -155,7 +256,9 @@ function StatCard({
       <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-black leading-none text-white">{value}</p>
+      <p className="mt-2 text-3xl font-black leading-none text-white">
+        {value}
+      </p>
     </div>
   );
 }
@@ -187,8 +290,31 @@ export default function AdminSubscriptionsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [subscriptionProducts, setSubscriptionProducts] = useState<
+    ProductOption[]
+  >([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [unlinkingId, setUnlinkingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [creatingFor, setCreatingFor] = useState<AdminUser | null>(null);
+  const [creatingSubscription, setCreatingSubscription] = useState(false);
+
+  const [manualForm, setManualForm] = useState<ManualSubscriptionForm>({
+    userId: "",
+    productId: "",
+    provider: "MERCADOPAGO",
+    status: "ACTIVE",
+    externalId: "",
+    providerStatus: "authorized",
+    payerEmail: "",
+    cancelAtPeriodEnd: false,
+    currentPeriodStart: "",
+    currentPeriodEnd: "",
+    grantAccess: true,
+    notes: "",
+  });
 
   const loadUsers = async (query?: string, silent = false) => {
     try {
@@ -201,7 +327,7 @@ export default function AdminSubscriptionsPage() {
       setError(null);
 
       const res = await usersService.adminListUsers(query?.trim() || undefined);
-      setUsers(res?.users || []);
+      setUsers(res?.users || res?.content?.users || []);
     } catch (e: any) {
       setError(e?.message || "No se pudieron cargar los usuarios.");
     } finally {
@@ -210,9 +336,23 @@ export default function AdminSubscriptionsPage() {
     }
   };
 
+  const loadSubscriptionProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      const res = await productsService.getSubscriptionProducts();
+      const items = res?.products || res?.content?.products || [];
+      setSubscriptionProducts(items);
+    } catch (e) {
+      console.error("Error cargando productos de suscripción", e);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
     loadUsers();
+    loadSubscriptionProducts();
   }, [isAdmin]);
 
   const filteredUsers = useMemo(() => {
@@ -236,12 +376,20 @@ export default function AdminSubscriptionsPage() {
 
   const stats = useMemo(() => {
     const total = users.length;
-    const active = users.filter((u) => u.subscription?.status === "ACTIVE").length;
+    const active = users.filter(
+      (u) => u.subscription?.status === "ACTIVE"
+    ).length;
     const withSubscription = users.filter((u) => !!u.subscription).length;
-    const pending = users.filter((u) => u.subscription?.status === "PAST_DUE").length;
+    const pending = users.filter(
+      (u) => u.subscription?.status === "PAST_DUE"
+    ).length;
 
     return { total, active, withSubscription, pending };
   }, [users]);
+
+  const providerStatusOptions = useMemo(() => {
+    return getProviderStatusOptions(manualForm.provider, manualForm.status);
+  }, [manualForm.provider, manualForm.status]);
 
   const unlinkSubscription = async (userId: string, email: string) => {
     const ok = window.confirm(
@@ -275,6 +423,154 @@ export default function AdminSubscriptionsPage() {
     }
   };
 
+  const openCreateSubscriptionModal = (user: AdminUser) => {
+    const provider = user.subscription?.provider || "MERCADOPAGO";
+    const status = user.subscription?.status || "ACTIVE";
+    const productId =
+      user.subscription?.product?.id || subscriptionProducts[0]?.id || "";
+    const providerStatus =
+      user.subscription?.providerStatus ||
+      getDefaultProviderStatus(provider, status);
+
+    setCreatingFor(user);
+    setManualForm({
+      userId: user.id,
+      productId,
+      provider,
+      status,
+      externalId:
+        user.subscription?.externalId ||
+        buildAutomaticExternalId(provider, user.id, productId),
+      providerStatus,
+      payerEmail: user.subscription?.payerEmail || user.email || "",
+      cancelAtPeriodEnd: user.subscription?.cancelAtPeriodEnd || false,
+      currentPeriodStart: user.subscription?.currentPeriodStart
+        ? user.subscription.currentPeriodStart.slice(0, 16)
+        : "",
+      currentPeriodEnd: user.subscription?.currentPeriodEnd
+        ? user.subscription.currentPeriodEnd.slice(0, 16)
+        : "",
+      grantAccess: true,
+      notes: "",
+    });
+    setCreateModalOpen(true);
+  };
+
+  const closeCreateSubscriptionModal = () => {
+    if (creatingSubscription) return;
+    setCreateModalOpen(false);
+    setCreatingFor(null);
+  };
+
+  const handleManualFormChange = (
+    field: keyof ManualSubscriptionForm,
+    value: string | boolean
+  ) => {
+    setManualForm((prev) => {
+      const next = {
+        ...prev,
+        [field]: value,
+      };
+
+      if (field === "provider" || field === "status") {
+        const provider =
+          (field === "provider" ? value : next.provider) as ProviderType;
+        const status =
+          (field === "status" ? value : next.status) as SubscriptionStatusType;
+
+        next.providerStatus = getDefaultProviderStatus(provider, status);
+        next.externalId = buildAutomaticExternalId(
+          provider,
+          next.userId,
+          next.productId
+        );
+      }
+
+      if (field === "productId") {
+        next.externalId = buildAutomaticExternalId(
+          next.provider,
+          next.userId,
+          String(value)
+        );
+      }
+
+      return next;
+    });
+  };
+
+  const createManualSubscription = async () => {
+    try {
+      if (!manualForm.userId) {
+        window.alert("Falta userId.");
+        return;
+      }
+
+      if (!manualForm.productId) {
+        window.alert("Seleccioná un producto.");
+        return;
+      }
+
+      setCreatingSubscription(true);
+      setError(null);
+
+      const payload = {
+        userId: manualForm.userId,
+        productId: manualForm.productId,
+        provider: manualForm.provider,
+        status: manualForm.status,
+        externalId: manualForm.externalId || null,
+        providerStatus: manualForm.providerStatus || null,
+        payerEmail: manualForm.payerEmail.trim() || null,
+        cancelAtPeriodEnd: manualForm.cancelAtPeriodEnd,
+        currentPeriodStart: manualForm.currentPeriodStart || null,
+        currentPeriodEnd: manualForm.currentPeriodEnd || null,
+        grantAccess: manualForm.grantAccess,
+        notes: manualForm.notes.trim() || null,
+      };
+
+      const res = await usersService.adminCreateManualSubscription(payload);
+
+      const createdSub = res?.subscription || res?.content?.subscription || null;
+
+      if (createdSub) {
+        const selectedProduct = subscriptionProducts.find(
+          (p) => p.id === manualForm.productId
+        );
+
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === manualForm.userId
+              ? {
+                  ...u,
+                  subscription: {
+                    ...createdSub,
+                    product:
+                      createdSub.product ||
+                      (selectedProduct
+                        ? {
+                            id: selectedProduct.id,
+                            title: selectedProduct.title,
+                          }
+                        : null),
+                  },
+                }
+              : u
+          )
+        );
+      } else {
+        await loadUsers(undefined, true);
+      }
+
+      setCreateModalOpen(false);
+      setCreatingFor(null);
+      window.alert("Suscripción creada/actualizada correctamente.");
+    } catch (e: any) {
+      setError(e?.message || "No se pudo crear la suscripción manual.");
+    } finally {
+      setCreatingSubscription(false);
+    }
+  };
+
   if (!isAdmin) return null;
 
   return (
@@ -298,9 +594,9 @@ export default function AdminSubscriptionsPage() {
               </h1>
 
               <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65 md:text-base">
-                Controlá el estado de cada usuario, el proveedor, el período actual y
-                el producto vinculado. También podés desvincular manualmente una
-                suscripción del sistema cuando haga falta.
+                Controlá el estado de cada usuario, el proveedor, el período
+                actual y el producto vinculado. También podés crear, editar o
+                desvincular manualmente una suscripción del sistema.
               </p>
             </div>
 
@@ -309,7 +605,9 @@ export default function AdminSubscriptionsPage() {
               disabled={refreshing}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 px-4 text-sm font-semibold text-yellow-200 transition hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
               {refreshing ? "Actualizando..." : "Actualizar"}
             </button>
           </div>
@@ -358,8 +656,13 @@ export default function AdminSubscriptionsPage() {
             </div>
 
             <div className="text-sm text-white/45">
-              Mostrando <span className="font-semibold text-white">{filteredUsers.length}</span> de{" "}
-              <span className="font-semibold text-white">{users.length}</span> usuarios
+              Mostrando{" "}
+              <span className="font-semibold text-white">
+                {filteredUsers.length}
+              </span>{" "}
+              de{" "}
+              <span className="font-semibold text-white">{users.length}</span>{" "}
+              usuarios
             </div>
           </div>
         </section>
@@ -374,7 +677,9 @@ export default function AdminSubscriptionsPage() {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/40">
                 <Search className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-semibold text-white">No hay resultados</h3>
+              <h3 className="text-lg font-semibold text-white">
+                No hay resultados
+              </h3>
               <p className="mt-2 text-sm text-white/55">
                 No encontramos usuarios que coincidan con tu búsqueda.
               </p>
@@ -411,7 +716,9 @@ export default function AdminSubscriptionsPage() {
                           </span>
                         </div>
 
-                        <p className="mt-1 break-all text-sm text-white/60">{user.email}</p>
+                        <p className="mt-1 break-all text-sm text-white/60">
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -460,20 +767,30 @@ export default function AdminSubscriptionsPage() {
                   </div>
 
                   <div className="border-t border-white/8 p-4">
-                    {canUnlink ? (
+                    <div className="flex flex-col gap-2">
                       <button
-                        disabled={isBusy}
-                        onClick={() => unlinkSubscription(user.id, user.email)}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={() => openCreateSubscriptionModal(user)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-yellow-400/25 bg-yellow-400/10 px-4 py-3 text-sm font-semibold text-yellow-200 transition hover:bg-yellow-400/15"
                       >
-                        <Link2Off className="h-4 w-4" />
-                        {isBusy ? "Desvinculando..." : "Desvincular suscripción"}
+                        <Plus className="h-4 w-4" />
+                        {sub
+                          ? "Editar / reemplazar suscripción"
+                          : "Agregar suscripción"}
                       </button>
-                    ) : (
-                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-center text-sm text-white/40">
-                        Este usuario no tiene suscripción vinculada.
-                      </div>
-                    )}
+
+                      {canUnlink ? (
+                        <button
+                          disabled={isBusy}
+                          onClick={() => unlinkSubscription(user.id, user.email)}
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <Link2Off className="h-4 w-4" />
+                          {isBusy
+                            ? "Desvinculando..."
+                            : "Desvincular suscripción"}
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
                 </article>
               );
@@ -492,7 +809,9 @@ export default function AdminSubscriptionsPage() {
                   <th className="w-[18%] px-5 py-4 font-medium">Producto</th>
                   <th className="w-[18%] px-5 py-4 font-medium">Período</th>
                   <th className="w-[10%] px-5 py-4 font-medium">País</th>
-                  <th className="w-[6%] px-5 py-4 font-medium text-right">Acción</th>
+                  <th className="w-[6%] px-5 py-4 font-medium text-right">
+                    Acción
+                  </th>
                 </tr>
               </thead>
 
@@ -531,7 +850,9 @@ export default function AdminSubscriptionsPage() {
                               <p className="truncate font-semibold text-white">
                                 {getFullName(user)}
                               </p>
-                              <p className="truncate text-white/55">{user.email}</p>
+                              <p className="truncate text-white/55">
+                                {user.email}
+                              </p>
 
                               {sub?.payerEmail && (
                                 <p className="mt-1 truncate text-xs text-white/35">
@@ -551,7 +872,9 @@ export default function AdminSubscriptionsPage() {
                           </span>
 
                           {sub?.providerStatus && (
-                            <p className="mt-2 text-xs text-white/40">{sub.providerStatus}</p>
+                            <p className="mt-2 text-xs text-white/40">
+                              {sub.providerStatus}
+                            </p>
                           )}
                         </td>
 
@@ -593,19 +916,27 @@ export default function AdminSubscriptionsPage() {
                         </td>
 
                         <td className="px-5 py-4">
-                          <div className="flex justify-end">
+                          <div className="flex flex-col items-end gap-2">
+                            <button
+                              onClick={() => openCreateSubscriptionModal(user)}
+                              className="inline-flex items-center gap-2 rounded-xl border border-yellow-400/25 bg-yellow-400/10 px-3 py-2 text-xs font-semibold text-yellow-200 transition hover:bg-yellow-400/15"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              {sub ? "Editar" : "Agregar"}
+                            </button>
+
                             {canUnlink ? (
                               <button
                                 disabled={isBusy}
-                                onClick={() => unlinkSubscription(user.id, user.email)}
+                                onClick={() =>
+                                  unlinkSubscription(user.id, user.email)
+                                }
                                 className="inline-flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 <Link2Off className="h-3.5 w-3.5" />
                                 {isBusy ? "..." : "Desvincular"}
                               </button>
-                            ) : (
-                              <span className="text-xs text-white/35">—</span>
-                            )}
+                            ) : null}
                           </div>
                         </td>
                       </tr>
@@ -617,6 +948,249 @@ export default function AdminSubscriptionsPage() {
           </div>
         </section>
       </div>
+
+      {createModalOpen && creatingFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0b0b0b] shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  {creatingFor.subscription
+                    ? "Editar / reemplazar suscripción"
+                    : "Agregar suscripción manual"}
+                </h3>
+                <p className="mt-1 text-sm text-white/50">
+                  {getFullName(creatingFor)} · {creatingFor.email}
+                </p>
+              </div>
+
+              <button
+                onClick={closeCreateSubscriptionModal}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Provider
+                </label>
+                <select
+                  value={manualForm.provider}
+                  onChange={(e) =>
+                    handleManualFormChange(
+                      "provider",
+                      e.target.value as ProviderType
+                    )
+                  }
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                >
+                  {PROVIDER_OPTIONS.map((provider) => (
+                    <option
+                      key={provider}
+                      value={provider}
+                      className="bg-[#111111]"
+                    >
+                      {provider}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Estado
+                </label>
+                <select
+                  value={manualForm.status}
+                  onChange={(e) =>
+                    handleManualFormChange(
+                      "status",
+                      e.target.value as SubscriptionStatusType
+                    )
+                  }
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                >
+                  {STATUS_OPTIONS.map((status) => (
+                    <option
+                      key={status}
+                      value={status}
+                      className="bg-[#111111]"
+                    >
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Producto
+                </label>
+                <select
+                  value={manualForm.productId}
+                  onChange={(e) =>
+                    handleManualFormChange("productId", e.target.value)
+                  }
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                >
+                  <option value="" className="bg-[#111111]">
+                    {loadingProducts
+                      ? "Cargando productos..."
+                      : "Seleccionar producto"}
+                  </option>
+                  {subscriptionProducts.map((product) => (
+                    <option
+                      key={product.id}
+                      value={product.id}
+                      className="bg-[#111111]"
+                    >
+                      {product.title} — {product.id}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Payer Email
+                </label>
+                <div className="flex h-11 w-full items-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white/80">
+                  {manualForm.payerEmail || "—"}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  External ID generado
+                </label>
+                <div className="flex min-h-[44px] w-full items-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-xs text-white/65 break-all">
+                  {manualForm.externalId || "Se genera automáticamente"}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Provider Status
+                </label>
+                <select
+                  value={manualForm.providerStatus}
+                  onChange={(e) =>
+                    handleManualFormChange("providerStatus", e.target.value)
+                  }
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                >
+                  {providerStatusOptions.map((option) => (
+                    <option
+                      key={option}
+                      value={option}
+                      className="bg-[#111111]"
+                    >
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Current Period Start
+                </label>
+                <input
+                  type="datetime-local"
+                  value={manualForm.currentPeriodStart}
+                  onChange={(e) =>
+                    handleManualFormChange(
+                      "currentPeriodStart",
+                      e.target.value
+                    )
+                  }
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Current Period End
+                </label>
+                <input
+                  type="datetime-local"
+                  value={manualForm.currentPeriodEnd}
+                  onChange={(e) =>
+                    handleManualFormChange("currentPeriodEnd", e.target.value)
+                  }
+                  className="h-11 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-xs uppercase tracking-[0.14em] text-white/45">
+                  Notas
+                </label>
+                <textarea
+                  value={manualForm.notes}
+                  onChange={(e) =>
+                    handleManualFormChange("notes", e.target.value)
+                  }
+                  placeholder="Motivo del alta manual..."
+                  rows={4}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none placeholder:text-white/25"
+                />
+              </div>
+
+              <div className="md:col-span-2 flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <label className="flex items-center gap-3 text-sm text-white/80">
+                  <input
+                    type="checkbox"
+                    checked={manualForm.grantAccess}
+                    onChange={(e) =>
+                      handleManualFormChange("grantAccess", e.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-white/20 bg-transparent"
+                  />
+                  Crear también el AccessGrant
+                </label>
+
+                <label className="flex items-center gap-3 text-sm text-white/80">
+                  <input
+                    type="checkbox"
+                    checked={manualForm.cancelAtPeriodEnd}
+                    onChange={(e) =>
+                      handleManualFormChange(
+                        "cancelAtPeriodEnd",
+                        e.target.checked
+                      )
+                    }
+                    className="h-4 w-4 rounded border-white/20 bg-transparent"
+                  />
+                  Cancelar al final del período
+                </label>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-white/10 px-5 py-4 sm:flex-row sm:justify-end">
+              <button
+                onClick={closeCreateSubscriptionModal}
+                disabled={creatingSubscription}
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/75 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={createManualSubscription}
+                disabled={creatingSubscription}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-yellow-400/25 bg-yellow-400/10 px-5 text-sm font-semibold text-yellow-200 transition hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Plus className="h-4 w-4" />
+                {creatingSubscription ? "Guardando..." : "Guardar suscripción"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

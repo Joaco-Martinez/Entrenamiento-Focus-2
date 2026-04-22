@@ -32,3 +32,12 @@ export async function adminCancel(req: AuthedRequest, res: Response) {
   const subscription = await subsService.adminCancel(req.params.userId);
   return res.json({ ok: true, subscription });
 }
+
+export async function getAll(req: AuthedRequest, res: Response) {
+  const subscriptions = await subsService.getAll();
+
+  return res.json({
+    ok: true,
+    subscriptions,
+  });
+}

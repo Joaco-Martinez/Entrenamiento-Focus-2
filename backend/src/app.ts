@@ -18,7 +18,7 @@ import { authRoutes } from "./routes/auth.routes";
 import { usersRoutes } from "./routes/users.routes";
 import { productsRoutes } from "./routes/products.routes";
 import { ordersRoutes } from "./routes/orders.routes";
-
+import  manualSuscriptionRoutes  from "./routes/subscriptions.admin.routes";
 import { subscriptionsRoutes } from "./routes/subscriptions.routes";
 import { webhooksRoutes } from "./routes/webhooks.routes";
 import { paypalRoutes } from "./payments/PaypalCheckout/paypal.routes";
@@ -61,6 +61,7 @@ app.use((req, _res, next) => {
 app.get("/", (_req, res) => res.json({ ok: true, name: "back-2" }));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/mercadopago_checkout", MpRoutes);
+app.use("/manual_subscriptions", manualSuscriptionRoutes);
 app.use("/paypal_checkout", paypalRoutes);
 app.use("/paypal_suscription", paypalSubscriptionsRoutes);
 app.use("/mercadopago_suscription", MPsuscription);

@@ -161,3 +161,30 @@ usersRoutes.delete(
   adminOnly,
   asyncHandler(usersController.unlinkUserSubscription)
 );
+
+/**
+ * @openapi
+ * /users/admin/users/{id}/impersonate:
+ *   post:
+ *     summary: Admin - impersonate a user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200: { description: Impersonation started }
+ *       401: { description: Missing/invalid token }
+ *       403: { description: Admin only }
+ *       404: { description: User not found }
+ */
+usersRoutes.post(
+  "/admin/users/:id/impersonate",
+  authRequired,
+  adminOnly,
+  asyncHandler(usersController.impersonateUser)
+);

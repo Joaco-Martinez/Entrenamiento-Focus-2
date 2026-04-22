@@ -39,6 +39,10 @@ export const productsService = {
     return data as { products: Product[] };
   },
 
+  async getSubscriptionProducts() {
+    return apiFetch("/products/subscriptions/options");
+  },
+  
   async getById(id: number | string): Promise<Product> {
     return apiFetch(`/products/${id}`);
   },
