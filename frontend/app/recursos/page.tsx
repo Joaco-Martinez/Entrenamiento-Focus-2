@@ -7,7 +7,9 @@ import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { ArrowRight, Lock, Sparkles, ShoppingCart } from "lucide-react"
 import { productsService, Product } from "@/services/products.service"
+import { paymentsService } from "@/services/payments.service"
 import { useCart } from "@/context/CartContext"
+import { useAuth } from "@/context/AuthContext"
 
 const HIDDEN_PRODUCT_ID = "mentoria-focus-product-id"
 
@@ -15,7 +17,11 @@ export default function RecursosPage() {
   const [items, setItems] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
   const { addToCart, isInCart } = useCart()
+  const { user } = useAuth()
+
+  const isAdmin = user?.role === "ADMIN" 
 
   useEffect(() => {
     const run = async () => {
@@ -23,13 +29,32 @@ export default function RecursosPage() {
       setLoading(true)
 
       try {
-        const data = await productsService.getAll()
+        const [productsData, mpStatus, paypalStatus] = await Promise.all([
+          productsService.getAll(),
+          paymentsService.subscriptionStatus().catch(() => null),
+          paymentsService.paypalSubscriptionStatus().catch(() => null),
+        ])
 
-        const rawItems = Array.isArray(data) ? data : data.products ?? []
+        const rawItems = Array.isArray(productsData)
+          ? productsData
+          : productsData.products ?? []
 
-        const filteredItems = rawItems.filter(
-          (item) => String(item.id) !== HIDDEN_PRODUCT_ID
-        )
+        const bestStatus =
+          (paypalStatus?.hasActiveSubscription ? paypalStatus : mpStatus) ??
+          mpStatus ??
+          paypalStatus
+
+        const hasActiveSubscription = Boolean(bestStatus?.hasActiveSubscription)
+
+        const filteredItems = rawItems.filter((item) => {
+          if (String(item.id) === HIDDEN_PRODUCT_ID) return false
+
+          if (item.requiresPremium && !hasActiveSubscription && !isAdmin) {
+            return false
+          }
+
+          return true
+        })
 
         setItems(filteredItems)
       } catch (e: any) {
@@ -40,7 +65,7 @@ export default function RecursosPage() {
     }
 
     run()
-  }, [])
+  }, [isAdmin])
 
   return (
     <section className="bg-muted/20 px-4 py-20 md:py-24">
@@ -112,7 +137,7 @@ export default function RecursosPage() {
                             alt={item.title || "Imagen del recurso"}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            className="object-contain bg-transparent"
+                            className="bg-transparent object-contain"
                           />
                         </div>
                       </div>
@@ -137,7 +162,8 @@ export default function RecursosPage() {
 
                           {item.arPrice != null ? (
                             <span className="pb-1 text-sm text-muted-foreground">
-                              · ARS {Number(item.arPrice).toLocaleString("es-AR")}
+                              · ARS{" "}
+                              {Number(item.arPrice).toLocaleString("es-AR")}
                             </span>
                           ) : (
                             <span className="pb-1 text-sm text-muted-foreground">

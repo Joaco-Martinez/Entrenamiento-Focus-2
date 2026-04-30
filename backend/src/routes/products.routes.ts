@@ -13,28 +13,15 @@ import * as productsService from "../services/products.service";
 import { cloudinary } from "../config/cloudinary";
 
 export const productsRoutes = Router();
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 /**
- * @openapi
- * tags:
- *   - name: Products
- *     description: Public products + protected access + admin CRUD
+ * PUBLIC / FIXED ROUTES
  */
 
-/**
- * @openapi
- * /products/subscriptions/options:
- *   get:
- *     summary: Get subscription product options for admin selects
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200: { description: OK }
- *       401: { description: Missing/invalid token }
- *       403: { description: Admin only }
- */
+productsRoutes.get("/", asyncHandler(productsController.list));
+
 productsRoutes.get(
   "/subscriptions/options",
   authRequired,
@@ -43,32 +30,81 @@ productsRoutes.get(
 );
 
 /**
- * @openapi
- * /products:
- *   get:
- *     summary: List public products (resourceUrl is hidden)
- *     tags: [Products]
- *     responses:
- *       200: { description: OK }
+ * ADMIN CRUD
  */
-productsRoutes.get("/", asyncHandler(productsController.list));
+
+productsRoutes.post(
+  "/admin/products",
+  authRequired,
+  adminOnly,
+  validateBody(createProductSchema),
+  asyncHandler(productsController.create)
+);
+
+productsRoutes.get(
+  "/admin/products",
+  authRequired,
+  adminOnly,
+  asyncHandler(productsController.listAdmin)
+);
+
+productsRoutes.put(
+  "/admin/products/:id",
+  authRequired,
+  adminOnly,
+  validateBody(updateProductSchema),
+  asyncHandler(productsController.update)
+);
+
+productsRoutes.delete(
+  "/admin/products/:id",
+  authRequired,
+  adminOnly,
+  asyncHandler(productsController.remove)
+);
+
+productsRoutes.post(
+  "/admin/products/:id/cover",
+  authRequired,
+  adminOnly,
+  upload.single("image"),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({
+        ok: false,
+        message: "Missing image",
+      });
+    }
+
+    const uploaded = await new Promise<{ secure_url: string }>(
+      (resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "focus/products" },
+          (err, result) => {
+            if (err || !result) return reject(err);
+            resolve(result as any);
+          }
+        );
+
+        stream.end(req.file!.buffer);
+      }
+    );
+
+    const product = await productsService.update(req.params.id, {
+      coverImageUrl: uploaded.secure_url,
+    });
+
+    return res.json({
+      ok: true,
+      product,
+    });
+  })
+);
 
 /**
- * @openapi
- * /products/{id}:
- *   get:
- *     summary: Get public product by id (resourceUrl is hidden)
- *     tags: [Products]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200: { description: OK }
- *       404: { description: Product not found }
+ * DYNAMIC PUBLIC ROUTES
+ * Siempre al final
  */
-productsRoutes.get("/:id", asyncHandler(productsController.get));
 
 productsRoutes.get(
   "/:id/access",
@@ -78,8 +114,11 @@ productsRoutes.get(
 
     const data = await productsService.getAccess(userId, req.params.id);
 
-    res.json({ ok: true, ...data });
+    return res.json({
+      ok: true,
+      ...data,
+    });
   })
 );
 
-// ... el resto igual
+productsRoutes.get("/:id", asyncHandler(productsController.get));

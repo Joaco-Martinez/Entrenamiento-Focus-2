@@ -73,6 +73,12 @@ export default function EntrenamientoFocusPage() {
       accent: "",
       end: "",
     },
+    {
+      start: "50%",
+      rest: " de descuento en todos los",
+      accent: " productos",
+      end: " de la web.",
+    },
   ]
 
   const MP_PLAN_ID = process.env.NEXT_PUBLIC_MP_PLAN_ID || ""
