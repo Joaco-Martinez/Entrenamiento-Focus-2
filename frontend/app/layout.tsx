@@ -72,7 +72,6 @@ export default function RootLayout({
             {children}
             <Analytics />
              {/* </MaintenanceGate> */}
-             <Footer />
              <WhatsAppButton />
           </CartProvider>
         </AuthProvider>

@@ -12,6 +12,62 @@ import { useCart } from "@/context/CartContext"
 import { useAuth } from "@/context/AuthContext"
 
 const HIDDEN_PRODUCT_ID = "mentoria-focus-product-id"
+const PREMIUM_DISCOUNT = 0.5
+
+function toMoney(value: number | string | null | undefined) {
+  const n = Number(value ?? 0)
+  return Number.isFinite(n) ? n : 0
+}
+
+function getPremiumPrice(value: number | string | null | undefined) {
+  return toMoney(value) * PREMIUM_DISCOUNT
+}
+
+function formatUSD(value: number | string | null | undefined) {
+  return `USD ${toMoney(value).toFixed(2)}`
+}
+
+function formatARS(value: number | string | null | undefined) {
+  return `ARS ${Math.round(toMoney(value)).toLocaleString("es-AR")}`
+}
+
+function normalizeProductKey(item: Product) {
+  const title = String(item.title ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+
+  return title || String(item.id)
+}
+
+function removeDuplicatedProducts(products: Product[]) {
+  const map = new Map<string, Product>()
+
+  for (const item of products) {
+    const key = normalizeProductKey(item)
+    const existing = map.get(key)
+
+    if (!existing) {
+      map.set(key, item)
+      continue
+    }
+
+    const existingHasImage = Boolean(existing.coverImageUrl)
+    const currentHasImage = Boolean(item.coverImageUrl)
+
+    const shouldReplace =
+      (!existing.requiresPremium && item.requiresPremium) ||
+      (!existingHasImage && currentHasImage)
+
+    if (shouldReplace) {
+      map.set(key, item)
+    }
+  }
+
+  return Array.from(map.values())
+}
 
 export default function RecursosPage() {
   const [items, setItems] = useState<Product[]>([])
@@ -21,7 +77,7 @@ export default function RecursosPage() {
   const { addToCart, isInCart } = useCart()
   const { user } = useAuth()
 
-  const isAdmin = user?.role === "ADMIN" 
+  const isAdmin = user?.role === "ADMIN"
 
   useEffect(() => {
     const run = async () => {
@@ -56,7 +112,9 @@ export default function RecursosPage() {
           return true
         })
 
-        setItems(filteredItems)
+        const uniqueItems = removeDuplicatedProducts(filteredItems)
+
+        setItems(uniqueItems)
       } catch (e: any) {
         setError(e?.message || "No se pudieron cargar los recursos.")
       } finally {
@@ -107,110 +165,175 @@ export default function RecursosPage() {
                 Todavía no hay recursos cargados.
               </p>
             ) : (
-              items.map((item, idx) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04, duration: 0.35 }}
-                >
-                  <Card className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card p-5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
-                    <div className="absolute right-5 top-5 z-20">
-                      {item.requiresPremium ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
-                          <Lock className="h-3.5 w-3.5" />
-                          Premium
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          Libre
-                        </span>
-                      )}
-                    </div>
+              items.map((item, idx) => {
+                const isPremiumProduct = Boolean(item.requiresPremium)
 
-                    <Link href={`/recursos/${item.id}`} className="block">
-                      <div className="relative overflow-hidden rounded-2xl">
-                        <div className="relative aspect-4/3 w-full">
-                          <Image
-                            src={item.coverImageUrl || "/placeholder.svg"}
-                            alt={item.title || "Imagen del recurso"}
-                            fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            className="bg-transparent object-contain"
-                          />
-                        </div>
-                      </div>
+                const originalUsdPrice = toMoney(item.usdPrice)
+                const finalUsdPrice = isPremiumProduct
+                  ? getPremiumPrice(item.usdPrice)
+                  : originalUsdPrice
 
-                      <div className="mt-5 space-y-3">
-                        <div className="space-y-2">
-                          <h3 className="line-clamp-2 text-2xl font-bold leading-tight">
-                            {item.title}
-                          </h3>
+                const originalArPrice =
+                  item.arPrice != null ? toMoney(item.arPrice) : null
 
-                          {item.description ? (
-                            <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                              {item.description}
-                            </p>
-                          ) : null}
-                        </div>
+                const finalArPrice =
+                  item.arPrice != null
+                    ? isPremiumProduct
+                      ? getPremiumPrice(item.arPrice)
+                      : toMoney(item.arPrice)
+                    : null
 
-                        <div className="flex flex-wrap items-end gap-2 pt-1">
-                          <span className="text-3xl font-extrabold text-primary">
-                            USD {Number(item.usdPrice ?? 0).toFixed(2)}
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.04, duration: 0.35 }}
+                  >
+                    <Card className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card p-5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+                      <div className="absolute right-5 top-5 z-20">
+                        {isPremiumProduct ? (
+                          <div className="flex flex-col items-end gap-2">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
+                              <Lock className="h-3.5 w-3.5" />
+                              Premium
+                            </span>
+
+                            <span className="rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white shadow-lg">
+                              50% OFF mentoría
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Libre
                           </span>
-
-                          {item.arPrice != null ? (
-                            <span className="pb-1 text-sm text-muted-foreground">
-                              · ARS{" "}
-                              {Number(item.arPrice).toLocaleString("es-AR")}
-                            </span>
-                          ) : (
-                            <span className="pb-1 text-sm text-muted-foreground">
-                              · {item.isSubscription ? "mensual" : "pago único"}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
-                    </Link>
 
-                    <div className="mt-6 grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const cartItem = {
-                            id: String(item.id),
-                            title: item.title ?? "",
-                            arPrice: Number(item.arPrice ?? 0),
-                            usdPrice: Number(item.usdPrice ?? 0),
-                            coverImageUrl: item.coverImageUrl || undefined,
-                            description: item.description || undefined,
-                            quantity: 1,
-                          }
+                      <Link href={`/recursos/${item.id}`} className="block">
+                        <div className="relative overflow-hidden rounded-2xl">
+                          <div className="relative aspect-4/3 w-full">
+                            <Image
+                              src={item.coverImageUrl || "/placeholder.svg"}
+                              alt={item.title || "Imagen del recurso"}
+                              fill
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              className="bg-transparent object-contain"
+                            />
+                          </div>
+                        </div>
 
-                          addToCart(cartItem)
-                        }}
-                        className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/15"
-                      >
-                        <ShoppingCart className="h-4 w-4 shrink-0" />
-                        <span className="text-center">
-                          {isInCart(String(item.id))
-                            ? "Agregar otro"
-                            : "Agregar al carrito"}
-                        </span>
-                      </button>
+                        <div className="mt-5 space-y-3">
+                          <div className="space-y-2">
+                            <h3 className="line-clamp-2 text-2xl font-bold leading-tight">
+                              {item.title}
+                            </h3>
 
-                      <Link
-                        href={`/recursos/${item.id}`}
-                        className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-                      >
-                        Ver detalle
-                        <ArrowRight className="h-4 w-4 shrink-0" />
+                            {item.description ? (
+                              <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                                {item.description}
+                              </p>
+                            ) : null}
+                          </div>
+
+                          <div className="pt-1">
+                            {isPremiumProduct ? (
+                              <div className="space-y-2">
+                                <div className="flex flex-wrap items-end gap-2">
+                                  <span className="text-sm font-semibold text-muted-foreground line-through">
+                                    {formatUSD(originalUsdPrice)}
+                                  </span>
+
+                                  <span className="text-3xl font-extrabold text-primary">
+                                    {formatUSD(finalUsdPrice)}
+                                  </span>
+                                </div>
+
+                                {originalArPrice != null &&
+                                finalArPrice != null ? (
+                                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                                    <span className="text-muted-foreground line-through">
+                                      {formatARS(originalArPrice)}
+                                    </span>
+
+                                    <span className="font-semibold text-emerald-400">
+                                      {formatARS(finalArPrice)}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">
+                                    {item.isSubscription
+                                      ? "mensual"
+                                      : "pago único"}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex flex-wrap items-end gap-2">
+                                <span className="text-3xl font-extrabold text-primary">
+                                  {formatUSD(originalUsdPrice)}
+                                </span>
+
+                                {originalArPrice != null ? (
+                                  <span className="pb-1 text-sm text-muted-foreground">
+                                    · {formatARS(originalArPrice)}
+                                  </span>
+                                ) : (
+                                  <span className="pb-1 text-sm text-muted-foreground">
+                                    ·{" "}
+                                    {item.isSubscription
+                                      ? "mensual"
+                                      : "pago único"}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </Link>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))
+
+                      <div className="mt-6 grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cartItem = {
+                              id: String(item.id),
+                              title: item.title ?? "",
+                              arPrice:
+                                item.arPrice != null
+                                  ? Number(finalArPrice ?? 0)
+                                  : 0,
+                              usdPrice: Number(finalUsdPrice ?? 0),
+                              coverImageUrl: item.coverImageUrl || undefined,
+                              description: item.description || undefined,
+                              quantity: 1,
+                            }
+
+                            addToCart(cartItem)
+                          }}
+                          className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition hover:bg-primary/15"
+                        >
+                          <ShoppingCart className="h-4 w-4 shrink-0" />
+                          <span className="text-center">
+                            {isInCart(String(item.id))
+                              ? "Agregar otro"
+                              : "Agregar al carrito"}
+                          </span>
+                        </button>
+
+                        <Link
+                          href={`/recursos/${item.id}`}
+                          className="inline-flex min-h-[58px] items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                        >
+                          Ver detalle
+                          <ArrowRight className="h-4 w-4 shrink-0" />
+                        </Link>
+                      </div>
+                    </Card>
+                  </motion.div>
+                )
+              })
             )}
           </div>
         </motion.div>

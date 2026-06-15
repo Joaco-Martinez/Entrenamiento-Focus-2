@@ -2,7 +2,15 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Mail, KeyRound, Lock, ArrowLeft, CheckCircle2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  KeyRound,
+  Lock,
+  ArrowLeft,
+  CheckCircle2,
+} from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
@@ -74,6 +82,40 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  async function resendCode() {
+    setError("");
+    setMessage("");
+
+    try {
+      setLoadingRequest(true);
+
+      const res = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.message || "No se pudo reenviar el código");
+      }
+
+      setMessage(
+        "Te reenviamos un nuevo código. Revisá tu email, spam o promociones."
+      );
+    } catch (err: any) {
+      setError(err?.message || "Ocurrió un error al reenviar el código");
+    } finally {
+      setLoadingRequest(false);
+    }
+  }
+
   async function handleResetPassword(e: FormEvent) {
     e.preventDefault();
     setError("");
@@ -120,17 +162,17 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.16),transparent_30%),radial-gradient(circle_at_bottom,rgba(255,255,255,0.06),transparent_25%)]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#111110] text-[#f0ede6]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(200,168,75,0.16),transparent_30%),radial-gradient(circle_at_bottom,rgba(240,237,230,0.06),transparent_25%)]" />
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
-        <section className="w-full max-w-md overflow-hidden rounded-3xl border border-[#D4AF37]/20 bg-[#0B0B0B]/95 shadow-[0_0_50px_rgba(212,175,55,0.10)] backdrop-blur-xl">
-          <div className="h-1.5 w-full bg-gradient-to-r from-[#D4AF37] via-[#f4d97c] to-[#D4AF37]" />
+        <section className="w-full max-w-md overflow-hidden rounded-3xl border border-[#c8a84b]/20 bg-[#181816]/95 shadow-[0_0_50px_rgba(200,168,75,0.10)] backdrop-blur-xl">
+          <div className="h-1.5 w-full bg-gradient-to-r from-[#c8a84b] via-[#d8b85b] to-[#c8a84b]" />
 
           <div className="p-5 sm:p-7">
             <Link
               href="/login"
-              className="mb-5 inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-[#D4AF37]"
+              className="mb-5 inline-flex items-center gap-2 text-sm text-[#f0ede6]/70 transition hover:text-[#c8a84b]"
             >
               <ArrowLeft className="h-4 w-4" />
               Volver al login
@@ -139,15 +181,17 @@ export default function ForgotPasswordPage() {
             {step !== "success" ? (
               <>
                 <div className="mb-6">
-                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#c8a84b]">
                     Entrenamiento Focus
                   </p>
-                  <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+
+                  <h1 className="mt-2 text-2xl font-bold text-[#f0ede6] sm:text-3xl">
                     {step === "request"
                       ? "¿Olvidaste tu contraseña?"
                       : "Restablecer contraseña"}
                   </h1>
-                  <p className="mt-2 text-sm leading-relaxed text-white/65">
+
+                  <p className="mt-2 text-sm leading-relaxed text-[#f0ede6]/65">
                     {step === "request"
                       ? "Ingresá tu email y te vamos a enviar un código para recuperar el acceso."
                       : "Ingresá el código que recibiste por email y definí tu nueva contraseña."}
@@ -161,7 +205,7 @@ export default function ForgotPasswordPage() {
                 )}
 
                 {message && (
-                  <div className="mb-4 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-3 text-sm text-[#f4e4a3]">
+                  <div className="mb-4 rounded-2xl border border-[#c8a84b]/30 bg-[#c8a84b]/10 px-4 py-3 text-sm text-[#f0ede6]">
                     {message}
                   </div>
                 )}
@@ -169,17 +213,19 @@ export default function ForgotPasswordPage() {
                 {step === "request" && (
                   <form onSubmit={handleRequestCode} className="space-y-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-white/80">
+                      <label className="mb-2 block text-sm font-medium text-[#f0ede6]/80">
                         Email
                       </label>
-                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 transition focus-within:border-[#D4AF37]/40 focus-within:bg-white/[0.07]">
-                        <Mail className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+
+                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-[#3a3a36] bg-[#111110] px-4 transition focus-within:border-[#c8a84b]/50 focus-within:bg-[#111110]/90">
+                        <Mail className="h-4 w-4 shrink-0 text-[#c8a84b]" />
+
                         <input
                           type="email"
                           placeholder="tuemail@gmail.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+                          className="h-full w-full bg-transparent text-sm text-[#f0ede6] outline-none placeholder:text-[#f0ede6]/35"
                           required
                           autoComplete="email"
                         />
@@ -189,7 +235,7 @@ export default function ForgotPasswordPage() {
                     <button
                       type="submit"
                       disabled={loadingRequest}
-                      className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#D4AF37] px-4 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#c8a84b] px-4 text-sm font-semibold text-[#111110] transition hover:bg-[#d8b85b] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {loadingRequest ? "Enviando código..." : "Enviar código"}
                     </button>
@@ -199,16 +245,18 @@ export default function ForgotPasswordPage() {
                 {step === "reset" && (
                   <form onSubmit={handleResetPassword} className="space-y-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-white/80">
+                      <label className="mb-2 block text-sm font-medium text-[#f0ede6]/80">
                         Email
                       </label>
-                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4">
-                        <Mail className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+
+                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-[#3a3a36] bg-[#111110] px-4">
+                        <Mail className="h-4 w-4 shrink-0 text-[#c8a84b]" />
+
                         <input
                           type="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+                          className="h-full w-full bg-transparent text-sm text-[#f0ede6] outline-none placeholder:text-[#f0ede6]/35"
                           required
                           autoComplete="email"
                         />
@@ -216,11 +264,13 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-white/80">
+                      <label className="mb-2 block text-sm font-medium text-[#f0ede6]/80">
                         Código de verificación
                       </label>
-                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 transition focus-within:border-[#D4AF37]/40">
-                        <KeyRound className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+
+                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-[#3a3a36] bg-[#111110] px-4 transition focus-within:border-[#c8a84b]/50">
+                        <KeyRound className="h-4 w-4 shrink-0 text-[#c8a84b]" />
+
                         <input
                           type="text"
                           inputMode="numeric"
@@ -228,33 +278,38 @@ export default function ForgotPasswordPage() {
                           placeholder="123456"
                           value={code}
                           onChange={(e) =>
-                            setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                            setCode(
+                              e.target.value.replace(/\D/g, "").slice(0, 6)
+                            )
                           }
-                          className="h-full w-full bg-transparent text-sm tracking-[0.35em] text-white outline-none placeholder:text-white/35"
+                          className="h-full w-full bg-transparent text-sm tracking-[0.35em] text-[#f0ede6] outline-none placeholder:text-[#f0ede6]/35"
                           required
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-white/80">
+                      <label className="mb-2 block text-sm font-medium text-[#f0ede6]/80">
                         Nueva contraseña
                       </label>
-                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 transition focus-within:border-[#D4AF37]/40">
-                        <Lock className="h-4 w-4 shrink-0 text-[#D4AF37]" />
+
+                      <div className="flex h-12 items-center gap-3 rounded-2xl border border-[#3a3a36] bg-[#111110] px-4 transition focus-within:border-[#c8a84b]/50">
+                        <Lock className="h-4 w-4 shrink-0 text-[#c8a84b]" />
+
                         <input
                           type={showPassword ? "text" : "password"}
                           placeholder="Nueva contraseña"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="h-full w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35"
+                          className="h-full w-full bg-transparent text-sm text-[#f0ede6] outline-none placeholder:text-[#f0ede6]/35"
                           required
                           autoComplete="new-password"
                         />
+
                         <button
                           type="button"
                           onClick={() => setShowPassword((prev) => !prev)}
-                          className="text-white/60 transition hover:text-white"
+                          className="text-[#f0ede6]/60 transition hover:text-[#f0ede6]"
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -292,7 +347,7 @@ export default function ForgotPasswordPage() {
                           setMessage("");
                           setStep("request");
                         }}
-                        className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 text-sm font-medium text-white transition hover:bg-white/10"
+                        className="flex h-12 w-full items-center justify-center rounded-2xl border border-[#3a3a36] bg-[#111110] px-4 text-sm font-medium text-[#f0ede6] transition hover:bg-[#22221f]"
                       >
                         Volver
                       </button>
@@ -300,7 +355,7 @@ export default function ForgotPasswordPage() {
                       <button
                         type="submit"
                         disabled={loadingReset}
-                        className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#D4AF37] px-4 text-sm font-semibold text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#c8a84b] px-4 text-sm font-semibold text-[#111110] transition hover:bg-[#d8b85b] disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         {loadingReset
                           ? "Actualizando..."
@@ -310,9 +365,9 @@ export default function ForgotPasswordPage() {
 
                     <button
                       type="button"
-                      onClick={() => handleRequestCode(new Event("submit") as any)}
+                      onClick={resendCode}
                       disabled={loadingRequest}
-                      className="w-full text-sm text-[#D4AF37] transition hover:text-[#f4d97c]"
+                      className="w-full text-sm text-[#c8a84b] transition hover:text-[#d8b85b]"
                     >
                       {loadingRequest ? "Reenviando..." : "Reenviar código"}
                     </button>
@@ -321,24 +376,26 @@ export default function ForgotPasswordPage() {
               </>
             ) : (
               <div className="py-4">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10">
-                  <CheckCircle2 className="h-8 w-8 text-[#D4AF37]" />
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-[#c8a84b]/30 bg-[#c8a84b]/10">
+                  <CheckCircle2 className="h-8 w-8 text-[#c8a84b]" />
                 </div>
 
                 <div className="text-center">
-                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#D4AF37]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#c8a84b]">
                     Listo
                   </p>
-                  <h1 className="mt-2 text-2xl font-bold">
+
+                  <h1 className="mt-2 text-2xl font-bold text-[#f0ede6]">
                     Contraseña actualizada
                   </h1>
-                  <p className="mt-3 text-sm leading-relaxed text-white/65">
+
+                  <p className="mt-3 text-sm leading-relaxed text-[#f0ede6]/65">
                     Ya podés iniciar sesión con tu nueva contraseña.
                   </p>
 
                   <Link
                     href="/login"
-                    className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[#D4AF37] px-4 text-sm font-semibold text-black transition hover:brightness-110"
+                    className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[#c8a84b] px-4 text-sm font-semibold text-[#111110] transition hover:bg-[#d8b85b]"
                   >
                     Ir al login
                   </Link>
@@ -358,11 +415,13 @@ function PasswordCheck({ ok, text }: { ok: boolean; text: string }) {
       className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${
         ok
           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-          : "border-white/10 bg-white/5 text-white/55"
+          : "border-[#3a3a36] bg-[#111110] text-[#f0ede6]/55"
       }`}
     >
       <span
-        className={`h-2 w-2 rounded-full ${ok ? "bg-emerald-400" : "bg-white/25"}`}
+        className={`h-2 w-2 rounded-full ${
+          ok ? "bg-emerald-400" : "bg-[#f0ede6]/25"
+        }`}
       />
       <span>{text}</span>
     </div>
