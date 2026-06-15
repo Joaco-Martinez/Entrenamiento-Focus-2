@@ -164,92 +164,96 @@ export default function EntrenamientoFocusPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
-<section className="relative overflow-hidden border-b border-[#22180d]">
-  <div className="absolute inset-0">
-    <div className="heroImage absolute inset-0" />
+    <main className="min-h-screen bg-[#111110] text-[#f0ede6]">
+      <section className="relative overflow-hidden border-b border-[#3a3a36]">
+        <div className="absolute inset-0">
+          <div className="heroImage absolute inset-0" />
 
-    <div className="absolute inset-0 hidden sm:block bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.85)_35%,rgba(0,0,0,0.55)_65%,rgba(0,0,0,0.28)_100%)]" />
+          <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(17,17,16,0.97)_0%,rgba(17,17,16,0.88)_35%,rgba(17,17,16,0.62)_65%,rgba(17,17,16,0.32)_100%)] sm:block" />
 
-    <div className="absolute inset-0 sm:hidden bg-[linear-gradient(90deg,rgba(0,0,0,0.95)_0%,rgba(0,0,0,0.80)_42%,rgba(0,0,0,0.45)_72%,rgba(0,0,0,0.18)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,16,0.96)_0%,rgba(17,17,16,0.82)_42%,rgba(17,17,16,0.48)_72%,rgba(17,17,16,0.20)_100%)] sm:hidden" />
 
-    <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black via-black/90 to-transparent sm:hidden" />
-  </div>
+          <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#111110] via-[#111110]/90 to-transparent sm:hidden" />
+        </div>
 
-  <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-[1180px] items-start px-6 pb-14 pt-24 sm:items-center sm:px-10 sm:py-16 lg:px-12">
-    <div className="max-w-[520px] pt-2 sm:pt-6 md:pt-0">
-      <h1 className="text-[38px] font-light leading-[1.02] tracking-[-0.03em] sm:text-[56px] lg:text-[68px]">
-        <span className="block">Entrenamiento</span>
-        <span className="block">Profesional en</span>
-        <span className="block text-primary">Mezcla &amp; Mastering</span>
-      </h1>
+        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-[1180px] items-start px-6 pb-14 pt-24 sm:items-center sm:px-10 sm:py-16 lg:px-12">
+          <div className="max-w-[520px] pt-2 sm:pt-6 md:pt-0">
+            <h1 className="text-[38px] font-light leading-[1.02] tracking-[-0.03em] text-[#f0ede6] sm:text-[56px] lg:text-[68px]">
+              <span className="block">Entrenamiento</span>
+              <span className="block">Profesional en</span>
+              <span className="block text-[#c8a84b]">
+                Mezcla &amp; Mastering
+              </span>
+            </h1>
 
-      <p className="mt-8 text-[22px] leading-[1.45] text-white/80 sm:text-[28px]">
-        No es un curso grabado.
-        <br />
-        <span className="font-medium text-primary">
-          Es un entrenamiento constante,
-        </span>
-        <br />
-        para definir tu criterio profesional.
-      </p>
+            <p className="mt-8 text-[22px] leading-[1.45] text-[#f0ede6]/80 sm:text-[28px]">
+              No es un curso grabado.
+              <br />
+              <span className="font-medium text-[#c8a84b]">
+                Es un entrenamiento constante,
+              </span>
+              <br />
+              para definir tu criterio profesional.
+            </p>
 
-      <a
-        href="#precio"
-        className="mt-10 inline-flex rounded-full bg-primary px-8 py-4 text-[18px] font-semibold text-black transition hover:scale-[1.02] hover:bg-[#efbb77] sm:text-[22px]"
-      >
-        Entrar al entrenamiento
-      </a>
+            <a
+              href="#precio"
+              className="mt-10 inline-flex rounded-full bg-[#c8a84b] px-8 py-4 text-[18px] font-semibold text-[#111110] transition hover:scale-[1.02] hover:bg-[#d8b85b] sm:text-[22px]"
+            >
+              Entrar al entrenamiento
+            </a>
 
-      <p className="mt-10 text-[15px] uppercase tracking-[0.08em] text-white/65 sm:text-[18px]">
-        Liderado por{" "}
-        <span className="font-semibold text-primary">Matias Ledesma</span>
-      </p>
-    </div>
-  </div>
+            <p className="mt-10 text-[15px] uppercase tracking-[0.08em] text-[#f0ede6]/65 sm:text-[18px]">
+              Liderado por{" "}
+              <span className="font-semibold text-[#c8a84b]">
+                Matias Ledesma
+              </span>
+            </p>
+          </div>
+        </div>
 
-  <style jsx>{`
-    .heroImage {
-      background-image: url("https://res.cloudinary.com/deb7jg37j/image/upload/v1776440143/Imagen_principal_c1vw7k.png");
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center 15%;
-    }
+        <style jsx>{`
+          .heroImage {
+            background-image: url("https://res.cloudinary.com/deb7jg37j/image/upload/v1776440143/Imagen_principal_c1vw7k.png");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center 15%;
+          }
 
-    @media (max-width: 640px) {
-      .heroImage {
-        background-size: auto 122%;
-        background-position: 72% 0%;
-      }
-    }
+          @media (max-width: 640px) {
+            .heroImage {
+              background-size: auto 122%;
+              background-position: 72% 0%;
+            }
+          }
 
-    @media (max-width: 430px) {
-      .heroImage {
-        background-size: auto 128%;
-        background-position: 74% 0%;
-      }
-    }
-  `}</style>
-</section>
+          @media (max-width: 430px) {
+            .heroImage {
+              background-size: auto 128%;
+              background-position: 74% 0%;
+            }
+          }
+        `}</style>
+      </section>
 
       <section className="mx-auto max-w-[1180px] px-6 py-16 md:px-10 lg:px-12 lg:py-24">
         <div className="flex items-center justify-center gap-4 sm:gap-8">
-          <div className="h-px max-w-[260px] flex-1 bg-[#aa7b2a]" />
+          <div className="h-px max-w-[260px] flex-1 bg-[#7a6429]" />
 
           <div className="text-center">
-            <h2 className="text-[34px] font-light sm:text-[54px]">
+            <h2 className="text-[34px] font-light text-[#f0ede6] sm:text-[54px]">
               Qué vas a conseguir
             </h2>
 
-            <p className="mt-3 text-[18px] text-white/75 sm:text-[28px]">
+            <p className="mt-3 text-[18px] text-[#f0ede6]/75 sm:text-[28px]">
               Tres beneficios{" "}
-              <span className="font-semibold text-primary">
+              <span className="font-semibold text-[#c8a84b]">
                 claros, sin vueltas.
               </span>
             </p>
           </div>
 
-          <div className="h-px max-w-[260px] flex-1 bg-[#aa7b2a]" />
+          <div className="h-px max-w-[260px] flex-1 bg-[#7a6429]" />
         </div>
 
         <div className="mt-14 grid gap-5 md:grid-cols-3 lg:gap-7">
@@ -259,22 +263,22 @@ export default function EntrenamientoFocusPage() {
             return (
               <article
                 key={item.title}
-                className="rounded-[28px] border border-[#D4AF37]/20 bg-[#D4AF37]/7 px-6 py-7 text-center transition-all duration-300"
+                className="rounded-[28px] border border-[#c8a84b]/20 bg-[#c8a84b]/[0.07] px-6 py-7 text-center transition-all duration-300 hover:border-[#c8a84b]/40 hover:bg-[#c8a84b]/[0.10]"
               >
                 <div className="mb-4 flex justify-center">
-                  <Icon className="h-7 w-7 text-primary" strokeWidth={1.9} />
+                  <Icon className="h-7 w-7 text-[#c8a84b]" strokeWidth={1.9} />
                 </div>
 
-                <h3 className="text-[20px] font-light leading-tight tracking-[-0.02em] text-white sm:text-[24px]">
+                <h3 className="text-[20px] font-light leading-tight tracking-[-0.02em] text-[#f0ede6] sm:text-[24px]">
                   {item.title}
                 </h3>
 
-                <p className="mt-3 text-[15px] leading-[1.7] text-white/72 sm:text-[17px]">
+                <p className="mt-3 text-[15px] leading-[1.7] text-[#f0ede6]/72 sm:text-[17px]">
                   {item.text.split(item.highlight[0]).map((part, index, arr) => (
                     <span key={index}>
                       {part}
                       {index < arr.length - 1 && (
-                        <span className="font-medium text-primary">
+                        <span className="font-medium text-[#c8a84b]">
                           {item.highlight[0]}
                         </span>
                       )}
@@ -287,23 +291,23 @@ export default function EntrenamientoFocusPage() {
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-white/[0.02]">
+      <section className="border-y border-[#3a3a36] bg-[#181816]">
         <div className="mx-auto max-w-[1280px] px-6 py-20 md:px-10 lg:px-12 lg:py-28">
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[13px] uppercase tracking-[0.3em] text-primary">
+              <p className="text-[13px] uppercase tracking-[0.3em] text-[#c8a84b]">
                 Además
               </p>
 
-              <h2 className="mt-4 text-[38px] font-light leading-[1.02] tracking-[-0.04em] sm:text-[58px]">
+              <h2 className="mt-4 text-[38px] font-light leading-[1.02] tracking-[-0.04em] text-[#f0ede6] sm:text-[58px]">
                 La formación no termina
-                <span className="block text-primary">en lo técnico.</span>
+                <span className="block text-[#c8a84b]">en lo técnico.</span>
               </h2>
             </div>
           </div>
 
           <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-            <article className="group overflow-hidden rounded-[34px] border border-white/10 bg-black">
+            <article className="group overflow-hidden rounded-[34px] border border-[#3a3a36] bg-[#111110]">
               <div className="relative h-[520px] overflow-hidden">
                 <img
                   src={extras[0].image}
@@ -311,14 +315,14 @@ export default function EntrenamientoFocusPage() {
                   className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#111110] via-[#111110]/35 to-transparent" />
 
                 <div className="absolute bottom-0 left-0 max-w-[620px] p-7 sm:p-9">
-                  <p className="text-[26px] font-medium leading-[1.2] text-primary sm:text-[34px]">
+                  <p className="text-[26px] font-medium leading-[1.2] text-[#c8a84b] sm:text-[34px]">
                     {extras[0].title}
                   </p>
 
-                  <p className="mt-3 text-[18px] leading-[1.7] text-white/78 sm:text-[20px]">
+                  <p className="mt-3 text-[18px] leading-[1.7] text-[#f0ede6]/78 sm:text-[20px]">
                     {extras[0].text}
                   </p>
                 </div>
@@ -329,7 +333,7 @@ export default function EntrenamientoFocusPage() {
               {extras.slice(1).map((item, index) => (
                 <article
                   key={item.title}
-                  className="group overflow-hidden rounded-[34px] border border-white/10 bg-black"
+                  className="group overflow-hidden rounded-[34px] border border-[#3a3a36] bg-[#111110]"
                 >
                   <div className="relative h-[248px] overflow-hidden">
                     <img
@@ -337,19 +341,19 @@ export default function EntrenamientoFocusPage() {
                       alt={item.title}
                       className={`h-full w-full transition duration-700 ${
                         index === 1
-                          ? "scale-[1.5] object-contain bg-black group-hover:scale-[1.54]"
+                          ? "scale-[1.5] object-contain bg-[#111110] group-hover:scale-[1.54]"
                           : "object-cover group-hover:scale-[1.04]"
                       }`}
                     />
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#111110]/95 via-[#111110]/70 to-transparent" />
 
                     <div className="absolute bottom-0 left-0 p-6 sm:p-7">
-                      <p className="max-w-[420px] text-[22px] font-medium leading-[1.25] text-[#D4AF37]">
+                      <p className="max-w-[420px] text-[22px] font-medium leading-[1.25] text-[#c8a84b]">
                         {item.title}
                       </p>
 
-                      <p className="mt-2 max-w-[420px] text-[16px] leading-[1.7] text-white/76">
+                      <p className="mt-2 max-w-[420px] text-[16px] leading-[1.7] text-[#f0ede6]/76">
                         {item.text}
                       </p>
                     </div>
@@ -363,30 +367,32 @@ export default function EntrenamientoFocusPage() {
 
       <section className="mx-auto max-w-[1180px] px-6 py-14 md:px-10 lg:px-12 lg:py-20">
         <div className="flex items-center justify-center gap-4 sm:gap-6">
-          <div className="h-px max-w-[220px] flex-1 bg-primary" />
+          <div className="h-px max-w-[220px] flex-1 bg-[#c8a84b]" />
 
-          <h2 className="text-center text-[28px] font-light tracking-[0.12em] text-primary sm:text-[42px]">
+          <h2 className="text-center text-[28px] font-light tracking-[0.12em] text-[#c8a84b] sm:text-[42px]">
             MODALIDAD
           </h2>
 
-          <div className="h-px max-w-[220px] flex-1 bg-primary" />
+          <div className="h-px max-w-[220px] flex-1 bg-[#c8a84b]" />
         </div>
 
         <div className="mx-auto mt-12 max-w-[880px] space-y-8 sm:space-y-10">
           {bullets.map((bullet, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-3 rounded-[28px] border border-[#D4AF37]/20 px-6 py-7 sm:gap-5"
+              className="flex items-start gap-3 rounded-[28px] border border-[#c8a84b]/20 bg-[#181816] px-6 py-7 sm:gap-5"
             >
-              <div className="pt-[2px] text-[20px] text-primary sm:text-[24px]">
+              <div className="pt-[2px] text-[20px] text-[#c8a84b] sm:text-[24px]">
                 ✓
               </div>
 
-              <p className="text-[18px] leading-[1.6] text-white/85 sm:text-[22px]">
-                <span className="font-medium text-white">{bullet.start}</span>
+              <p className="text-[18px] leading-[1.6] text-[#f0ede6]/85 sm:text-[22px]">
+                <span className="font-medium text-[#f0ede6]">
+                  {bullet.start}
+                </span>
                 {bullet.rest}
                 {bullet.accent && (
-                  <span className="text-primary">{bullet.accent}</span>
+                  <span className="text-[#c8a84b]">{bullet.accent}</span>
                 )}
                 {bullet.end}
               </p>
@@ -399,16 +405,16 @@ export default function EntrenamientoFocusPage() {
         id="precio"
         className="mx-auto max-w-[1200px] px-6 pb-20 md:px-10 lg:px-12 lg:pb-28"
       >
-        <div className="overflow-hidden rounded-[36px] border border-white/10 bg-[#050505]">
+        <div className="overflow-hidden rounded-[36px] border border-[#3a3a36] bg-[#181816]">
           <div className="grid lg:grid-cols-2">
-            <div className="border-b border-white/10 p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
-              <p className="text-[11px] uppercase tracking-[0.28em] text-primary">
+            <div className="border-b border-[#3a3a36] p-8 sm:p-10 lg:border-b-0 lg:border-r lg:p-12">
+              <p className="text-[11px] uppercase tracking-[0.28em] text-[#c8a84b]">
                 Te espero adentro
               </p>
 
               <h2 className="mt-4 text-[36px] font-light leading-[1.05] tracking-[-0.03em] sm:text-[48px] lg:text-[56px]">
-                <span className="block text-white">Sumate a</span>
-                <span className="block text-primary">
+                <span className="block text-[#f0ede6]">Sumate a</span>
+                <span className="block text-[#c8a84b]">
                   Entrenamiento Focus
                 </span>
               </h2>
@@ -419,33 +425,35 @@ export default function EntrenamientoFocusPage() {
                   onClick={() => handleSelectProvider("paypal")}
                   className={`group relative cursor-pointer overflow-hidden rounded-[24px] border p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] active:scale-[0.98] ${
                     selectedProvider === "paypal"
-                      ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.2)]"
-                      : "border-[#D4AF37]/20 bg-[#D4AF37]/[0.05] hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/10 hover:shadow-[0_0_20px_rgba(212,175,55,0.15)]"
+                      ? "border-[#c8a84b] bg-[#c8a84b]/10 shadow-[0_0_25px_rgba(200,168,75,0.2)]"
+                      : "border-[#c8a84b]/20 bg-[#c8a84b]/[0.05] hover:border-[#c8a84b]/60 hover:bg-[#c8a84b]/10 hover:shadow-[0_0_20px_rgba(200,168,75,0.15)]"
                   }`}
                 >
                   <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f0ede6]/10 to-transparent" />
                   </div>
 
                   <div className="relative z-10">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#c8a84b]">
                       Pago internacional
                     </p>
 
                     <div className="mt-3 flex items-end justify-between">
                       <div className="flex items-end gap-1">
-                        <span className="text-[14px] text-white/50">USD</span>
-                        <span className="text-[36px] font-light text-white">
+                        <span className="text-[14px] text-[#f0ede6]/50">
+                          USD
+                        </span>
+                        <span className="text-[36px] font-light text-[#f0ede6]">
                           15
                         </span>
                       </div>
 
-                      <span className="text-[20px] text-white/60 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white">
+                      <span className="text-[20px] text-[#f0ede6]/60 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#f0ede6]">
                         →
                       </span>
                     </div>
 
-                    <p className="mt-2 text-[13px] text-white/60 transition-colors duration-300 group-hover:text-white/80">
+                    <p className="mt-2 text-[13px] text-[#f0ede6]/60 transition-colors duration-300 group-hover:text-[#f0ede6]/80">
                       PayPal
                     </p>
                   </div>
@@ -457,35 +465,35 @@ export default function EntrenamientoFocusPage() {
                     onClick={() => handleSelectProvider("mercadopago")}
                     className={`group relative cursor-pointer overflow-hidden rounded-[24px] border p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:scale-[1.03] active:scale-[0.98] ${
                       selectedProvider === "mercadopago"
-                        ? "border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_25px_rgba(212,175,55,0.2)]"
-                        : "border-white/10 bg-white/[0.02] hover:border-[#D4AF37]/40 hover:bg-white/[0.04] hover:shadow-[0_0_20px_rgba(212,175,55,0.12)]"
+                        ? "border-[#c8a84b] bg-[#c8a84b]/10 shadow-[0_0_25px_rgba(200,168,75,0.2)]"
+                        : "border-[#3a3a36] bg-[#111110] hover:border-[#c8a84b]/40 hover:bg-[#22221f] hover:shadow-[0_0_20px_rgba(200,168,75,0.12)]"
                     }`}
                   >
                     <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#f0ede6]/10 to-transparent" />
                     </div>
 
                     <div className="relative z-10">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37]">
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-[#c8a84b]">
                         Pago Argentina
                       </p>
 
                       <div className="mt-3 flex items-end justify-between">
                         <div className="flex items-end gap-1">
-                          <span className="text-[14px] text-white/50">
+                          <span className="text-[14px] text-[#f0ede6]/50">
                             ARS
                           </span>
-                          <span className="text-[36px] font-light text-white">
+                          <span className="text-[36px] font-light text-[#f0ede6]">
                             19.500
                           </span>
                         </div>
 
-                        <span className="text-[20px] text-white/60 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white">
+                        <span className="text-[20px] text-[#f0ede6]/60 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#f0ede6]">
                           →
                         </span>
                       </div>
 
-                      <p className="mt-2 text-[13px] text-white/60 transition-colors duration-300 group-hover:text-white/80">
+                      <p className="mt-2 text-[13px] text-[#f0ede6]/60 transition-colors duration-300 group-hover:text-[#f0ede6]/80">
                         MercadoPago
                       </p>
                     </div>
@@ -500,8 +508,8 @@ export default function EntrenamientoFocusPage() {
               )}
 
               {selectedProvider && (
-                <div className="mt-6 rounded-[24px] border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5 sm:p-6">
-                  <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-[#D4AF37]">
+                <div className="mt-6 rounded-[24px] border border-[#c8a84b]/20 bg-[#c8a84b]/5 p-5 sm:p-6">
+                  <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-[#c8a84b]">
                     Completar suscripción
                   </p>
 
@@ -531,8 +539,8 @@ export default function EntrenamientoFocusPage() {
               )}
 
               <div className="mt-8 space-y-3">
-                <p className="max-w-[520px] text-[13px] leading-[1.7] text-white/50">
-                  <span className="text-[#D4AF37]">Importante:</span> el correo
+                <p className="max-w-[520px] text-[13px] leading-[1.7] text-[#f0ede6]/50">
+                  <span className="text-[#c8a84b]">Importante:</span> el correo
                   de tu cuenta debe coincidir con el de PayPal o Mercado Pago.
                 </p>
 
@@ -540,13 +548,13 @@ export default function EntrenamientoFocusPage() {
                   <button
                     type="button"
                     onClick={goToLogin}
-                    className="inline-flex rounded-full border border-white/15 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/5"
+                    className="inline-flex rounded-full border border-[#3a3a36] px-5 py-2.5 text-sm font-medium text-[#f0ede6] transition hover:bg-[#22221f]"
                   >
                     Iniciar sesión para suscribirme
                   </button>
                 )}
 
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-[#f0ede6]/40">
                   {!user
                     ? "Para suscribirte, primero tenés que iniciar sesión."
                     : isArgentina
@@ -559,15 +567,15 @@ export default function EntrenamientoFocusPage() {
             <div className="flex items-center justify-center p-10 lg:p-12">
               <div className="max-w-[260px] text-center">
                 <div className="mb-6 flex justify-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/[0.04]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#c8a84b]/20 bg-[#c8a84b]/[0.04]">
                     <Calendar
-                      className="h-6 w-6 text-[#D4AF37]"
+                      className="h-6 w-6 text-[#c8a84b]"
                       strokeWidth={1.6}
                     />
                   </div>
                 </div>
 
-                <p className="text-[18px] leading-[1.7] text-white/75 sm:text-[20px]">
+                <p className="text-[18px] leading-[1.7] text-[#f0ede6]/75 sm:text-[20px]">
                   El pago se renueva automáticamente cada mes. Podés cancelar
                   cuando quieras.
                 </p>
@@ -578,17 +586,17 @@ export default function EntrenamientoFocusPage() {
       </section>
 
       {showEmailConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#111111] p-6 shadow-2xl">
-            <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#D4AF37]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111110]/80 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[28px] border border-[#3a3a36] bg-[#181816] p-6 shadow-2xl">
+            <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#c8a84b]">
               Confirmación
             </p>
 
-            <h3 className="mt-3 text-2xl font-semibold text-white">
+            <h3 className="mt-3 text-2xl font-semibold text-[#f0ede6]">
               Antes de continuar
             </h3>
 
-            <p className="mt-4 text-sm leading-7 text-white/75">
+            <p className="mt-4 text-sm leading-7 text-[#f0ede6]/75">
               Asegúrate de que el mail de tu cuenta Focus sea el mismo que usas
               en PayPal o Mercado Pago para no tener demoras en la activación.
             </p>
@@ -597,7 +605,7 @@ export default function EntrenamientoFocusPage() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="inline-flex flex-1 items-center justify-center rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
+                className="inline-flex flex-1 items-center justify-center rounded-2xl border border-[#3a3a36] px-5 py-3 text-sm font-semibold text-[#f0ede6] transition hover:bg-[#22221f]"
               >
                 Todavía no
               </button>
@@ -605,7 +613,7 @@ export default function EntrenamientoFocusPage() {
               <button
                 type="button"
                 onClick={confirmProviderSelection}
-                className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-semibold text-black transition hover:scale-[1.02]"
+                className="inline-flex flex-1 items-center justify-center rounded-2xl bg-[#c8a84b] px-5 py-3 text-sm font-semibold text-[#111110] transition hover:scale-[1.02] hover:bg-[#d8b85b]"
               >
                 Sí, continuar
               </button>
