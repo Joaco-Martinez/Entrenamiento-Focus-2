@@ -38,14 +38,18 @@ export default function MaintenanceGate({
           Estamos en mantenimiento
         </h1>
 
-        <p className="text-gray-400 mb-6">
+        <p className="text-gray-400 mb-4">
           Estamos mejorando la plataforma para darte una experiencia mucho más profesional.
-          Volvemos en breve.
+        </p>
+
+        <p className="text-gray-400 mb-6">
+          Se levantará una vez regularizado el servicio.
         </p>
 
         <a
           href="https://wa.me/5493518736207"
           target="_blank"
+          rel="noopener noreferrer"
           className="inline-block rounded-full bg-[#D4AF37] px-6 py-3 text-black font-medium hover:opacity-90 transition"
         >
           Contactar por WhatsApp
