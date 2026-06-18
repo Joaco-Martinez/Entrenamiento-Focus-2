@@ -13,32 +13,31 @@ import Footer from "@/components/footer"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
+const isMaintenanceMode = process.env.MAINTENANCE_MODE === "true"
+
 export const metadata: Metadata = {
   title: "ENTRENAMIENTO FOCUS - Mentoría de Producción Musical Profesional",
   description:
     "Mentoría privada para productores musicales que quieren destacar en la industria real. Producción, mezcla y mastering a nivel profesional.",
 
-  // 👇 LOGO (favicon + google)
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
     apple: "/logo.png",
   },
 
-  // 👇 TU FIRMA (opcional pero pro)
   creator: "Joaquín Martinez",
   authors: [{ name: "Joaquín Martinez" }],
 
-  // 👇 REDES / WHATSAPP / LINK PREVIEW
   openGraph: {
     title: "ENTRENAMIENTO FOCUS",
     description:
       "Mentoría privada para productores musicales que quieren destacar en la industria real.",
-    url: "www.entrenamientofocus.com.ar", // ⚠️ CAMBIAR
+    url: "https://www.entrenamientofocus.com.ar",
     siteName: "Focus",
     images: [
       {
-        url: "/logo.png", // ideal después cambiar por og-image
+        url: "/logo.png",
         width: 1200,
         height: 630,
       },
@@ -47,12 +46,10 @@ export const metadata: Metadata = {
     type: "website",
   },
 
-  // 👇 TWITTER (por si pinta)
   twitter: {
     card: "summary_large_image",
     title: "ENTRENAMIENTO FOCUS",
-    description:
-      "Mentoría privada para productores musicales.",
+    description: "Mentoría privada para productores musicales.",
     images: ["/logo.png"],
   },
 }
@@ -62,17 +59,25 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const appContent = (
+    <>
+      <Navbar />
+      {children}
+      <Analytics />
+      <WhatsAppButton />
+    </>
+  )
+
   return (
     <html lang="es">
       <body className="font-sans antialiased">
         <AuthProvider>
           <CartProvider>
-             {/* <MaintenanceGate> */}
-            <Navbar />
-            {children}
-            <Analytics />
-             {/* </MaintenanceGate> */}
-             <WhatsAppButton />
+            {isMaintenanceMode ? (
+              <MaintenanceGate>{appContent}</MaintenanceGate>
+            ) : (
+              appContent
+            )}
           </CartProvider>
         </AuthProvider>
       </body>
