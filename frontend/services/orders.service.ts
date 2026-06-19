@@ -77,6 +77,32 @@ export const ordersService = {
     return apiFetch("/orders/me");
   },
 
+  async adminMarkPaid(
+  orderId: string,
+  body?: {
+    externalId?: string;
+    raw?: any;
+  }
+) {
+  const res = await api.patch(
+    `/orders/admin/orders/${orderId}/mark-paid`,
+    body ?? {}
+  );
+
+  return res.data;
+},
+
+async adminGrantAccess(body: {
+  userId?: string;
+  email?: string;
+  productId: string;
+  orderId?: string;
+}) {
+  const res = await api.post("/orders/admin/access-grants", body);
+
+  return res.data;
+},
+  
   /**
    * Admin: list orders. An optional status filter can be provided.
    */
