@@ -324,27 +324,26 @@ export async function grantAccessManual(input: {
     finalOrderId = manualOrder.id;
   }
 
-  const accessGrant = await prisma.accessGrant.upsert({
-    where: {
-      userId_productId: {
-        userId: user.id,
-        productId: product.id,
-      },
-    },
-    create: {
+ const accessGrant = await prisma.accessGrant.upsert({
+  where: {
+    userId_productId: {
       userId: user.id,
       productId: product.id,
-      orderId: finalOrderId,
     },
-    update: {
-      orderId: finalOrderId,
-    },
-    include: {
-      user: { select: { id: true, email: true } },
-      product: true,
-      order: true,
-    },
-  });
+  },
+  create: {
+    userId: user.id,
+    productId: product.id,
+    orderId: finalOrderId,
+  },
+  update: {
+    orderId: finalOrderId,
+  },
+  include: {
+    user: { select: { id: true, email: true } },
+    product: true,
+  },
+});
 
   return accessGrant;
 }
