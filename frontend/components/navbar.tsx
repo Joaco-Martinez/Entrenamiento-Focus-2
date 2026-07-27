@@ -18,6 +18,7 @@ export function Navbar() {
   const { totalItems } = useCart()
 
   const navItems = [
+    { href: "/", label: "Inicio" },
     { href: "/entrenamiento-focus", label: "Mentoria" },
     { href: "/servicios", label: "Servicios" },
     { href: "/recursos", label: "Productos" },
