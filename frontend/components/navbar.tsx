@@ -43,7 +43,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => go("/")}
-            className="group text-xl font-bold tracking-tight transition-colors"
+            className="group -ml-1 text-xl font-bold tracking-tight transition-colors"
           >
             <span className="text-foreground transition-colors group-hover:text-primary">
               ENTRENAMIENTO
