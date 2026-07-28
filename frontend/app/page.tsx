@@ -6,13 +6,13 @@ export default function EntrenamientoFocusPage() {
     <main className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
       {/* Hero mobile: foto arriba, texto abajo, sin superposición */}
       <section className="border-t border-[#c8a84b]/10 sm:hidden">
-        <div className="relative aspect-[4/5] w-full overflow-hidden">
+        <div className="relative aspect-[4/3] w-full overflow-hidden">
           <Image
             src="/hero-cover.jpg"
             alt="Matias Ledesma y Franco Cano en el estudio"
             fill
             priority
-            className="object-cover object-[center_15%]"
+            className="object-cover object-[58%_50%]"
           />
         </div>
 
