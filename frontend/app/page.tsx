@@ -12,7 +12,7 @@ export default function EntrenamientoFocusPage() {
             alt="Matias Ledesma y Franco Cano en el estudio"
             fill
             priority
-            className="object-cover object-[56%_50%]"
+            className="object-cover object-[45%_50%]"
           />
         </div>
 
