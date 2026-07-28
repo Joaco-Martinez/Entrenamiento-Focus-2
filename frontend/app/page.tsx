@@ -4,36 +4,64 @@ import Link from "next/link";
 export default function EntrenamientoFocusPage() {
   return (
     <main className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
-      <section className="relative overflow-hidden border-t border-[#c8a84b]/10">
+      {/* Hero mobile: foto arriba, texto abajo, sin superposición */}
+      <section className="border-t border-[#c8a84b]/10 sm:hidden">
+        <div className="relative aspect-[4/5] w-full overflow-hidden">
+          <Image
+            src="/hero-cover.jpg"
+            alt="Matias Ledesma y Franco Cano en el estudio"
+            fill
+            priority
+            className="object-cover object-[center_15%]"
+          />
+        </div>
+
+        <div className="px-6 py-10">
+          <span className="text-[13px] font-bold uppercase tracking-[0.3em] text-[#c8a84b]">
+            Quiénes somos
+          </span>
+
+          <h1 className="mt-4 text-[34px] font-extrabold leading-[1.05] tracking-tight text-[#f0ede6]">
+            Matias Ledesma{" "}
+            <span className="font-normal text-[#c8a84b]">·</span> Franco Cano
+          </h1>
+
+          <p className="mt-6 text-[17px] leading-[1.5] text-[#f0ede6]/80">
+            <span className="font-medium text-[#c8a84b]">Dos obsesionados</span> por la
+            producción y el audio.
+            <br />
+            Nos involucramos de lleno en cada proyecto y compartimos el camino
+            detrás de cada resultado.
+          </p>
+        </div>
+      </section>
+
+      {/* Hero desktop: el mismo que ya estaba, sin cambios, solo oculto en mobile */}
+      <section className="relative hidden overflow-hidden border-t border-[#c8a84b]/10 sm:block">
         <div className="absolute inset-0">
           <Image
             src="/hero-cover.jpg"
             alt="Matias Ledesma y Franco Cano en el estudio"
             fill
             priority
-            className="object-cover object-[72%_10%] sm:object-[center_20%]"
+            className="object-cover object-[center_20%]"
           />
 
-          <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(17,17,16,0.97)_0%,rgba(17,17,16,0.88)_35%,rgba(17,17,16,0.62)_65%,rgba(17,17,16,0.32)_100%)] sm:block" />
-
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,16,0.96)_0%,rgba(17,17,16,0.82)_42%,rgba(17,17,16,0.48)_72%,rgba(17,17,16,0.20)_100%)] sm:hidden" />
-
-          <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#111110] via-[#111110]/90 to-transparent sm:hidden" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,16,0.97)_0%,rgba(17,17,16,0.88)_35%,rgba(17,17,16,0.62)_65%,rgba(17,17,16,0.32)_100%)]" />
         </div>
 
-        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-[1180px] items-start px-6 pb-14 pt-24 sm:items-center sm:px-10 sm:py-16 lg:px-12">
-          <div className="max-w-[520px] pt-2 sm:pt-6 md:pt-0">
+        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-[1180px] items-center px-10 py-16 lg:px-12">
+          <div className="max-w-[520px]">
             <span className="text-[13px] font-bold uppercase tracking-[0.3em] text-[#c8a84b]">
               Quiénes somos
             </span>
 
-            <h1 className="mt-4 text-[38px] font-extrabold leading-[1.05] tracking-tight text-[#f0ede6] sm:text-[52px]">
+            <h1 className="mt-4 text-[52px] font-extrabold leading-[1.05] tracking-tight text-[#f0ede6]">
               Matias Ledesma{" "}
-              <span className="font-normal text-[#c8a84b]">·</span> Franco
-              Cano
+              <span className="font-normal text-[#c8a84b]">·</span> Franco Cano
             </h1>
 
-            <p className="mt-6 text-[19px] leading-[1.5] text-[#f0ede6]/80 sm:text-[23px]">
+            <p className="mt-6 text-[23px] leading-[1.5] text-[#f0ede6]/80">
               <span className="font-medium text-[#c8a84b]">Dos obsesionados</span> por la
               producción y el audio.
               <br />
