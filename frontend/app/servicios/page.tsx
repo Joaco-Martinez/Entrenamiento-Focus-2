@@ -45,10 +45,6 @@ export default function ServiciosPage() {
               key={member.name}
               className="overflow-hidden rounded-xl bg-[#1a1a18]"
             >
-              <div className="px-1 pb-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#c8a84b] sm:text-[10px] sm:tracking-[0.18em]">
-                {member.name}
-              </div>
-
               <div className="relative aspect-[3/4] overflow-hidden bg-[#222]">
                 <img
                   src={member.image}

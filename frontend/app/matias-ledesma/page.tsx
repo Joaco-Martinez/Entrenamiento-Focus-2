@@ -99,17 +99,17 @@ export default function MatiasLedesmaPage() {
     <main className="min-h-screen overflow-hidden bg-[#111110] pt-16 text-[#f0ede6]">
       <section className="grid min-h-[calc(100dvh-64px)] grid-cols-1 overflow-hidden border-b border-[#3a3a36] md:grid-cols-2">
         <div className="relative z-10 flex flex-col justify-center px-6 py-16 md:px-12 md:py-20">
-          <h1 className="font-['Barlow'] text-[64px] font-light leading-[0.9] tracking-[-0.03em] text-[#f0ede6] sm:text-[90px] lg:text-[118px]">
+          <h1 className="text-[44px] font-extrabold leading-[1.05] tracking-tight text-[#f0ede6] sm:text-[64px] lg:text-[80px]">
             Matias
             <br />
-            <em className="font-light text-[#c8a84b]">Ledesma</em>
+            <span className="font-normal text-[#c8a84b]">Ledesma</span>
           </h1>
 
-          <p className="mt-8 font-['Barlow'] text-[11px] uppercase tracking-[0.24em] text-[#888880]">
+          <p className="mt-8 text-[11px] uppercase tracking-[0.24em] text-[#888880]">
             Mix · Mastering · Córdoba, ARG
           </p>
 
-          <div className="mt-10 max-w-[440px] space-y-6 text-[16px] leading-[1.85] text-[#d4cfc0]">
+          <div className="mt-10 max-w-[440px] space-y-6 text-[16px] leading-[1.85] text-[#d4cfc0] text-justify">
             <p>
               Empecé como músico y eso me enseñó algo que solo te lo da estar
               de ese lado:{" "}
@@ -151,7 +151,7 @@ export default function MatiasLedesmaPage() {
 
       <section
         id="equipos"
-        className="mx-auto max-w-[1200px] px-6 py-20 md:px-12 md:py-28"
+        className="mx-auto max-w-[1180px] px-6 py-20 sm:px-10 md:py-28 lg:px-12"
       >
         <h2 className="font-['Barlow'] text-[44px] font-light leading-[1.05] tracking-[-0.02em] text-[#f0ede6] md:text-[62px]">
           Equipos
@@ -192,9 +192,9 @@ export default function MatiasLedesmaPage() {
 
       <section
         id="trabajos"
-        className="border-y border-[#c8a84b]/10 bg-[#181816] px-6 py-20 md:px-12 md:py-24"
+        className="border-y border-[#c8a84b]/10 bg-[#181816] px-6 py-20 sm:px-10 md:py-24 lg:px-12"
       >
-        <div className="mx-auto max-w-[1200px]">
+        <div className="mx-auto max-w-[1180px]">
           <div className="mb-12">
             <div className="mb-8 flex items-center gap-4 font-['Barlow'] text-[11px] uppercase tracking-[0.3em] text-[#c8a84b]">
               Discografía
@@ -241,7 +241,7 @@ export default function MatiasLedesmaPage() {
 
       <section
         id="contacto"
-        className="mx-auto flex max-w-[1200px] flex-col gap-10 border-t border-[#3a3a36] px-6 py-20 md:flex-row md:items-center md:justify-between md:px-12 md:py-28"
+        className="mx-auto flex max-w-[1180px] flex-col gap-10 border-t border-[#3a3a36] px-6 py-20 sm:px-10 md:flex-row md:items-center md:justify-between md:py-28 lg:px-12"
       >
         <div>
           <div className="mb-8 flex items-center gap-4 font-['Barlow'] text-[11px] uppercase tracking-[0.3em] text-[#c8a84b]">
