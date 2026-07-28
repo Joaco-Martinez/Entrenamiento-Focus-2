@@ -53,19 +53,10 @@ export default function EntrenamientoFocusPage() {
             </p>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
-            <Link
-              href="/entrenamiento-focus"
-              className="group w-full max-w-[320px] rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-10 py-5 text-center transition hover:bg-[#c8a84b] sm:w-auto"
-            >
-              <span className="text-[16px] font-bold text-[#f0ede6] transition group-hover:text-[#111110]">
-                Mentoría →
-              </span>
-            </Link>
-
+          <div className="flex flex-col items-center justify-center gap-10 sm:flex-row">
             <Link
               href="/servicios"
-              className="group w-full max-w-[320px] rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-10 py-5 text-center transition hover:bg-[#c8a84b] sm:w-auto"
+              className="group w-full max-w-[360px] rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-14 py-5 text-center transition hover:bg-[#c8a84b] sm:w-auto"
             >
               <span className="text-[16px] font-bold text-[#f0ede6] transition group-hover:text-[#111110]">
                 Servicios →
@@ -74,7 +65,7 @@ export default function EntrenamientoFocusPage() {
 
             <Link
               href="/recursos"
-              className="group w-full max-w-[320px] rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-10 py-5 text-center transition hover:bg-[#c8a84b] sm:w-auto"
+              className="group w-full max-w-[360px] rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-14 py-5 text-center transition hover:bg-[#c8a84b] sm:w-auto"
             >
               <span className="text-[16px] font-bold text-[#f0ede6] transition group-hover:text-[#111110]">
                 Productos →
