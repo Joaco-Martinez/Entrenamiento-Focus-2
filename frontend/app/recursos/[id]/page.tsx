@@ -187,7 +187,7 @@ export default function RecursoDetallePage() {
             <div className="mt-8 border-t border-white/10 pt-8">
               <div className="space-y-2">
                 <p className="text-4xl font-extrabold leading-none text-primary md:text-5xl">
-                  USD {product.usdPrice.toFixed(2)}
+                  USD {Number.isInteger(product.usdPrice) ? product.usdPrice : product.usdPrice.toFixed(2)}
                 </p>
 
                 {product.arPrice != null ? (

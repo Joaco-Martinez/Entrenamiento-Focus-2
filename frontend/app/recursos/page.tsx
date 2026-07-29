@@ -24,7 +24,8 @@ function getPremiumPrice(value: number | string | null | undefined) {
 }
 
 function formatUSD(value: number | string | null | undefined) {
-  return `USD ${toMoney(value).toFixed(2)}`
+  const n = toMoney(value)
+  return `USD ${Number.isInteger(n) ? n : n.toFixed(2)}`
 }
 
 function formatARS(value: number | string | null | undefined) {
