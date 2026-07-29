@@ -105,11 +105,11 @@ export default function MatiasLedesmaPage() {
             <span className="font-normal text-[#c8a84b]">Ledesma</span>
           </h1>
 
-          <p className="mt-8 text-[11px] uppercase tracking-[0.24em] text-[#888880]">
+          <p className="mt-8 max-w-[440px] text-[11px] lg:text-[13px] uppercase tracking-[0.24em] text-[#888880]">
             Mix · Mastering · Córdoba, ARG
           </p>
 
-          <div className="mt-10 max-w-[440px] space-y-6 text-[16px] leading-[1.85] text-[#d4cfc0] text-justify">
+          <div className="mt-10 max-w-[440px] space-y-6 text-[16px] lg:text-[20px] leading-[1.85] text-[#d4cfc0]">
             <p>
               Empecé como músico y eso me enseñó algo que solo te lo da estar
               de ese lado:{" "}
@@ -153,19 +153,19 @@ export default function MatiasLedesmaPage() {
         id="equipos"
         className="mx-auto max-w-[1180px] px-6 py-20 sm:px-10 md:py-28 lg:px-12"
       >
-        <h2 className="font-['Barlow'] text-[44px] font-light leading-[1.05] tracking-[-0.02em] text-[#f0ede6] md:text-[62px]">
+        <h2 className="text-[44px] font-light leading-[1.05] tracking-[-0.02em] text-[#f0ede6] md:text-[62px]">
           Equipos
           <br />
-          <em className="text-[#c8a84b]">utilizados</em>
+          <span className="text-[#c8a84b]">utilizados</span>
         </h2>
 
         <div className="mt-12 grid grid-cols-2 gap-[3px] md:grid-cols-4">
           {gearItems.map((item) => (
             <article
               key={`${item.brand}-${item.name}`}
-              className="group overflow-hidden"
+              className="group overflow-hidden border border-[#7a6429]/50"
             >
-              <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#e8e6e2] p-3 md:p-4">
+              <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#111110] p-1">
                 <img
                   src={item.image}
                   alt={item.alt}
@@ -176,12 +176,12 @@ export default function MatiasLedesmaPage() {
                 />
               </div>
 
-              <div className="flex min-h-[70px] flex-col gap-1 bg-[#c8a84b] px-3 py-3 md:min-h-[76px] md:px-4">
-                <span className="font-['Barlow'] text-[8px] uppercase tracking-[0.18em] text-[#111110]/55 md:text-[9px]">
+              <div className="flex flex-col gap-1 bg-[#c8a84b] px-3 py-2 md:px-4">
+                <span className="text-[8px] uppercase tracking-[0.18em] text-[#111110]/55 md:text-[9px] lg:text-[13px]">
                   {item.brand}
                 </span>
 
-                <span className="font-['Barlow'] text-[15px] font-semibold leading-[1.05] text-[#111110] md:text-[17px]">
+                <span className="text-[15px] font-semibold leading-[1.05] text-[#111110] md:text-[17px] lg:text-[20px]">
                   {item.name}
                 </span>
               </div>
@@ -196,15 +196,15 @@ export default function MatiasLedesmaPage() {
       >
         <div className="mx-auto max-w-[1180px]">
           <div className="mb-12">
-            <div className="mb-8 flex items-center gap-4 font-['Barlow'] text-[11px] uppercase tracking-[0.3em] text-[#c8a84b]">
+            <div className="mb-8 flex items-center gap-4 text-[11px] lg:text-[20px] uppercase tracking-[0.3em] text-[#c8a84b]">
               Discografía
               <span className="h-px w-40 max-w-[160px] bg-gradient-to-r from-[#7a6429] to-transparent" />
             </div>
 
-            <h2 className="font-['Barlow'] text-[44px] font-light leading-[1.05] tracking-[-0.02em] text-[#f0ede6] md:text-[62px]">
+            <h2 className="text-[44px] font-light leading-[1.05] tracking-[-0.02em] text-[#f0ede6] md:text-[62px]">
               Trabajos
               <br />
-              <em className="text-[#c8a84b]">recientes</em>
+              <span className="text-[#c8a84b]">recientes</span>
             </h2>
           </div>
 
@@ -233,7 +233,7 @@ export default function MatiasLedesmaPage() {
       </section>
 
       <section className="border-b border-[#3a3a36] bg-[#181816] px-6 py-20 text-center md:px-12">
-        <p className="mx-auto max-w-[900px] font-['Barlow'] text-[26px] font-light italic leading-[1.6] text-[#f0ede6] md:text-[34px]">
+        <p className="mx-auto max-w-[850px] text-[19px] font-semibold leading-[1.5] text-[#f0ede6] md:text-[24px]">
           &quot;No se trata de lo que agregás — sino de lo que lográs que el
           oyente sienta sin saber por qué.&quot;
         </p>
@@ -244,18 +244,18 @@ export default function MatiasLedesmaPage() {
         className="mx-auto flex max-w-[1180px] flex-col gap-10 border-t border-[#3a3a36] px-6 py-20 sm:px-10 md:flex-row md:items-center md:justify-between md:py-28 lg:px-12"
       >
         <div>
-          <div className="mb-8 flex items-center gap-4 font-['Barlow'] text-[11px] uppercase tracking-[0.3em] text-[#c8a84b]">
+          <div className="mb-8 flex items-center gap-4 text-[11px] lg:text-[20px] uppercase tracking-[0.3em] text-[#c8a84b]">
             Trabajemos
             <span className="h-px w-32 bg-gradient-to-r from-[#7a6429] to-transparent" />
           </div>
 
-          <h2 className="font-['Barlow'] text-[46px] font-light leading-none tracking-[-0.02em] text-[#f0ede6] md:text-[72px]">
+          <h2 className="text-[46px] font-light leading-none tracking-[-0.02em] text-[#f0ede6] md:text-[72px]">
             ¿Tenés un
             <br />
-            <em className="text-[#c8a84b]">proyecto?</em>
+            <span className="text-[#c8a84b]">proyecto?</span>
           </h2>
 
-          <p className="mt-6 max-w-[420px] text-[15px] leading-[1.8] text-[#888880]">
+          <p className="mt-6 max-w-[420px] text-[15px] lg:text-[20px] leading-[1.8] text-[#888880]">
             Trabajo con artistas y productores comprometidos con su música. Si
             llegaste hasta acá, probablemente seas uno.
           </p>
@@ -263,18 +263,20 @@ export default function MatiasLedesmaPage() {
 
         <a
           href="https://api.whatsapp.com/send?phone=543512289357&text=Hola%20Matias%2C%20me%20gustaría%20trabajar%20con%20vos!"
-          className="inline-flex shrink-0 items-center justify-center gap-4 border border-[#c8a84b] px-10 py-5 font-['Barlow'] text-[12px] uppercase tracking-[0.22em] text-[#c8a84b] transition hover:bg-[#c8a84b] hover:text-[#111110]"
+          className="group inline-flex shrink-0 items-center justify-center rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-14 py-5 transition hover:bg-[#c8a84b]"
         >
-          Contacto →
+          <span className="text-[16px] font-bold text-[#f0ede6] transition group-hover:text-[#111110]">
+            Contacto →
+          </span>
         </a>
       </section>
 
       <footer className="flex flex-col gap-3 border-t border-[#3a3a36] px-6 py-8 md:flex-row md:items-center md:justify-between md:px-12">
-        <p className="font-['Barlow'] text-[10px] uppercase tracking-[0.18em] text-[#555550]">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#555550]">
           © 2025 Matias Ledesma · Córdoba, Argentina
         </p>
 
-        <span className="font-['Barlow'] text-[10px] uppercase tracking-[0.18em] text-[#7a6429]">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#7a6429]">
           Entrenamiento Focus ⚡
         </span>
       </footer>

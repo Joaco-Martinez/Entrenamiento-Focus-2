@@ -139,13 +139,13 @@ export default function FrancoCanoPage() {
             Franco Cano
           </p>
 
-          <h1 className="text-[58px] font-black leading-[0.92] tracking-[-0.02em] text-[#E8E8E8] sm:text-[78px] lg:text-[96px]">
+          <h1 className="text-[44px] font-extrabold leading-[1.05] tracking-tight text-[#E8E8E8] sm:text-[64px] lg:text-[80px]">
             Prod
             <br />
             <span className="text-[#C9A84C]">ByKNNO</span>
           </h1>
 
-          <p className="mt-6 flex flex-wrap gap-x-2 gap-y-1 text-[12px] lg:text-[14px] uppercase tracking-[0.18em] text-[#888888]">
+          <p className="mt-6 flex max-w-[440px] flex-wrap gap-x-2 gap-y-1 text-[11px] lg:text-[13px] uppercase tracking-[0.24em] text-[#888888]">
             <span>Instrumentales</span>
             <span className="text-white/20">·</span>
             <span>Grabación</span>
@@ -155,7 +155,7 @@ export default function FrancoCanoPage() {
             <span>Mastering</span>
           </p>
 
-          <p className="mt-8 max-w-[440px] text-[15px] lg:text-[17px] leading-[1.75] text-[#AAAAAA] text-justify">
+          <p className="mt-8 max-w-[440px] text-[16px] lg:text-[20px] leading-[1.85] text-[#AAAAAA]">
             Mi objetivo es que cada canción alcance su máximo potencial,
             buscando destacar la emoción y la intención original del artista.
             Desde la creación del instrumental, la grabación, la mezcla y el
@@ -177,14 +177,14 @@ export default function FrancoCanoPage() {
                     {stat.number}
                   </div>
 
-                  <div className="mt-0.5 text-[12px] lg:text-[14px] leading-[1.4] text-[#888888]">
+                  <div className="mt-0.5 text-[12px] lg:text-[20px] leading-[1.4] text-[#888888]">
                     {stat.label}
                   </div>
                 </div>
               </div>
             ))}
 
-            <p className="text-[13px] lg:text-[15px] italic text-[#888888]">
+            <p className="text-[13px] lg:text-[20px] italic text-[#888888]">
               Especializado en música urbana y latina, pop y electrónica.
             </p>
           </div>
@@ -216,7 +216,7 @@ export default function FrancoCanoPage() {
       >
         <div className="mx-auto max-w-[1180px]">
           <div className="mb-12">
-            <div className="mb-8 flex items-center gap-4 text-[11px] lg:text-[13px] uppercase tracking-[0.3em] text-[#C9A84C]">
+            <div className="mb-8 flex items-center gap-4 text-[11px] lg:text-[20px] uppercase tracking-[0.3em] text-[#C9A84C]">
               Discografía
               <span className="h-px w-40 max-w-[160px] bg-gradient-to-r from-[#7a6429] to-transparent" />
             </div>
@@ -252,7 +252,7 @@ export default function FrancoCanoPage() {
 
       <section id="servicios" className="px-6 py-16 sm:px-10 md:py-24 lg:px-12">
         <div className="mx-auto max-w-[1180px]">
-          <p className="mb-10 flex items-center gap-3 text-[10px] lg:text-[12px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
+          <p className="mb-10 flex items-center gap-3 text-[10px] lg:text-[20px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
             Qué ofrezco
             <span className="h-px w-10 bg-[#C9A84C]" />
           </p>
@@ -285,11 +285,6 @@ export default function FrancoCanoPage() {
         className="bg-[#111111] px-6 py-16 sm:px-10 md:py-24 lg:px-12"
       >
         <div className="mx-auto max-w-[1180px]">
-          <p className="mb-10 flex items-center justify-center gap-3 text-[10px] lg:text-[12px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
-            El Arsenal
-            <span className="h-px w-10 bg-[#C9A84C]" />
-          </p>
-
           <h2 className="mb-12 text-center text-[42px] font-extrabold leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[56px]">
             Equipos utilizados
           </h2>
@@ -326,16 +321,18 @@ export default function FrancoCanoPage() {
         className="mx-auto grid max-w-[1180px] items-center gap-10 px-6 py-20 sm:px-10 md:py-24 lg:grid-cols-[1fr_auto] lg:px-12"
       >
         <div>
-          <p className="mb-5 flex items-center gap-3 text-[10px] lg:text-[12px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
+          <p className="mb-5 flex items-center gap-3 text-[10px] lg:text-[20px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
             Trabajemos
             <span className="h-px w-10 bg-[#C9A84C]" />
           </p>
 
-          <h2 className="text-[42px] font-black leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[64px]">
-            ¿Tenés un <span className="text-[#C9A84C]">proyecto?</span>
+          <h2 className="text-[46px] font-light leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[72px]">
+            ¿Tenés un
+            <br />
+            <span className="text-[#C9A84C]">proyecto?</span>
           </h2>
 
-          <p className="mt-4 max-w-[500px] text-[15px] lg:text-[17px] text-[#888888]">
+          <p className="mt-4 max-w-[500px] text-[15px] lg:text-[20px] text-[#888888]">
             Desde el instrumental hasta el master. Si buscás a alguien que
             acompañe todo el proceso, hablemos.
           </p>
@@ -345,9 +342,11 @@ export default function FrancoCanoPage() {
           href="https://wa.link/xrw6yw"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex whitespace-nowrap rounded bg-[#C9A84C] px-8 py-4 text-[11px] lg:text-[13px] font-bold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#E2C06A]"
+          className="group inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-[#C9A84C]/30 bg-[#0A0A0A] px-14 py-5 transition hover:bg-[#C9A84C]"
         >
-          Contacto
+          <span className="text-[16px] font-bold text-[#E8E8E8] transition group-hover:text-[#0A0A0A]">
+            Contacto →
+          </span>
         </a>
       </section>
 
