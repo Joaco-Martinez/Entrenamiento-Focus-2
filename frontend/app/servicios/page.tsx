@@ -28,11 +28,11 @@ export default function ServiciosPage() {
 
           <div className="mt-4 mb-5 h-[2px] w-9 bg-[#c8a84b]" />
 
-          <p className="text-[15px] font-light leading-[1.7] text-[#a09e98]">
+          <p className="text-[15px] lg:text-[20px] font-light leading-[1.7] text-[#a09e98]">
             Trabajamos con artistas que se toman en serio su música.
           </p>
 
-          <p className="text-[15px] font-light leading-[1.7] text-[#a09e98]">
+          <p className="text-[15px] lg:text-[20px] font-light leading-[1.7] text-[#a09e98]">
             <strong className="font-semibold text-[#e8e6e0]">
               Si sos uno de ellos, podemos ayudarte.
             </strong>
@@ -58,7 +58,7 @@ export default function ServiciosPage() {
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-3 pt-10 sm:px-4 sm:pb-4">
                   <a
                     href={member.href}
-                    className="block w-full rounded-md border border-[#c8a84b]/60 bg-white/[0.05] px-2 py-2 text-center text-[8px] font-semibold uppercase tracking-[0.08em] text-white backdrop-blur transition hover:border-[#c8a84b] hover:bg-[#c8a84b] hover:text-[#111110] sm:rounded-lg sm:px-4 sm:py-3 sm:text-[11px] sm:tracking-[0.14em]"
+                    className="block w-full rounded-md border border-[#c8a84b]/60 bg-white/[0.05] px-2 py-2 text-center text-[8px] font-semibold uppercase tracking-[0.08em] text-white backdrop-blur transition hover:border-[#c8a84b] hover:bg-[#c8a84b] hover:text-[#111110] sm:rounded-lg sm:px-4 sm:py-3 sm:text-[11px] lg:text-[14px] sm:tracking-[0.14em]"
                   >
                     {member.button}
                   </a>
@@ -80,11 +80,11 @@ export default function ServiciosPage() {
 
           <div className="relative z-10 flex min-h-[320px] flex-col items-start gap-5 p-6 sm:flex-row sm:items-center sm:gap-8 sm:p-8">
             <div className="flex-1">
-              <div className="mb-3 inline-flex items-center gap-1 rounded-full border border-[#c8a84b]/35 bg-[#c8a84b]/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#c8a84b]">
+              <div className="mb-3 inline-flex items-center gap-1 rounded-full border border-[#c8a84b]/35 bg-[#c8a84b]/15 px-3 py-1 text-[10px] lg:text-[14px] font-semibold uppercase tracking-[0.08em] text-[#c8a84b]">
                 ⚡ Más elegido
               </div>
 
-              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-white/45">
+              <p className="mb-2 text-[10px] lg:text-[14px] font-medium uppercase tracking-[0.18em] text-white/45">
                 Franco Cano + Matias Ledesma
               </p>
 
@@ -92,7 +92,7 @@ export default function ServiciosPage() {
                 Pack Focus
               </h2>
 
-              <p className="max-w-[390px] text-[14px] font-light leading-[1.7] text-white/65">
+              <p className="max-w-[480px] text-[14px] lg:text-[18px] font-light leading-[1.7] text-white/65">
                 Tu canción, de principio a fin, con los dos.{" "}
                 <strong className="font-medium text-white">
                   Un criterio unificado desde la producción hasta el master
@@ -105,7 +105,7 @@ export default function ServiciosPage() {
               href="https://wa.link/p6iugi"
               target="_blank"
               rel="noreferrer"
-              className="w-full shrink-0 rounded-lg bg-[#c8a84b] px-7 py-4 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-[#111110] transition hover:opacity-90 sm:w-auto"
+              className="w-full shrink-0 rounded-lg bg-[#c8a84b] px-7 py-4 text-center text-[11px] lg:text-[16px] font-bold uppercase tracking-[0.14em] text-[#111110] transition hover:opacity-90 sm:w-auto"
             >
               Consultar Pack →
             </a>
