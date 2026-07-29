@@ -102,7 +102,9 @@ export default function ServiciosPage() {
             </div>
 
             <a
-              href="#"
+              href="https://wa.link/p6iugi"
+              target="_blank"
+              rel="noreferrer"
               className="w-full shrink-0 rounded-lg bg-[#c8a84b] px-7 py-4 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-[#111110] transition hover:opacity-90 sm:w-auto"
             >
               Consultar Pack →
