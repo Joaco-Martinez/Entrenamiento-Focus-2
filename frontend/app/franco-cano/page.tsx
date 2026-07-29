@@ -312,7 +312,7 @@ export default function FrancoCanoPage() {
           &quot;Mi objetivo es que cada canción alcance su{" "}
           <span className="text-[#C9A84C]">máximo potencial</span>,
           <br className="hidden md:block" />
-          destacando la emoción y la intención original del artista.&quot;
+          {" "}destacando la emoción y la intención original del artista.&quot;
         </p>
       </section>
 
