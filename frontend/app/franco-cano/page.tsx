@@ -135,7 +135,7 @@ export default function FrancoCanoPage() {
         className="grid min-h-[calc(100dvh-64px)] grid-cols-1 overflow-hidden border-b border-white/10 md:grid-cols-2"
       >
         <div className="flex flex-col justify-center px-6 py-16 md:py-20 md:pl-[380px] md:pr-12">
-          <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#888888]">
+          <p className="mb-5 text-[10px] lg:text-[12px] font-semibold uppercase tracking-[0.2em] text-[#888888]">
             Franco Cano
           </p>
 
@@ -145,7 +145,7 @@ export default function FrancoCanoPage() {
             <span className="text-[#C9A84C]">ByKNNO</span>
           </h1>
 
-          <p className="mt-6 flex flex-wrap gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.18em] text-[#888888]">
+          <p className="mt-6 flex flex-wrap gap-x-2 gap-y-1 text-[12px] lg:text-[14px] uppercase tracking-[0.18em] text-[#888888]">
             <span>Instrumentales</span>
             <span className="text-white/20">·</span>
             <span>Grabación</span>
@@ -155,7 +155,7 @@ export default function FrancoCanoPage() {
             <span>Mastering</span>
           </p>
 
-          <p className="mt-8 max-w-[440px] text-[14px] leading-[1.75] text-[#AAAAAA] text-justify">
+          <p className="mt-8 max-w-[440px] text-[15px] lg:text-[17px] leading-[1.75] text-[#AAAAAA] text-justify">
             Mi objetivo es que cada canción alcance su máximo potencial,
             buscando destacar la emoción y la intención original del artista.
             Desde la creación del instrumental, la grabación, la mezcla y el
@@ -163,6 +163,31 @@ export default function FrancoCanoPage() {
             tus ideas en una canción terminada y lista para competir en la
             industria.
           </p>
+
+          <div className="mt-8 max-w-[440px] space-y-5">
+            {stats.map((stat) => (
+              <div
+                key={stat.number}
+                className="flex items-center gap-5 border-b border-white/10 pb-5"
+              >
+                <div className="h-px w-8 shrink-0 bg-[#C9A84C]" />
+
+                <div>
+                  <div className="text-[30px] lg:text-[36px] font-extrabold text-[#E8E8E8]">
+                    {stat.number}
+                  </div>
+
+                  <div className="mt-0.5 text-[12px] lg:text-[14px] leading-[1.4] text-[#888888]">
+                    {stat.label}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <p className="text-[13px] lg:text-[15px] italic text-[#888888]">
+              Especializado en música urbana y latina, pop y electrónica.
+            </p>
+          </div>
         </div>
 
         <div className="relative min-h-[420px] overflow-hidden bg-[#161616] md:min-h-full">
@@ -185,45 +210,18 @@ export default function FrancoCanoPage() {
         </div>
       </section>
 
-      <section className="grid border-b border-white/10 border-t border-white/10 px-6 md:grid-cols-2 md:px-12 lg:grid-cols-[repeat(3,1fr)_auto]">
-        {stats.map((stat) => (
-          <div
-            key={stat.number}
-            className="flex items-center gap-5 border-b border-white/10 py-9 md:border-r md:last:border-r-0 lg:border-b-0"
-          >
-            <div className="h-px w-8 bg-[#C9A84C]" />
-
-            <div>
-              <div className="font-['Barlow'] text-[28px] font-extrabold text-[#E8E8E8]">
-                {stat.number}
-              </div>
-
-              <div className="mt-0.5 text-[11px] leading-[1.4] text-[#888888]">
-                {stat.label}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        <div className="flex items-center py-8 md:col-span-2 lg:col-span-1 lg:pl-12">
-          <p className="max-w-[260px] text-[12px] italic text-[#888888]">
-            Especializado en música urbana y latina, pop y electrónica.
-          </p>
-        </div>
-      </section>
-
       <section
         id="portfolio"
         className="border-y border-[#C9A84C]/10 bg-[#111111] px-6 py-20 md:px-12 md:py-24"
       >
-        <div className="mx-auto max-w-[1200px]">
+        <div className="mx-auto max-w-[1180px]">
           <div className="mb-12">
-            <div className="mb-8 flex items-center gap-4 font-['Barlow'] text-[11px] uppercase tracking-[0.3em] text-[#C9A84C]">
+            <div className="mb-8 flex items-center gap-4 text-[11px] lg:text-[13px] uppercase tracking-[0.3em] text-[#C9A84C]">
               Discografía
               <span className="h-px w-40 max-w-[160px] bg-gradient-to-r from-[#7a6429] to-transparent" />
             </div>
 
-            <h2 className="font-['Barlow'] text-[44px] font-light leading-[1.05] tracking-[-0.02em] text-[#E8E8E8] md:text-[62px]">
+            <h2 className="text-[44px] font-light leading-[1.05] tracking-[-0.02em] text-[#E8E8E8] md:text-[62px]">
               Portfolio
               <br />
               <em className="text-[#C9A84C]">producciones</em>
@@ -252,66 +250,70 @@ export default function FrancoCanoPage() {
         </div>
       </section>
 
-      <section id="servicios" className="px-6 py-16 md:px-12 md:py-24">
-        <p className="mb-10 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
-          Qué ofrezco
-          <span className="h-px w-10 bg-[#C9A84C]" />
-        </p>
+      <section id="servicios" className="px-6 py-16 sm:px-10 md:py-24 lg:px-12">
+        <div className="mx-auto max-w-[1180px]">
+          <p className="mb-10 flex items-center gap-3 text-[10px] lg:text-[12px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
+            Qué ofrezco
+            <span className="h-px w-10 bg-[#C9A84C]" />
+          </p>
 
-        <h2 className="mb-12 font-['Barlow'] text-[42px] font-extrabold leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[56px]">
-          Servicios
-        </h2>
+          <h2 className="mb-12 text-[42px] font-extrabold leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[56px]">
+            Servicios
+          </h2>
 
-        <div className="grid border border-white/10 md:grid-cols-3">
-          {services.map((service) => (
-            <article
-              key={service.name}
-              className="border-b border-white/10 p-8 transition hover:bg-[#161616] md:border-r md:p-10"
-            >
-              <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#C9A84C]">
-                {service.name}
-              </p>
+          <div className="grid border border-white/10 md:grid-cols-2">
+            {services.map((service) => (
+              <article
+                key={service.name}
+                className="border-b border-white/10 p-8 transition hover:bg-[#161616] md:border-r md:p-10"
+              >
+                <p className="mb-4 text-[13px] lg:text-[16px] font-semibold uppercase tracking-[0.16em] text-[#C9A84C]">
+                  {service.name}
+                </p>
 
-              <p className="text-[13px] leading-[1.7] text-[#999999]">
-                {service.desc}
-              </p>
-            </article>
-          ))}
+                <p className="text-[16px] leading-[1.6] lg:text-[20px] text-[#999999]">
+                  {service.desc}
+                </p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
       <section
         id="equipos"
-        className="bg-[#111111] px-6 py-16 md:px-12 md:py-24"
+        className="bg-[#111111] px-6 py-16 sm:px-10 md:py-24 lg:px-12"
       >
-        <p className="mb-10 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
-          El Arsenal
-          <span className="h-px w-10 bg-[#C9A84C]" />
-        </p>
+        <div className="mx-auto max-w-[1180px]">
+          <p className="mb-10 flex items-center justify-center gap-3 text-[10px] lg:text-[12px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
+            El Arsenal
+            <span className="h-px w-10 bg-[#C9A84C]" />
+          </p>
 
-        <h2 className="mb-12 font-['Barlow'] text-[42px] font-extrabold leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[56px]">
-          Equipos utilizados
-        </h2>
+          <h2 className="mb-12 text-center text-[42px] font-extrabold leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[56px]">
+            Equipos utilizados
+          </h2>
 
-        <div className="grid max-w-[900px] grid-cols-1 gap-x-14 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {gearCategories.map((gear) => (
-            <div key={gear.category}>
-              <p className="mb-3 border-b border-white/10 pb-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#C9A84C]">
-                {gear.category}
-              </p>
+          <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-x-24 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {gearCategories.map((gear) => (
+              <div key={gear.category}>
+                <p className="mb-3 border-b border-white/10 pb-3 text-[13px] lg:text-[16px] font-semibold uppercase tracking-[0.16em] text-[#C9A84C]">
+                  {gear.category}
+                </p>
 
-              <div className="space-y-1 text-[13px] leading-8 text-[#999999]">
-                {gear.items.map((item) => (
-                  <p key={item}>{item}</p>
-                ))}
+                <div className="space-y-1 text-[16px] leading-[1.6] lg:text-[20px] text-[#999999]">
+                  {gear.items.map((item) => (
+                    <p key={item}>{item}</p>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-[#161616] px-6 py-20 text-center md:px-12 md:py-24">
-        <p className="mx-auto max-w-[800px] font-['Barlow'] text-[24px] font-semibold leading-[1.4] text-[#E8E8E8] md:text-[30px]">
+      <section className="border-y border-white/10 bg-[#161616] px-6 py-20 text-center sm:px-10 md:py-24 lg:px-12">
+        <p className="mx-auto max-w-[850px] text-[19px] font-semibold leading-[1.5] text-[#E8E8E8] md:text-[24px]">
           &quot;Mi objetivo es que cada canción alcance su{" "}
           <span className="text-[#C9A84C]">máximo potencial</span>,
           <br className="hidden md:block" />
@@ -321,19 +323,19 @@ export default function FrancoCanoPage() {
 
       <section
         id="contacto"
-        className="grid items-center gap-10 px-6 py-20 md:px-12 md:py-24 lg:grid-cols-[1fr_auto]"
+        className="mx-auto grid max-w-[1180px] items-center gap-10 px-6 py-20 sm:px-10 md:py-24 lg:grid-cols-[1fr_auto] lg:px-12"
       >
         <div>
-          <p className="mb-5 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
+          <p className="mb-5 flex items-center gap-3 text-[10px] lg:text-[12px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
             Trabajemos
             <span className="h-px w-10 bg-[#C9A84C]" />
           </p>
 
-          <h2 className="font-['Barlow'] text-[42px] font-black leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[64px]">
+          <h2 className="text-[42px] font-black leading-none tracking-[-0.02em] text-[#E8E8E8] md:text-[64px]">
             ¿Tenés un <span className="text-[#C9A84C]">proyecto?</span>
           </h2>
 
-          <p className="mt-4 max-w-[500px] text-[14px] text-[#888888]">
+          <p className="mt-4 max-w-[500px] text-[15px] lg:text-[17px] text-[#888888]">
             Desde el instrumental hasta el master. Si buscás a alguien que
             acompañe todo el proceso, hablemos.
           </p>
@@ -343,7 +345,7 @@ export default function FrancoCanoPage() {
           href="https://wa.link/xrw6yw"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex whitespace-nowrap rounded bg-[#C9A84C] px-8 py-4 text-[11px] font-bold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#E2C06A]"
+          className="inline-flex whitespace-nowrap rounded bg-[#C9A84C] px-8 py-4 text-[11px] lg:text-[13px] font-bold uppercase tracking-[0.14em] text-black transition hover:-translate-y-0.5 hover:bg-[#E2C06A]"
         >
           Contacto
         </a>
