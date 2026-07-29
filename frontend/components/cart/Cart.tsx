@@ -220,7 +220,7 @@ export function CartDrawer({
                 <Link
                   href="/recursos"
                   onClick={onClose}
-                  className="flex min-h-[48px] items-center justify-center rounded-xl bg-primary px-5 py-3 text-center font-semibold text-primary-foreground transition hover:opacity-90"
+                  className="flex min-h-[48px] items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-center font-medium text-white/80 transition hover:bg-white/[0.06]"
                 >
                   Seguir comprando
                 </Link>
@@ -228,7 +228,7 @@ export function CartDrawer({
                 <button
                   type="button"
                   onClick={goToCheckout}
-                  className="flex min-h-[48px] items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-center font-medium text-white/80 transition hover:bg-white/[0.06]"
+                  className="flex min-h-[48px] items-center justify-center rounded-xl bg-primary px-5 py-3 text-center font-semibold text-primary-foreground transition hover:opacity-90"
                 >
                   Finalizar compra
                 </button>
