@@ -75,7 +75,7 @@ export default function EntrenamientoFocusPage() {
       <section className="border-t border-[#c8a84b]/10 px-5 py-12 md:px-12 md:py-16">
         <div className="mx-auto max-w-[1180px]">
           <div className="mb-11 flex flex-col items-center text-center">
-            <p className="max-w-4xl text-[19px] leading-[1.5] text-[#c8a84b] sm:text-[23px]">
+            <p className="max-w-4xl text-[19px] font-semibold leading-[1.5] text-[#f0ede6] sm:text-[24px]">
               &quot;Para que dejes de trabajar solo y empieces a moverte en
               los círculos que realmente te hacen crecer.&quot;
             </p>
