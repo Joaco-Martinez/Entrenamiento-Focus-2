@@ -112,7 +112,8 @@ export default function MatiasLedesmaPage() {
           <div className="mt-10 max-w-[440px] space-y-6 text-[16px] lg:text-[20px] leading-[1.85] text-[#d4cfc0]">
             <p>
               Empecé como músico y eso me enseñó algo que solo te lo da estar
-              de ese lado:{" "}
+              de ese lado:
+              <br />
               <strong className="font-medium text-[#c8a84b]">
                 entender qué siente el artista.
               </strong>
