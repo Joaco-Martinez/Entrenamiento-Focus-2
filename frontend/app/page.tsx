@@ -50,7 +50,7 @@ export default function EntrenamientoFocusPage() {
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,16,0.97)_0%,rgba(17,17,16,0.88)_35%,rgba(17,17,16,0.62)_65%,rgba(17,17,16,0.32)_100%)]" />
         </div>
 
-        <div className="relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-[1180px] items-center px-10 py-16 lg:px-12">
+        <div className="relative flex min-h-[calc(100dvh-64px)] items-center py-16 pl-[380px] pr-10 lg:pr-12">
           <div className="max-w-[520px]">
             <span className="text-[13px] font-bold uppercase tracking-[0.3em] text-[#c8a84b]">
               Quiénes somos

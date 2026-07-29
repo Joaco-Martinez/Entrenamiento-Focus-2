@@ -134,12 +134,12 @@ export default function FrancoCanoPage() {
         id="sobre"
         className="grid min-h-[calc(100dvh-64px)] grid-cols-1 overflow-hidden border-b border-white/10 md:grid-cols-2"
       >
-        <div className="flex flex-col justify-center px-6 py-16 md:px-12 md:py-20">
+        <div className="flex flex-col justify-center px-6 py-16 md:py-20 md:pl-[380px] md:pr-12">
           <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#888888]">
             Franco Cano
           </p>
 
-          <h1 className="font-['Barlow'] text-[58px] font-black leading-[0.92] tracking-[-0.02em] text-[#E8E8E8] sm:text-[78px] lg:text-[96px]">
+          <h1 className="text-[58px] font-black leading-[0.92] tracking-[-0.02em] text-[#E8E8E8] sm:text-[78px] lg:text-[96px]">
             Prod
             <br />
             <span className="text-[#C9A84C]">ByKNNO</span>
@@ -155,7 +155,7 @@ export default function FrancoCanoPage() {
             <span>Mastering</span>
           </p>
 
-          <p className="mt-8 max-w-[440px] text-[14px] leading-[1.75] text-[#AAAAAA]">
+          <p className="mt-8 max-w-[440px] text-[14px] leading-[1.75] text-[#AAAAAA] text-justify">
             Mi objetivo es que cada canción alcance su máximo potencial,
             buscando destacar la emoción y la intención original del artista.
             Desde la creación del instrumental, la grabación, la mezcla y el

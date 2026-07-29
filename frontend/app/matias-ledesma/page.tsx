@@ -98,7 +98,7 @@ export default function MatiasLedesmaPage() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#111110] pt-16 text-[#f0ede6]">
       <section className="grid min-h-[calc(100dvh-64px)] grid-cols-1 overflow-hidden border-b border-[#3a3a36] md:grid-cols-2">
-        <div className="relative z-10 flex flex-col justify-center px-6 py-16 md:px-12 md:py-20">
+        <div className="relative z-10 flex flex-col justify-center px-6 py-16 md:py-20 md:pl-[380px] md:pr-12">
           <h1 className="text-[44px] font-extrabold leading-[1.05] tracking-tight text-[#f0ede6] sm:text-[64px] lg:text-[80px]">
             Matias
             <br />
