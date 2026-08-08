@@ -2,22 +2,22 @@
 
 const gearItems = [
   {
+    brand: "Empirical Labs",
+    name: "Distressor",
+    image: "/1.png",
+    alt: "Empirical Labs Distressor",
+  },
+  {
     brand: "Manley",
     name: "Stereo Variable Mu",
-    image: "/1.png",
+    image: "/2.png",
     alt: "Manley Stereo Variable Mu",
   },
   {
     brand: "API",
     name: "2500",
-    image: "/2.png",
-    alt: "API 2500",
-  },
-  {
-    brand: "Empirical Labs",
-    name: "Distressor",
     image: "/3.png",
-    alt: "Empirical Labs Distressor",
+    alt: "API 2500",
   },
   {
     brand: "Manley",
