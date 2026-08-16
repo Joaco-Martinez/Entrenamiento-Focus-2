@@ -101,9 +101,10 @@ export default function ServiciosPage() {
               </p>
             </div>
 
-            {/* TODO: pegar el nuevo número/link de WhatsApp acá cuando lo tengamos (era https://wa.link/p6iugi) */}
             <a
-              href="#"
+              href="https://wa.link/z356e3"
+              target="_blank"
+              rel="noreferrer"
               className="w-full shrink-0 rounded-lg bg-[#c8a84b] px-7 py-4 text-center text-[11px] lg:text-[16px] font-bold uppercase tracking-[0.14em] text-[#111110] transition hover:opacity-90 sm:w-auto"
             >
               Consultar Pack →
