@@ -1,16 +1,14 @@
 "use client"
 
 export default function WhatsAppButton() {
-  const phone = "5493518736207"
-  const message = "Hola, te escribo desde la pagina Entrenamiento Focus"
-
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+  // TODO: pegar el nuevo número acá cuando lo tengamos y restaurar el href de abajo.
+  // const phone = "5493518736207"
+  // const message = "Hola, te escribo desde la pagina Entrenamiento Focus"
+  // const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 
   return (
     <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
+      href="#"
       aria-label="WhatsApp"
       className="group fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-[0_0_30px_rgba(37,211,102,0.6)]"
     >
