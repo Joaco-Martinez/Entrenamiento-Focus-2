@@ -19,6 +19,7 @@ export function Navbar() {
 
   const navItems = [
     { href: "/", label: "Inicio" },
+    { href: "/foro", label: "Foro" },
     { href: "/servicios", label: "Servicios" },
     { href: "/recursos", label: "Productos" },
   ]

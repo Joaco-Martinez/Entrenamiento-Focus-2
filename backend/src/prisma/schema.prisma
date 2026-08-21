@@ -52,6 +52,19 @@ enum SubscriptionLinkIntentStatus {
   EXPIRED
 }
 
+enum ServiceType {
+  MIX
+  MASTERING
+  MIX_MASTERING
+}
+
+enum ServiceRequestStatus {
+  AWAITING_PAYMENT
+  AWAITING_MATERIAL
+  IN_PROGRESS
+  DELIVERED
+}
+
 model SubscriptionLinkIntent {
   id        String @id @default(uuid())
 
@@ -113,6 +126,9 @@ subscriptionLinkIntents SubscriptionLinkIntent[]
   orders       Order[]
   subscription Subscription?
   accessGrants AccessGrant[]
+  serviceRequests ServiceRequest[]
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
 }
 
 model Product {
@@ -162,6 +178,7 @@ model Order {
 
   items    OrderItem[]
   payments Payment[]
+  serviceRequests ServiceRequest[]
 }
 
 model OrderItem {
@@ -265,4 +282,63 @@ model Subscription {
   @@index([provider])
   @@index([status])
   @@index([externalId])
+}
+
+model ServiceRequest {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  serviceType ServiceType
+  songCount   Int
+
+  status ServiceRequestStatus @default(AWAITING_PAYMENT)
+
+  materialLink String?
+  genre        String?
+  references   String?
+  comments     String?
+
+  deliveredFileUrl String?
+
+  deliveryDueAt DateTime?
+  deliveredAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model ForumPost {
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  title     String
+  content   String
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comments  ForumComment[]
+
+  @@index([authorId])
+}
+
+model ForumComment {
+  id        String    @id @default(uuid())
+  postId    String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([postId])
+  @@index([authorId])
 }
