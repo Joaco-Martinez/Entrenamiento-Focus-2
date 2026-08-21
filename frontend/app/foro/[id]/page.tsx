@@ -21,6 +21,27 @@ function formatDate(value: string) {
   })
 }
 
+function linkifyText(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const parts = text.split(urlRegex)
+
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[#c8a84b] underline-offset-2 hover:underline"
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  )
+}
+
 function ForoProximamente() {
   return (
     <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
@@ -153,7 +174,7 @@ export default function ForoPostPage() {
                 </p>
 
                 <p className="mt-6 whitespace-pre-wrap text-[16px] leading-[1.8] text-[#f0ede6]/85">
-                  {post.content}
+                  {linkifyText(post.content)}
                 </p>
 
                 {post.tags?.length > 0 && (
@@ -204,7 +225,7 @@ export default function ForoPostPage() {
                       </div>
 
                       <p className="mt-2 whitespace-pre-wrap text-[14px] leading-[1.7] text-[#f0ede6]/80">
-                        {c.content}
+                        {linkifyText(c.content)}
                       </p>
                     </div>
                   ))}
