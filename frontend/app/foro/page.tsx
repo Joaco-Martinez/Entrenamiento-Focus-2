@@ -47,6 +47,22 @@ function findMatchedComment(post: ForumPost, query: string) {
   return post.comments.find((c) => c.content.toLowerCase().includes(q)) ?? null
 }
 
+function ForoProximamente() {
+  return (
+    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
+      <div className="text-center">
+        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#f0ede6] sm:text-[40px]">
+          Foro <span className="text-[#c8a84b]">próximamente</span>
+        </h1>
+
+        <p className="mt-4 text-[15px] text-[#f0ede6]/60">
+          Estamos terminando de preparar esta sección. Volvé pronto.
+        </p>
+      </div>
+    </main>
+  )
+}
+
 export default function ForoPage() {
   const { isAuth } = useAuth()
 
@@ -104,6 +120,10 @@ export default function ForoPage() {
       ),
     [posts]
   )
+
+  if (!loading && error) {
+    return <ForoProximamente />
+  }
 
   return (
     <main className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
@@ -184,11 +204,7 @@ export default function ForoPage() {
               <p className="text-[15px] text-[#f0ede6]/60">Cargando...</p>
             )}
 
-            {!loading && error && (
-              <p className="text-[15px] text-red-400">{error}</p>
-            )}
-
-            {!loading && !error && sortedPosts.length === 0 && (
+            {!loading && sortedPosts.length === 0 && (
               <p className="text-[15px] text-[#f0ede6]/60">
                 {activeQuery
                   ? "No encontramos posts que coincidan con tu búsqueda."
@@ -196,7 +212,7 @@ export default function ForoPage() {
               </p>
             )}
 
-            {!loading && !error && sortedPosts.length > 0 && (
+            {!loading && sortedPosts.length > 0 && (
               <div className="grid gap-5 md:grid-cols-2">
                 {sortedPosts.map((post) => {
                   const matchedComment = findMatchedComment(post, activeQuery)

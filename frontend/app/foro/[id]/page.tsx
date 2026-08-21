@@ -21,6 +21,22 @@ function formatDate(value: string) {
   })
 }
 
+function ForoProximamente() {
+  return (
+    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
+      <div className="text-center">
+        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#f0ede6] sm:text-[40px]">
+          Foro <span className="text-[#c8a84b]">próximamente</span>
+        </h1>
+
+        <p className="mt-4 text-[15px] text-[#f0ede6]/60">
+          Estamos terminando de preparar esta sección. Volvé pronto.
+        </p>
+      </div>
+    </main>
+  )
+}
+
 export default function ForoPostPage() {
   const params = useParams()
   const router = useRouter()
@@ -97,6 +113,10 @@ export default function ForoPostPage() {
     }
   }
 
+  if (!loading && error) {
+    return <ForoProximamente />
+  }
+
   return (
     <main className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
       <section className="border-t border-[#c8a84b]/10 px-5 py-12 md:px-12 md:py-16">
@@ -109,11 +129,7 @@ export default function ForoPostPage() {
             <p className="mt-8 text-[15px] text-[#f0ede6]/60">Cargando...</p>
           )}
 
-          {!loading && error && (
-            <p className="mt-8 text-[15px] text-red-400">{error}</p>
-          )}
-
-          {!loading && !error && post && (
+          {!loading && post && (
             <>
               <div className="mt-6 rounded-[28px] border border-[#c8a84b]/10 bg-[#181816] p-6 sm:p-8">
                 <div className="flex items-start justify-between gap-4">
