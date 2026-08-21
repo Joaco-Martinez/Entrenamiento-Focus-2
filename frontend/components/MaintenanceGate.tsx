@@ -47,7 +47,7 @@ export default function MaintenanceGate({
         </p>
 
         <a
-          href="https://wa.me/5493518736207"
+          href="https://wa.link/z356e3"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block rounded-full bg-[#D4AF37] px-6 py-3 text-black font-medium hover:opacity-90 transition"
