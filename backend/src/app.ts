@@ -18,6 +18,7 @@ import { authRoutes } from "./routes/auth.routes";
 import { usersRoutes } from "./routes/users.routes";
 import { productsRoutes } from "./routes/products.routes";
 import { forumRoutes } from "./routes/forum.routes";
+import { articlesRoutes } from "./routes/articles.routes";
 import { ordersRoutes } from "./routes/orders.routes";
 import  manualSuscriptionRoutes  from "./routes/subscriptions.admin.routes";
 import { subscriptionsRoutes } from "./routes/subscriptions.routes";
@@ -72,6 +73,7 @@ app.use("/mp-link-subscriptions", mpLinkSubscriptionsRoutes);
 app.use("/users", usersRoutes);
 app.use("/products", productsRoutes);
 app.use("/forum", forumRoutes);
+app.use("/articles", articlesRoutes);
 app.use("/orders", ordersRoutes);
 
 app.use("/subscriptions", subscriptionsRoutes);

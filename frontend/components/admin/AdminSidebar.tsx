@@ -14,11 +14,13 @@ import {
   X,
   ChevronRight,
   ShieldCheck,
+  Newspaper,
 } from "lucide-react";
 
 const links = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Productos", href: "/admin/products", icon: Package },
+  { label: "Artículos", href: "/admin/articles", icon: Newspaper },
   { label: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
   { label: "Suscripciones", href: "/admin/subscriptions", icon: CreditCard },
 ];

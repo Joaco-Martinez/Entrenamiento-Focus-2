@@ -64,6 +64,8 @@ function ForoProximamente() {
 }
 
 export default function ForoPage() {
+  const forumEnabled = process.env.NEXT_PUBLIC_SHOW_FORO === "true"
+
   const { isAuth } = useAuth()
 
   const [posts, setPosts] = useState<ForumPost[]>([])
@@ -88,7 +90,9 @@ export default function ForoPage() {
   }
 
   useEffect(() => {
-    loadAll()
+    if (forumEnabled) {
+      loadAll()
+    }
   }, [])
 
   const runSearch = async (q: string) => {
@@ -121,7 +125,7 @@ export default function ForoPage() {
     [posts]
   )
 
-  if (!loading && error) {
+  if (!forumEnabled || (!loading && error)) {
     return <ForoProximamente />
   }
 

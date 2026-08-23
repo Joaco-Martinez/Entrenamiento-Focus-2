@@ -59,6 +59,8 @@ function ForoProximamente() {
 }
 
 export default function ForoPostPage() {
+  const forumEnabled = process.env.NEXT_PUBLIC_SHOW_FORO === "true"
+
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
@@ -88,7 +90,7 @@ export default function ForoPostPage() {
   }
 
   useEffect(() => {
-    if (id) load()
+    if (forumEnabled && id) load()
   }, [id])
 
   const canDelete = (authorId: string) => isAdmin || user?.id === authorId
@@ -134,7 +136,7 @@ export default function ForoPostPage() {
     }
   }
 
-  if (!loading && error) {
+  if (!forumEnabled || (!loading && error)) {
     return <ForoProximamente />
   }
 

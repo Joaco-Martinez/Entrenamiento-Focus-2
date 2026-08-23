@@ -17,9 +17,11 @@ export function Navbar() {
   const { isAuth, isAdmin, logout } = useAuth()
   const { totalItems } = useCart()
 
+  const showForo = process.env.NEXT_PUBLIC_SHOW_FORO === "true"
+
   const navItems = [
     { href: "/", label: "Inicio" },
-    { href: "/foro", label: "Foro" },
+    ...(showForo ? [{ href: "/foro", label: "Foro" }] : []),
     { href: "/servicios", label: "Servicios" },
     { href: "/recursos", label: "Productos" },
   ]

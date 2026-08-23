@@ -6,7 +6,25 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { forumService } from "@/services/forum.service"
 
+function ForoProximamente() {
+  return (
+    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
+      <div className="text-center">
+        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#f0ede6] sm:text-[40px]">
+          Foro <span className="text-[#c8a84b]">próximamente</span>
+        </h1>
+
+        <p className="mt-4 text-[15px] text-[#f0ede6]/60">
+          Estamos terminando de preparar esta sección. Volvé pronto.
+        </p>
+      </div>
+    </main>
+  )
+}
+
 export default function NuevoPostPage() {
+  const forumEnabled = process.env.NEXT_PUBLIC_SHOW_FORO === "true"
+
   const router = useRouter()
   const { isAuth, loading: authLoading } = useAuth()
 
@@ -18,7 +36,7 @@ export default function NuevoPostPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!authLoading && !isAuth) {
+    if (forumEnabled && !authLoading && !isAuth) {
       router.push("/login?redirect=/foro/nuevo")
     }
   }, [authLoading, isAuth, router])
@@ -48,6 +66,10 @@ export default function NuevoPostPage() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (!forumEnabled) {
+    return <ForoProximamente />
   }
 
   if (authLoading || !isAuth) {
