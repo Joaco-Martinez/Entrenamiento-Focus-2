@@ -8,13 +8,13 @@ import { forumService } from "@/services/forum.service"
 
 function ForoProximamente() {
   return (
-    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
+    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
       <div className="text-center">
-        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#f0ede6] sm:text-[40px]">
-          Foro <span className="text-[#c8a84b]">próximamente</span>
+        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#2a2620] sm:text-[40px]">
+          Foro <span className="text-[#a67c27]">próximamente</span>
         </h1>
 
-        <p className="mt-4 text-[15px] text-[#f0ede6]/60">
+        <p className="mt-4 text-[15px] text-[#6b6153]">
           Estamos terminando de preparar esta sección. Volvé pronto.
         </p>
       </div>
@@ -74,34 +74,34 @@ export default function NuevoPostPage() {
 
   if (authLoading || !isAuth) {
     return (
-      <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] text-[#f0ede6]">
-        <p className="text-[15px] text-[#f0ede6]/60">Cargando...</p>
+      <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] text-[#2a2620]">
+        <p className="text-[15px] text-[#6b6153]">Cargando...</p>
       </main>
     )
   }
 
   return (
-    <main className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
-      <section className="border-t border-[#c8a84b]/10 px-5 py-12 md:px-12 md:py-16">
+    <main className="mt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
+      <section className="border-t border-[#2a2620]/10 px-5 py-12 md:px-12 md:py-16">
         <div className="mx-auto max-w-[720px]">
-          <Link href="/foro" className="text-[13px] text-[#c8a84b] hover:underline">
+          <Link href="/foro" className="text-[13px] text-[#a67c27] hover:underline">
             ← Volver al foro
           </Link>
 
-          <p className="mt-6 text-[13px] uppercase tracking-[0.3em] text-[#c8a84b]">
+          <p className="mt-6 text-[13px] uppercase tracking-[0.3em] text-[#a67c27]">
             Nuevo post
           </p>
 
-          <h1 className="mt-3 text-[32px] font-light leading-[1.05] tracking-[-0.03em] text-[#f0ede6] sm:text-[40px]">
+          <h1 className="mt-3 text-[32px] font-light leading-[1.05] tracking-[-0.03em] text-[#2a2620] sm:text-[40px]">
             Compartí algo con la comunidad
           </h1>
 
           <form
             onSubmit={handleSubmit}
-            className="mt-10 space-y-6 rounded-[28px] border border-[#c8a84b]/10 bg-[#181816] p-6 sm:p-8"
+            className="mt-10 space-y-6 rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6 sm:p-8"
           >
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-[#f0ede6]/70">
+              <label className="mb-2 block text-[13px] font-medium text-[#6b6153]">
                 Título
               </label>
 
@@ -109,12 +109,12 @@ export default function NuevoPostPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ej: ¿Qué plugin de EQ usan para voces?"
-                className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#111110] px-5 py-3.5 text-[15px] text-[#f0ede6] placeholder:text-[#f0ede6]/40 outline-none transition focus:border-[#c8a84b]/60"
+                className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#f4ecdf] px-5 py-3.5 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-[#f0ede6]/70">
+              <label className="mb-2 block text-[13px] font-medium text-[#6b6153]">
                 Contenido
               </label>
 
@@ -123,12 +123,12 @@ export default function NuevoPostPage() {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Contá tu duda, idea o experiencia..."
                 rows={8}
-                className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#111110] px-5 py-3.5 text-[15px] text-[#f0ede6] placeholder:text-[#f0ede6]/40 outline-none transition focus:border-[#c8a84b]/60"
+                className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#f4ecdf] px-5 py-3.5 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-[13px] font-medium text-[#f0ede6]/70">
+              <label className="mb-2 block text-[13px] font-medium text-[#6b6153]">
                 Tags (separados por coma)
               </label>
 
@@ -136,16 +136,16 @@ export default function NuevoPostPage() {
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 placeholder="Ej: mezcla, plugins, voces"
-                className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#111110] px-5 py-3.5 text-[15px] text-[#f0ede6] placeholder:text-[#f0ede6]/40 outline-none transition focus:border-[#c8a84b]/60"
+                className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#f4ecdf] px-5 py-3.5 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
               />
             </div>
 
-            {error && <p className="text-[13px] text-red-400">{error}</p>}
+            {error && <p className="text-[13px] text-red-700">{error}</p>}
 
             <button
               type="submit"
               disabled={submitting || !title.trim() || !content.trim()}
-              className="inline-flex items-center justify-center rounded-full bg-[#c8a84b] px-8 py-3.5 text-[16px] font-semibold text-[#111110] transition hover:scale-[1.02] hover:bg-[#d8b85b] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-full bg-[#a67c27] px-8 py-3.5 text-[16px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? "Publicando..." : "Publicar"}
             </button>

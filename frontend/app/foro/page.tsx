@@ -27,7 +27,7 @@ function highlight(text: string, query: string) {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="rounded bg-[#c8a84b]/25 px-0.5 text-[#f0ede6]">
+      <mark className="rounded bg-[#a67c27]/25 px-0.5 text-[#2a2620]">
         {text.slice(idx, idx + query.length)}
       </mark>
       {text.slice(idx + query.length)}
@@ -49,13 +49,13 @@ function findMatchedComment(post: ForumPost, query: string) {
 
 function ForoProximamente() {
   return (
-    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
+    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
       <div className="text-center">
-        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#f0ede6] sm:text-[40px]">
-          Foro <span className="text-[#c8a84b]">próximamente</span>
+        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#2a2620] sm:text-[40px]">
+          Foro <span className="text-[#a67c27]">próximamente</span>
         </h1>
 
-        <p className="mt-4 text-[15px] text-[#f0ede6]/60">
+        <p className="mt-4 text-[15px] text-[#6b6153]">
           Estamos terminando de preparar esta sección. Volvé pronto.
         </p>
       </div>
@@ -130,16 +130,16 @@ export default function ForoPage() {
   }
 
   return (
-    <main className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
-      <section className="border-t border-[#c8a84b]/10 px-5 py-12 md:px-12 md:py-16">
+    <main className="mt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
+      <section className="border-t border-[#2a2620]/10 px-5 py-12 md:px-12 md:py-16">
         <div className="mx-auto max-w-[1180px]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[13px] uppercase tracking-[0.3em] text-[#c8a84b]">
+              <p className="text-[13px] uppercase tracking-[0.3em] text-[#a67c27]">
                 Comunidad
               </p>
 
-              <h1 className="mt-3 text-[34px] font-light leading-[1.05] tracking-[-0.03em] text-[#f0ede6] sm:text-[48px]">
+              <h1 className="mt-3 text-[34px] font-light leading-[1.05] tracking-[-0.03em] text-[#2a2620] sm:text-[48px]">
                 Foro
               </h1>
             </div>
@@ -147,13 +147,13 @@ export default function ForoPage() {
             {isAuth ? (
               <Link
                 href="/foro/nuevo"
-                className="inline-flex w-fit items-center justify-center rounded-full bg-[#c8a84b] px-6 py-3 text-[15px] font-semibold text-[#111110] transition hover:scale-[1.02] hover:bg-[#d8b85b]"
+                className="inline-flex w-fit items-center justify-center rounded-full bg-[#a67c27] px-6 py-3 text-[15px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f]"
               >
                 Nuevo post
               </Link>
             ) : (
-              <p className="text-[14px] text-[#f0ede6]/60">
-                <Link href="/login" className="text-[#c8a84b] hover:underline">
+              <p className="text-[14px] text-[#6b6153]">
+                <Link href="/login" className="text-[#a67c27] hover:underline">
                   Iniciá sesión
                 </Link>{" "}
                 para participar del foro.
@@ -172,12 +172,12 @@ export default function ForoPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar por palabra clave, ej: plugins gratis"
-              className="w-full rounded-full border border-[#c8a84b]/20 bg-[#181816] px-6 py-3 text-[15px] text-[#f0ede6] placeholder:text-[#f0ede6]/40 outline-none transition focus:border-[#c8a84b]/60"
+              className="w-full rounded-full border border-[#a67c27]/20 bg-[#faf6ee] px-6 py-3 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
             />
 
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-full border border-[#c8a84b]/30 px-6 py-3 text-[15px] font-medium text-[#f0ede6] transition hover:bg-[#c8a84b] hover:text-[#111110]"
+              className="inline-flex items-center justify-center rounded-full border border-[#a67c27]/30 px-6 py-3 text-[15px] font-medium text-[#2a2620] transition hover:bg-[#a67c27] hover:text-[#2a2620]"
             >
               Buscar
             </button>
@@ -190,7 +190,7 @@ export default function ForoPage() {
                   setActiveQuery("")
                   loadAll()
                 }}
-                className="inline-flex items-center justify-center rounded-full px-4 py-3 text-[14px] text-[#f0ede6]/60 transition hover:text-[#f0ede6]"
+                className="inline-flex items-center justify-center rounded-full px-4 py-3 text-[14px] text-[#6b6153] transition hover:text-[#2a2620]"
               >
                 Limpiar
               </button>
@@ -198,18 +198,18 @@ export default function ForoPage() {
           </form>
 
           {activeQuery && (
-            <p className="mt-4 text-[14px] text-[#f0ede6]/50">
-              Resultados para <span className="text-[#c8a84b]">&ldquo;{activeQuery}&rdquo;</span>
+            <p className="mt-4 text-[14px] text-[#6b6153]">
+              Resultados para <span className="text-[#a67c27]">&ldquo;{activeQuery}&rdquo;</span>
             </p>
           )}
 
           <div className="mt-10">
             {loading && (
-              <p className="text-[15px] text-[#f0ede6]/60">Cargando...</p>
+              <p className="text-[15px] text-[#6b6153]">Cargando...</p>
             )}
 
             {!loading && sortedPosts.length === 0 && (
-              <p className="text-[15px] text-[#f0ede6]/60">
+              <p className="text-[15px] text-[#6b6153]">
                 {activeQuery
                   ? "No encontramos posts que coincidan con tu búsqueda."
                   : "Todavía no hay posts en el foro."}
@@ -225,28 +225,28 @@ export default function ForoPage() {
                     <Link
                       key={post.id}
                       href={`/foro/${post.id}`}
-                      className="group rounded-[28px] border border-[#c8a84b]/10 bg-[#181816] p-6 transition-all duration-300 hover:border-[#c8a84b]/40 hover:bg-[#c8a84b]/[0.05]"
+                      className="group rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6 transition-all duration-300 hover:border-[#a67c27]/40 hover:bg-[#a67c27]/[0.05]"
                     >
-                      <h2 className="text-[20px] font-medium leading-tight text-[#f0ede6] transition-colors group-hover:text-[#c8a84b]">
+                      <h2 className="text-[20px] font-medium leading-tight text-[#2a2620] transition-colors group-hover:text-[#a67c27]">
                         {highlight(post.title, activeQuery)}
                       </h2>
 
-                      <p className="mt-2 text-[13px] text-[#f0ede6]/50">
+                      <p className="mt-2 text-[13px] text-[#6b6153]">
                         {authorName(post.author)} · {formatDate(post.createdAt)}
                       </p>
 
-                      <p className="mt-4 line-clamp-2 text-[14px] leading-[1.6] text-[#f0ede6]/70">
+                      <p className="mt-4 line-clamp-2 text-[14px] leading-[1.6] text-[#6b6153]">
                         {highlight(post.content, activeQuery)}
                       </p>
 
                       {matchedComment && (
-                        <div className="mt-4 rounded-2xl border border-[#c8a84b]/15 bg-[#111110] p-4">
-                          <p className="text-[11px] uppercase tracking-[0.2em] text-[#c8a84b]">
+                        <div className="mt-4 rounded-2xl border border-[#2a2620]/10 bg-[#f4ecdf] p-4">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-[#a67c27]">
                             Coincidencia en un comentario de{" "}
                             {authorName(matchedComment.author)}
                           </p>
 
-                          <p className="mt-2 line-clamp-2 text-[13px] leading-[1.6] text-[#f0ede6]/75">
+                          <p className="mt-2 line-clamp-2 text-[13px] leading-[1.6] text-[#6b6153]">
                             {highlight(matchedComment.content, activeQuery)}
                           </p>
                         </div>
@@ -257,7 +257,7 @@ export default function ForoPage() {
                           {post.tags.map((tag) => (
                             <span
                               key={tag}
-                              className="rounded-full border border-[#c8a84b]/30 px-3 py-1 text-[11px] font-medium text-[#c8a84b]"
+                              className="rounded-full border border-[#a67c27]/30 px-3 py-1 text-[11px] font-medium text-[#a67c27]"
                             >
                               {tag}
                             </span>
@@ -265,7 +265,7 @@ export default function ForoPage() {
                         </div>
                       )}
 
-                      <p className="mt-4 text-[13px] text-[#f0ede6]/50">
+                      <p className="mt-4 text-[13px] text-[#6b6153]">
                         {post._count?.comments ?? post.comments?.length ?? 0} comentarios
                       </p>
                     </Link>

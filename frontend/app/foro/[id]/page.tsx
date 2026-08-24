@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumComment, ForumPost } from "@/services/forum.service"
 import { articlesService, Article } from "@/services/articles.service"
+import { Newspaper } from "lucide-react"
 
 function authorName(author: { firstName: string | null; lastName: string | null } | null | undefined) {
   const name = [author?.firstName, author?.lastName].filter(Boolean).join(" ")
@@ -33,7 +34,7 @@ function linkifyText(text: string) {
         href={part}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[#c8a84b] underline-offset-2 hover:underline"
+        className="text-[#a67c27] underline-offset-2 hover:underline"
       >
         {part}
       </a>
@@ -89,33 +90,35 @@ function ArticlePreviewCard({ slug }: { slug: string }) {
   if (!article) return null
 
   return (
-    <div className="mt-3 flex items-center gap-3 rounded-2xl border border-[#c8a84b]/15 bg-[#111110] p-3">
-      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#c8a84b]/10 bg-[#181816]">
+    <Link
+      href={`/articulos/${article.slug}`}
+      className="group mt-3 flex flex-col overflow-hidden rounded-2xl border border-[#2a2620]/10 bg-[#faf6ee] transition duration-300 hover:border-[#a67c27]/30 hover:bg-[#a67c27]/5"
+    >
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#f4ecdf]">
         {article.coverImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={article.coverImageUrl}
             alt={article.title}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-[10px] text-[#f0ede6]/30">
-            Sin imagen
+          <div className="flex h-full w-full items-center justify-center text-[#6b6153]">
+            <Newspaper className="h-8 w-8" />
           </div>
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[14px] font-medium text-[#f0ede6]">{article.title}</p>
+      <div className="flex flex-col gap-2 p-4 sm:p-5">
+        <p className="text-[18px] font-bold leading-snug text-[#2a2620] transition group-hover:text-[#a67c27] sm:text-[20px]">
+          {article.title}
+        </p>
 
-        <Link
-          href={`/articulos/${article.slug}`}
-          className="mt-1 inline-block text-[12px] font-medium text-[#c8a84b] hover:underline"
-        >
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#a67c27]">
           Ver artículo →
-        </Link>
+        </span>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -135,13 +138,13 @@ function PostBody({ text, textClassName }: { text: string; textClassName: string
 
 function ForoProximamente() {
   return (
-    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
+    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
       <div className="text-center">
-        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#f0ede6] sm:text-[40px]">
-          Foro <span className="text-[#c8a84b]">próximamente</span>
+        <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#2a2620] sm:text-[40px]">
+          Foro <span className="text-[#a67c27]">próximamente</span>
         </h1>
 
-        <p className="mt-4 text-[15px] text-[#f0ede6]/60">
+        <p className="mt-4 text-[15px] text-[#6b6153]">
           Estamos terminando de preparar esta sección. Volvé pronto.
         </p>
       </div>
@@ -272,30 +275,30 @@ export default function ForoPostPage() {
   }
 
   return (
-    <main className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
-      <section className="border-t border-[#c8a84b]/10 px-5 py-12 md:px-12 md:py-16">
+    <main className="mt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
+      <section className="border-t border-[#2a2620]/10 px-5 py-12 md:px-12 md:py-16">
         <div className="mx-auto max-w-[860px]">
-          <Link href="/foro" className="text-[13px] text-[#c8a84b] hover:underline">
+          <Link href="/foro" className="text-[13px] text-[#a67c27] hover:underline">
             ← Volver al foro
           </Link>
 
           {loading && (
-            <p className="mt-8 text-[15px] text-[#f0ede6]/60">Cargando...</p>
+            <p className="mt-8 text-[15px] text-[#6b6153]">Cargando...</p>
           )}
 
           {!loading && post && (
             <>
-              <div className="mt-6 rounded-[28px] border border-[#c8a84b]/10 bg-[#181816] p-6 sm:p-8">
+              <div className="mt-6 rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6 sm:p-8">
                 <div className="flex items-start justify-between gap-4">
                   {editing ? (
                     <input
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="Título"
-                      className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#111110] px-5 py-3.5 text-[20px] font-light text-[#f0ede6] outline-none transition focus:border-[#c8a84b]/60 sm:text-[28px]"
+                      className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#f4ecdf] px-5 py-3.5 text-[20px] font-light text-[#2a2620] outline-none transition focus:border-[#a67c27]/60 sm:text-[28px]"
                     />
                   ) : (
-                    <h1 className="text-[28px] font-light leading-[1.15] tracking-[-0.02em] text-[#f0ede6] sm:text-[36px]">
+                    <h1 className="text-[28px] font-light leading-[1.15] tracking-[-0.02em] text-[#2a2620] sm:text-[36px]">
                       {post.title}
                     </h1>
                   )}
@@ -305,7 +308,7 @@ export default function ForoPostPage() {
                       <button
                         type="button"
                         onClick={handleStartEdit}
-                        className="rounded-full border border-[#c8a84b]/30 px-4 py-1.5 text-[12px] font-medium text-[#c8a84b] transition hover:bg-[#c8a84b]/10"
+                        className="rounded-full border border-[#a67c27]/30 px-4 py-1.5 text-[12px] font-medium text-[#a67c27] transition hover:bg-[#a67c27]/10"
                       >
                         Editar
                       </button>
@@ -313,7 +316,7 @@ export default function ForoPostPage() {
                       <button
                         type="button"
                         onClick={handleDeletePost}
-                        className="rounded-full border border-red-400/30 px-4 py-1.5 text-[12px] font-medium text-red-400 transition hover:bg-red-400/10"
+                        className="rounded-full border border-red-700/30 px-4 py-1.5 text-[12px] font-medium text-red-700 transition hover:bg-red-700/10"
                       >
                         Eliminar
                       </button>
@@ -321,7 +324,7 @@ export default function ForoPostPage() {
                   )}
                 </div>
 
-                <p className="mt-3 text-[13px] text-[#f0ede6]/50">
+                <p className="mt-3 text-[13px] text-[#6b6153]">
                   {authorName(post.author)} · {formatDate(post.createdAt)}
                 </p>
 
@@ -332,17 +335,17 @@ export default function ForoPostPage() {
                       onChange={(e) => setEditContent(e.target.value)}
                       placeholder="Contenido"
                       rows={8}
-                      className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#111110] px-5 py-4 text-[15px] text-[#f0ede6] placeholder:text-[#f0ede6]/40 outline-none transition focus:border-[#c8a84b]/60"
+                      className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#f4ecdf] px-5 py-4 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
                     />
 
-                    {editError && <p className="text-[13px] text-red-400">{editError}</p>}
+                    {editError && <p className="text-[13px] text-red-700">{editError}</p>}
 
                     <div className="flex gap-3">
                       <button
                         type="button"
                         onClick={handleSaveEdit}
                         disabled={editSubmitting || !editTitle.trim() || !editContent.trim()}
-                        className="inline-flex items-center justify-center rounded-full bg-[#c8a84b] px-6 py-3 text-[15px] font-semibold text-[#111110] transition hover:scale-[1.02] hover:bg-[#d8b85b] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded-full bg-[#a67c27] px-6 py-3 text-[15px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {editSubmitting ? "Guardando..." : "Guardar"}
                       </button>
@@ -351,7 +354,7 @@ export default function ForoPostPage() {
                         type="button"
                         onClick={handleCancelEdit}
                         disabled={editSubmitting}
-                        className="inline-flex items-center justify-center rounded-full border border-[#c8a84b]/20 px-6 py-3 text-[15px] font-medium text-[#f0ede6]/70 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded-full border border-[#a67c27]/20 px-6 py-3 text-[15px] font-medium text-[#6b6153] transition hover:bg-[#2a2620]/5 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Cancelar
                       </button>
@@ -360,7 +363,7 @@ export default function ForoPostPage() {
                 ) : (
                   <PostBody
                     text={post.content}
-                    textClassName="mt-6 whitespace-pre-wrap text-[16px] leading-[1.8] text-[#f0ede6]/85"
+                    textClassName="mt-6 whitespace-pre-wrap text-[16px] leading-[1.8] text-[#2a2620]"
                   />
                 )}
 
@@ -369,7 +372,7 @@ export default function ForoPostPage() {
                     {post.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full border border-[#c8a84b]/30 px-3 py-1 text-[11px] font-medium text-[#c8a84b]"
+                        className="rounded-full border border-[#a67c27]/30 px-3 py-1 text-[11px] font-medium text-[#a67c27]"
                       >
                         {tag}
                       </span>
@@ -379,9 +382,9 @@ export default function ForoPostPage() {
               </div>
 
               <div className="mt-10">
-                <h2 className="text-[18px] font-medium text-[#f0ede6]">
+                <h2 className="text-[18px] font-medium text-[#2a2620]">
                   Comentarios{" "}
-                  <span className="text-[#f0ede6]/40">
+                  <span className="text-[#6b6153]">
                     ({post.comments?.length ?? 0})
                   </span>
                 </h2>
@@ -390,11 +393,11 @@ export default function ForoPostPage() {
                   {(post.comments ?? []).map((c: ForumComment) => (
                     <div
                       key={c.id}
-                      className="rounded-2xl border border-[#c8a84b]/10 bg-[#181816] p-5"
+                      className="rounded-2xl border border-[#2a2620]/10 bg-[#faf6ee] p-5"
                     >
                       <div className="flex items-start justify-between gap-4">
-                        <p className="text-[13px] text-[#f0ede6]/50">
-                          <span className="font-medium text-[#f0ede6]/80">
+                        <p className="text-[13px] text-[#6b6153]">
+                          <span className="font-medium text-[#6b6153]">
                             {authorName(c.author)}
                           </span>{" "}
                           · {formatDate(c.createdAt)}
@@ -404,7 +407,7 @@ export default function ForoPostPage() {
                           <button
                             type="button"
                             onClick={() => handleDeleteComment(c.id)}
-                            className="shrink-0 text-[12px] font-medium text-red-400/80 transition hover:text-red-400"
+                            className="shrink-0 text-[12px] font-medium text-red-700/80 transition hover:text-red-700"
                           >
                             Eliminar
                           </button>
@@ -413,13 +416,13 @@ export default function ForoPostPage() {
 
                       <PostBody
                         text={c.content}
-                        textClassName="mt-2 whitespace-pre-wrap text-[14px] leading-[1.7] text-[#f0ede6]/80"
+                        textClassName="mt-2 whitespace-pre-wrap text-[14px] leading-[1.7] text-[#2a2620]"
                       />
                     </div>
                   ))}
 
                   {(post.comments ?? []).length === 0 && (
-                    <p className="text-[14px] text-[#f0ede6]/50">
+                    <p className="text-[14px] text-[#6b6153]">
                       Todavía no hay comentarios. Sé el primero en participar.
                     </p>
                   )}
@@ -433,24 +436,24 @@ export default function ForoPostPage() {
                         onChange={(e) => setComment(e.target.value)}
                         placeholder="Escribí tu comentario..."
                         rows={4}
-                        className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#181816] px-5 py-4 text-[15px] text-[#f0ede6] placeholder:text-[#f0ede6]/40 outline-none transition focus:border-[#c8a84b]/60"
+                        className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#faf6ee] px-5 py-4 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
                       />
 
                       {commentError && (
-                        <p className="text-[13px] text-red-400">{commentError}</p>
+                        <p className="text-[13px] text-red-700">{commentError}</p>
                       )}
 
                       <button
                         type="submit"
                         disabled={submitting || !comment.trim()}
-                        className="inline-flex items-center justify-center rounded-full bg-[#c8a84b] px-6 py-3 text-[15px] font-semibold text-[#111110] transition hover:scale-[1.02] hover:bg-[#d8b85b] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded-full bg-[#a67c27] px-6 py-3 text-[15px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {submitting ? "Publicando..." : "Comentar"}
                       </button>
                     </form>
                   ) : (
-                    <p className="text-[14px] text-[#f0ede6]/60">
-                      <Link href="/login" className="text-[#c8a84b] hover:underline">
+                    <p className="text-[14px] text-[#6b6153]">
+                      <Link href="/login" className="text-[#a67c27] hover:underline">
                         Iniciá sesión
                       </Link>{" "}
                       para dejar un comentario.
