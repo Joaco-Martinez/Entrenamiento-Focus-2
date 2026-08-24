@@ -21,6 +21,7 @@ import {
   X,
   Upload,
   Link as LinkIcon,
+  Check,
 } from "lucide-react";
 
 function formatDate(value?: string | null) {
@@ -85,6 +86,7 @@ export default function AdminArticlesPage() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [copiedSlugId, setCopiedSlugId] = useState<string | null>(null);
 
   const refresh = async (silent = false) => {
     setError(null);
@@ -144,6 +146,16 @@ export default function AdminArticlesPage() {
     setOpenEdit(false);
     setEditing(null);
     await refresh(true);
+  };
+
+  const handleCopySlug = async (a: Article) => {
+    const url = `${window.location.origin}/articulos/${a.slug}`;
+    await navigator.clipboard.writeText(url);
+
+    setCopiedSlugId(a.id);
+    setTimeout(() => {
+      setCopiedSlugId((current) => (current === a.id ? null : current));
+    }, 1500);
   };
 
   const onDelete = async (id: string) => {
@@ -423,10 +435,31 @@ export default function AdminArticlesPage() {
                         </td>
 
                         <td className="px-5 py-4">
-                          <Badge className="border border-white/10 bg-white/5 text-white/70">
-                            <LinkIcon className="h-3 w-3" />
-                            <span className="truncate">{a.slug}</span>
-                          </Badge>
+                          <button
+                            type="button"
+                            onClick={() => handleCopySlug(a)}
+                            title="Copiar URL pública del artículo"
+                          >
+                            <Badge
+                              className={`border transition ${
+                                copiedSlugId === a.id
+                                  ? "border-yellow-400/30 bg-yellow-400/10 text-yellow-200"
+                                  : "border-white/10 bg-white/5 text-white/70 hover:border-yellow-400/30 hover:bg-yellow-400/10 hover:text-yellow-200"
+                              }`}
+                            >
+                              {copiedSlugId === a.id ? (
+                                <>
+                                  <Check className="h-3 w-3" />
+                                  <span className="truncate">Copiado</span>
+                                </>
+                              ) : (
+                                <>
+                                  <LinkIcon className="h-3 w-3" />
+                                  <span className="truncate">{a.slug}</span>
+                                </>
+                              )}
+                            </Badge>
+                          </button>
                         </td>
 
                         <td className="px-5 py-4 text-white/80">{formatDate(a.createdAt)}</td>
