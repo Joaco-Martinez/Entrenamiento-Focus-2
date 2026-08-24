@@ -172,6 +172,7 @@ export default function ForoPostPage() {
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState("")
   const [editContent, setEditContent] = useState("")
+  const [editTags, setEditTags] = useState("")
   const [editSubmitting, setEditSubmitting] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
@@ -211,6 +212,7 @@ export default function ForoPostPage() {
     if (!post) return
     setEditTitle(post.title)
     setEditContent(post.content)
+    setEditTags(post.tags.join(", "))
     setEditError(null)
     setEditing(true)
   }
@@ -228,9 +230,15 @@ export default function ForoPostPage() {
     setEditError(null)
 
     try {
+      const tagsArray = editTags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+
       await forumService.update(post.id, {
         title: editTitle.trim(),
         content: editContent.trim(),
+        tags: tagsArray,
       })
       setEditing(false)
       load()
@@ -336,6 +344,13 @@ export default function ForoPostPage() {
                       placeholder="Contenido"
                       rows={8}
                       className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#f4ecdf] px-5 py-4 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
+                    />
+
+                    <input
+                      value={editTags}
+                      onChange={(e) => setEditTags(e.target.value)}
+                      placeholder="Tags (separados por coma)"
+                      className="w-full rounded-2xl border border-[#a67c27]/20 bg-[#f4ecdf] px-5 py-3.5 text-[15px] text-[#2a2620] placeholder:text-[#6b6153] outline-none transition focus:border-[#a67c27]/60"
                     />
 
                     {editError && <p className="text-[13px] text-red-700">{editError}</p>}
