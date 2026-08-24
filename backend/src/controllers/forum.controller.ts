@@ -30,6 +30,13 @@ export async function createComment(req: AuthedRequest, res: Response) {
   res.status(201).json({ ok: true, comment });
 }
 
+export async function update(req: AuthedRequest, res: Response) {
+  const userId = req.user!.sub;
+  const isAdmin = req.user!.role === "ADMIN";
+  const post = await forumService.updatePost(req.params.id, userId, isAdmin, req.body);
+  res.json({ ok: true, post });
+}
+
 export async function remove(req: AuthedRequest, res: Response) {
   const userId = req.user!.sub;
   const isAdmin = req.user!.role === "ADMIN";

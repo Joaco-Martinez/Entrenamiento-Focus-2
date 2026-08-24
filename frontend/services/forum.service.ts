@@ -35,6 +35,8 @@ export type CreateForumPostDto = {
   tags?: string[]
 }
 
+export type UpdateForumPostDto = Partial<CreateForumPostDto>
+
 export const forumService = {
   /**
    * List all forum posts (public).
@@ -77,6 +79,17 @@ export const forumService = {
       body: JSON.stringify({ content }),
     })
     return data as { comment: ForumComment }
+  },
+
+  /**
+   * Update a post. Requires auth (author or admin).
+   */
+  async update(id: string, dto: UpdateForumPostDto): Promise<{ post: ForumPost }> {
+    const data = await apiFetch(`/forum/posts/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(dto),
+    })
+    return data as { post: ForumPost }
   },
 
   /**

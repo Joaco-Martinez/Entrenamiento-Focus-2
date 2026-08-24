@@ -6,6 +6,8 @@ export const createPostSchema = z.object({
   tags: z.array(z.string()).optional().default([]),
 });
 
+export const updatePostSchema = createPostSchema.partial();
+
 export const createCommentSchema = z.object({
   content: z.string().min(1),
 });

@@ -75,6 +75,21 @@ export async function search(q: string) {
   });
 }
 
+export async function updatePost(postId: string, userId: string, isAdmin: boolean, data: any) {
+  const post = await prisma.forumPost.findUnique({ where: { id: postId } });
+  if (!post) throw new ApiError(404, "Post not found");
+
+  if (!isAdmin && post.authorId !== userId) {
+    throw new ApiError(403, "No autorizado");
+  }
+
+  return prisma.forumPost.update({
+    where: { id: postId },
+    data,
+    include: { author: { select: authorSelect } },
+  });
+}
+
 export async function deletePost(postId: string, userId: string, isAdmin: boolean) {
   const post = await prisma.forumPost.findUnique({ where: { id: postId } });
   if (!post) throw new ApiError(404, "Post not found");

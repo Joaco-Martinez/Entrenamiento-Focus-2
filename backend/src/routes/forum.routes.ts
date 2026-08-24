@@ -4,6 +4,7 @@ import { validateBody } from "../common/middlewares/validate";
 import { authRequired } from "../common/middlewares/authRequired";
 import {
   createPostSchema,
+  updatePostSchema,
   createCommentSchema,
 } from "../schemas/forum.schemas";
 import * as forumController from "../controllers/forum.controller";
@@ -28,6 +29,13 @@ forumRoutes.post(
   authRequired,
   validateBody(createCommentSchema),
   asyncHandler(forumController.createComment)
+);
+
+forumRoutes.put(
+  "/posts/:id",
+  authRequired,
+  validateBody(updatePostSchema),
+  asyncHandler(forumController.update)
 );
 
 forumRoutes.delete(

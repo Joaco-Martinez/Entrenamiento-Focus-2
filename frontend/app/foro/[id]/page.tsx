@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumComment, ForumPost } from "@/services/forum.service"
+import { articlesService, Article } from "@/services/articles.service"
 
 function authorName(author: { firstName: string | null; lastName: string | null } | null | undefined) {
   const name = [author?.firstName, author?.lastName].filter(Boolean).join(" ")
@@ -42,6 +43,96 @@ function linkifyText(text: string) {
   )
 }
 
+function extractArticleSlugs(text: string): string[] {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const matches = text.match(urlRegex) || []
+  const slugs: string[] = []
+
+  matches.forEach((raw) => {
+    try {
+      const url = new URL(raw)
+      if (url.host !== window.location.host) return
+
+      const match = url.pathname.match(/^\/articulos\/([^/]+)\/?$/)
+      if (match) {
+        const slug = decodeURIComponent(match[1])
+        if (!slugs.includes(slug)) slugs.push(slug)
+      }
+    } catch {
+      // URL malformada, se ignora
+    }
+  })
+
+  return slugs
+}
+
+function ArticlePreviewCard({ slug }: { slug: string }) {
+  const [article, setArticle] = useState<Article | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    articlesService
+      .getBySlug(slug)
+      .then(({ article: data }) => {
+        if (!cancelled) setArticle(data)
+      })
+      .catch(() => {
+        // si no se encuentra el artículo, no se muestra la tarjeta
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [slug])
+
+  if (!article) return null
+
+  return (
+    <div className="mt-3 flex items-center gap-3 rounded-2xl border border-[#c8a84b]/15 bg-[#111110] p-3">
+      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#c8a84b]/10 bg-[#181816]">
+        {article.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={article.coverImageUrl}
+            alt={article.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[10px] text-[#f0ede6]/30">
+            Sin imagen
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-medium text-[#f0ede6]">{article.title}</p>
+
+        <Link
+          href={`/articulos/${article.slug}`}
+          className="mt-1 inline-block text-[12px] font-medium text-[#c8a84b] hover:underline"
+        >
+          Ver artículo →
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function PostBody({ text, textClassName }: { text: string; textClassName: string }) {
+  const articleSlugs = extractArticleSlugs(text)
+
+  return (
+    <>
+      <p className={textClassName}>{linkifyText(text)}</p>
+
+      {articleSlugs.map((slug) => (
+        <ArticlePreviewCard key={slug} slug={slug} />
+      ))}
+    </>
+  )
+}
+
 function ForoProximamente() {
   return (
     <main className="mt-16 flex min-h-screen items-center justify-center bg-[#111110] px-6 text-[#f0ede6]">
@@ -75,6 +166,12 @@ export default function ForoPostPage() {
   const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState<string | null>(null)
 
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState("")
+  const [editContent, setEditContent] = useState("")
+  const [editSubmitting, setEditSubmitting] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
   const load = async () => {
     setLoading(true)
     setError(null)
@@ -104,6 +201,40 @@ export default function ForoPostPage() {
       router.push("/foro")
     } catch (e: any) {
       alert(e?.message || "No se pudo eliminar el post")
+    }
+  }
+
+  const handleStartEdit = () => {
+    if (!post) return
+    setEditTitle(post.title)
+    setEditContent(post.content)
+    setEditError(null)
+    setEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setEditing(false)
+    setEditError(null)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!post) return
+    if (!editTitle.trim() || !editContent.trim()) return
+
+    setEditSubmitting(true)
+    setEditError(null)
+
+    try {
+      await forumService.update(post.id, {
+        title: editTitle.trim(),
+        content: editContent.trim(),
+      })
+      setEditing(false)
+      load()
+    } catch (e: any) {
+      setEditError(e?.message || "No se pudo actualizar el post")
+    } finally {
+      setEditSubmitting(false)
     }
   }
 
@@ -156,18 +287,37 @@ export default function ForoPostPage() {
             <>
               <div className="mt-6 rounded-[28px] border border-[#c8a84b]/10 bg-[#181816] p-6 sm:p-8">
                 <div className="flex items-start justify-between gap-4">
-                  <h1 className="text-[28px] font-light leading-[1.15] tracking-[-0.02em] text-[#f0ede6] sm:text-[36px]">
-                    {post.title}
-                  </h1>
+                  {editing ? (
+                    <input
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="Título"
+                      className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#111110] px-5 py-3.5 text-[20px] font-light text-[#f0ede6] outline-none transition focus:border-[#c8a84b]/60 sm:text-[28px]"
+                    />
+                  ) : (
+                    <h1 className="text-[28px] font-light leading-[1.15] tracking-[-0.02em] text-[#f0ede6] sm:text-[36px]">
+                      {post.title}
+                    </h1>
+                  )}
 
-                  {canDelete(post.authorId) && (
-                    <button
-                      type="button"
-                      onClick={handleDeletePost}
-                      className="shrink-0 rounded-full border border-red-400/30 px-4 py-1.5 text-[12px] font-medium text-red-400 transition hover:bg-red-400/10"
-                    >
-                      Eliminar
-                    </button>
+                  {canDelete(post.authorId) && !editing && (
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        onClick={handleStartEdit}
+                        className="rounded-full border border-[#c8a84b]/30 px-4 py-1.5 text-[12px] font-medium text-[#c8a84b] transition hover:bg-[#c8a84b]/10"
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDeletePost}
+                        className="rounded-full border border-red-400/30 px-4 py-1.5 text-[12px] font-medium text-red-400 transition hover:bg-red-400/10"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -175,9 +325,44 @@ export default function ForoPostPage() {
                   {authorName(post.author)} · {formatDate(post.createdAt)}
                 </p>
 
-                <p className="mt-6 whitespace-pre-wrap text-[16px] leading-[1.8] text-[#f0ede6]/85">
-                  {linkifyText(post.content)}
-                </p>
+                {editing ? (
+                  <div className="mt-6 space-y-3">
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      placeholder="Contenido"
+                      rows={8}
+                      className="w-full rounded-2xl border border-[#c8a84b]/20 bg-[#111110] px-5 py-4 text-[15px] text-[#f0ede6] placeholder:text-[#f0ede6]/40 outline-none transition focus:border-[#c8a84b]/60"
+                    />
+
+                    {editError && <p className="text-[13px] text-red-400">{editError}</p>}
+
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={handleSaveEdit}
+                        disabled={editSubmitting || !editTitle.trim() || !editContent.trim()}
+                        className="inline-flex items-center justify-center rounded-full bg-[#c8a84b] px-6 py-3 text-[15px] font-semibold text-[#111110] transition hover:scale-[1.02] hover:bg-[#d8b85b] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {editSubmitting ? "Guardando..." : "Guardar"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        disabled={editSubmitting}
+                        className="inline-flex items-center justify-center rounded-full border border-[#c8a84b]/20 px-6 py-3 text-[15px] font-medium text-[#f0ede6]/70 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <PostBody
+                    text={post.content}
+                    textClassName="mt-6 whitespace-pre-wrap text-[16px] leading-[1.8] text-[#f0ede6]/85"
+                  />
+                )}
 
                 {post.tags?.length > 0 && (
                   <div className="mt-6 flex flex-wrap gap-2">
@@ -226,9 +411,10 @@ export default function ForoPostPage() {
                         )}
                       </div>
 
-                      <p className="mt-2 whitespace-pre-wrap text-[14px] leading-[1.7] text-[#f0ede6]/80">
-                        {linkifyText(c.content)}
-                      </p>
+                      <PostBody
+                        text={c.content}
+                        textClassName="mt-2 whitespace-pre-wrap text-[14px] leading-[1.7] text-[#f0ede6]/80"
+                      />
                     </div>
                   ))}
 
