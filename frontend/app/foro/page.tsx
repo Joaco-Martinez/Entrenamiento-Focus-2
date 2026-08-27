@@ -17,9 +17,10 @@ function ForoProximamente() {
   )
 }
 
-async function fetchInitialPosts(): Promise<ForumPost[]> {
+async function fetchInitialPosts(onlyWithArticle: boolean): Promise<ForumPost[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/forum/posts`, {
+    const qs = onlyWithArticle ? "?articulos=true" : ""
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/forum/posts${qs}`, {
       cache: "no-store",
     })
     if (!res.ok) return []
@@ -30,14 +31,20 @@ async function fetchInitialPosts(): Promise<ForumPost[]> {
   }
 }
 
-export default async function ForoPage() {
+export default async function ForoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tipo?: string }>
+}) {
   const forumEnabled = process.env.NEXT_PUBLIC_SHOW_FORO === "true"
 
   if (!forumEnabled) {
     return <ForoProximamente />
   }
 
-  const initialPosts = await fetchInitialPosts()
+  const { tipo } = await searchParams
+  const onlyArticles = tipo === "articulos"
+  const initialPosts = await fetchInitialPosts(onlyArticles)
 
   return (
     <main className="mt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">

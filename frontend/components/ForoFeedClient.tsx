@@ -1,13 +1,65 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumPost } from "@/services/forum.service"
 import { ForumPostCard } from "@/components/ForumPostCard"
 
+function LoginRequiredModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter()
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#2a2620]/50 px-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="w-full max-w-sm rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6 sm:p-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-[15px] leading-[1.6] text-[#2a2620]">
+          Para crear un aporte a la comunidad de Entrenamiento Focus necesitás iniciar sesión.
+        </p>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            type="button"
+            onClick={() => router.push("/login?redirect=/foro")}
+            className="inline-flex flex-1 items-center justify-center rounded-full bg-[#a67c27] px-5 py-2.5 text-[14px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f]"
+          >
+            Iniciar sesión
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex flex-1 items-center justify-center rounded-full border border-[#a67c27]/20 px-5 py-2.5 text-[14px] font-medium text-[#6b6153] transition hover:bg-[#2a2620]/5"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) {
   const { isAuth } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const onlyArticles = searchParams.get("tipo") === "articulos"
 
   const [posts, setPosts] = useState<ForumPost[]>(initialPosts)
   const [loading, setLoading] = useState(false)
@@ -16,12 +68,16 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
   const [query, setQuery] = useState("")
   const [activeQuery, setActiveQuery] = useState("")
 
-  const loadAll = async () => {
+  const [showLoginModal, setShowLoginModal] = useState(false)
+
+  const runQuery = async (q: string, onlyArt: boolean) => {
     setLoading(true)
     setError(null)
 
     try {
-      const { posts: data } = await forumService.getAll()
+      const { posts: data } = q.trim()
+        ? await forumService.search(q.trim(), { onlyWithArticle: onlyArt })
+        : await forumService.getAll({ onlyWithArticle: onlyArt })
       setPosts(data)
     } catch (e: any) {
       setError(e?.message || "No se pudo cargar el foro")
@@ -30,26 +86,22 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
     }
   }
 
+  // El primer render ya trae initialPosts calculado en el server con el
+  // filtro correcto; solo hace falta refetchear cuando "tipo" cambia
+  // después (link, atrás/adelante del navegador).
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    runQuery(activeQuery, onlyArticles)
+  }, [onlyArticles])
+
   const runSearch = async (q: string) => {
     const trimmed = q.trim()
     setActiveQuery(trimmed)
-
-    if (!trimmed) {
-      loadAll()
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { posts: data } = await forumService.search(trimmed)
-      setPosts(data)
-    } catch (e: any) {
-      setError(e?.message || "No se pudo realizar la búsqueda")
-    } finally {
-      setLoading(false)
-    }
+    await runQuery(trimmed, onlyArticles)
   }
 
   const sortedPosts = [...posts].sort(
@@ -60,8 +112,18 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
     setPosts((prev) => prev.filter((p) => p.id !== postId))
   }
 
+  const handleNewPostClick = () => {
+    if (isAuth) {
+      router.push("/foro/nuevo")
+    } else {
+      setShowLoginModal(true)
+    }
+  }
+
   return (
     <>
+      {showLoginModal && <LoginRequiredModal onClose={() => setShowLoginModal(false)} />}
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[13px] uppercase tracking-[0.3em] text-[#a67c27]">Comunidad</p>
@@ -71,21 +133,24 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
           </h1>
         </div>
 
-        {isAuth ? (
-          <Link
-            href="/foro/nuevo"
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          <button
+            type="button"
+            onClick={handleNewPostClick}
             className="inline-flex w-fit items-center justify-center rounded-full bg-[#a67c27] px-6 py-3 text-[15px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f]"
           >
             Nuevo post
-          </Link>
-        ) : (
-          <p className="text-[14px] text-[#6b6153]">
-            <Link href="/login" className="text-[#a67c27] hover:underline">
-              Iniciá sesión
-            </Link>{" "}
-            para participar del foro.
-          </p>
-        )}
+          </button>
+
+          {!isAuth && (
+            <p className="text-[14px] text-[#6b6153]">
+              <Link href="/login" className="text-[#a67c27] hover:underline">
+                Iniciá sesión
+              </Link>{" "}
+              para participar del foro.
+            </p>
+          )}
+        </div>
       </div>
 
       <form
@@ -115,7 +180,7 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
             onClick={() => {
               setQuery("")
               setActiveQuery("")
-              loadAll()
+              runQuery("", onlyArticles)
             }}
             className="inline-flex items-center justify-center rounded-full px-4 py-3 text-[14px] text-[#6b6153] transition hover:text-[#2a2620]"
           >
@@ -123,6 +188,13 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
           </button>
         )}
       </form>
+
+      <Link
+        href={onlyArticles ? "/foro" : "/foro?tipo=articulos"}
+        className="mt-4 inline-block text-[13px] text-[#a67c27] hover:underline"
+      >
+        {onlyArticles ? "← Ver todo el foro" : "Ver artículos Focus →"}
+      </Link>
 
       {activeQuery && (
         <p className="mt-4 text-[14px] text-[#6b6153]">
@@ -139,6 +211,8 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
           <p className="text-[15px] text-[#6b6153]">
             {activeQuery
               ? "No encontramos posts que coincidan con tu búsqueda."
+              : onlyArticles
+              ? "Todavía no hay posts que enlacen un artículo."
               : "Todavía no hay posts en el foro."}
           </p>
         )}

@@ -61,8 +61,9 @@ async function attachMatchedComments<T extends { id: string; content: string; ti
   return new Map(matches.map((c) => [c.postId, c]));
 }
 
-export async function listPosts() {
+export async function listPosts(options: { onlyWithArticle?: boolean } = {}) {
   return prisma.forumPost.findMany({
+    where: options.onlyWithArticle ? { articleSlug: { not: null } } : undefined,
     orderBy: { createdAt: "desc" },
     include: withFeedComments(),
   });
@@ -157,18 +158,23 @@ export async function createComment(postId: string, authorId: string, data: any)
   });
 }
 
-export async function search(q: string) {
+export async function search(q: string, options: { onlyWithArticle?: boolean } = {}) {
   const posts = await prisma.forumPost.findMany({
     where: {
-      OR: [
-        { title: { contains: q, mode: "insensitive" } },
-        { content: { contains: q, mode: "insensitive" } },
-        { tags: { has: q } },
+      AND: [
         {
-          comments: {
-            some: { content: { contains: q, mode: "insensitive" } },
-          },
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { content: { contains: q, mode: "insensitive" } },
+            { tags: { has: q } },
+            {
+              comments: {
+                some: { content: { contains: q, mode: "insensitive" } },
+              },
+            },
+          ],
         },
+        ...(options.onlyWithArticle ? [{ articleSlug: { not: null } }] : []),
       ],
     },
     orderBy: { createdAt: "desc" },

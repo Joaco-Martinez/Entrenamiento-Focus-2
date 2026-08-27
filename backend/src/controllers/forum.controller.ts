@@ -3,7 +3,8 @@ import { AuthedRequest } from "../common/middlewares/authRequired";
 import * as forumService from "../services/forum.service";
 
 export async function list(req: Request, res: Response) {
-  const posts = await forumService.listPosts();
+  const onlyWithArticle = req.query.articulos === "true";
+  const posts = await forumService.listPosts({ onlyWithArticle });
   res.json({ ok: true, posts });
 }
 
@@ -34,7 +35,8 @@ export async function createArticleComment(req: AuthedRequest, res: Response) {
 
 export async function search(req: Request, res: Response) {
   const q = String(req.query.q ?? "");
-  const posts = await forumService.search(q);
+  const onlyWithArticle = req.query.articulos === "true";
+  const posts = await forumService.search(q, { onlyWithArticle });
   res.json({ ok: true, posts });
 }
 

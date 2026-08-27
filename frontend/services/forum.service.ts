@@ -47,16 +47,22 @@ export const forumService = {
    * List all forum posts (public). Each post carries only its oldest
    * comment plus the total count — call getComments() to load the rest.
    */
-  async getAll(): Promise<{ posts: ForumPost[] }> {
-    const data = await apiFetch(`/forum/posts`)
+  async getAll(options?: { onlyWithArticle?: boolean }): Promise<{ posts: ForumPost[] }> {
+    const qs = options?.onlyWithArticle ? "?articulos=true" : ""
+    const data = await apiFetch(`/forum/posts${qs}`)
     return data as { posts: ForumPost[] }
   },
 
   /**
    * Search posts by keyword, matching title, content, tags or comments.
    */
-  async search(q: string): Promise<{ posts: ForumPost[] }> {
-    const data = await apiFetch(`/forum/search?q=${encodeURIComponent(q)}`)
+  async search(
+    q: string,
+    options?: { onlyWithArticle?: boolean }
+  ): Promise<{ posts: ForumPost[] }> {
+    const params = new URLSearchParams({ q })
+    if (options?.onlyWithArticle) params.set("articulos", "true")
+    const data = await apiFetch(`/forum/search?${params.toString()}`)
     return data as { posts: ForumPost[] }
   },
 
