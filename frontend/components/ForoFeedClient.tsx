@@ -56,6 +56,10 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
+  const handlePostDeleted = (postId: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId))
+  }
+
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -142,7 +146,12 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
         {!loading && sortedPosts.length > 0 && (
           <div className="mx-auto flex max-w-3xl flex-col gap-5">
             {sortedPosts.map((post) => (
-              <ForumPostCard key={post.id} post={post} highlightQuery={activeQuery} />
+              <ForumPostCard
+                key={post.id}
+                post={post}
+                highlightQuery={activeQuery}
+                onDeleted={handlePostDeleted}
+              />
             ))}
           </div>
         )}

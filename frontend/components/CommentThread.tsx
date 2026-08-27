@@ -1,62 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
-import { MoreVertical } from "lucide-react"
+import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { ForumComment } from "@/services/forum.service"
 import { displayAuthorName, formatDateTime, linkifyText } from "@/components/PostBody"
-
-function CommentActionsMenu({ onDelete }: { onDelete: () => void }) {
-  const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [open])
-
-  return (
-    <div ref={containerRef} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Más acciones"
-        aria-expanded={open}
-        className="rounded-full p-1 text-[#6b6153] transition hover:bg-[#2a2620]/5 hover:text-[#2a2620]"
-      >
-        <MoreVertical className="h-4 w-4" />
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-10 mt-1 w-40 overflow-hidden rounded-xl border border-[#2a2620]/10 bg-[#faf6ee] shadow-lg"
-        >
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              setOpen(false)
-              onDelete()
-            }}
-            className="block w-full px-4 py-2.5 text-left text-[13px] font-medium text-red-700 transition hover:bg-red-700/10"
-          >
-            Eliminar
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
+import { ActionsMenu } from "@/components/ActionsMenu"
 
 export function CommentItem({
   comment,
@@ -82,7 +31,9 @@ export function CommentItem({
           · {formatDateTime(comment.createdAt)}
         </p>
 
-        {canDelete && onDelete && <CommentActionsMenu onDelete={onDelete} />}
+        {canDelete && onDelete && (
+          <ActionsMenu items={[{ label: "Eliminar", onClick: onDelete, destructive: true }]} />
+        )}
       </div>
 
       <p className="mt-2 whitespace-pre-wrap text-[14px] leading-[1.7] text-[#2a2620]">
