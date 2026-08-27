@@ -12,6 +12,26 @@ export async function get(req: Request, res: Response) {
   res.json({ ok: true, post });
 }
 
+export async function getComments(req: Request, res: Response) {
+  const comments = await forumService.getPostComments(req.params.id);
+  res.json({ ok: true, comments });
+}
+
+export async function getByArticleSlug(req: Request, res: Response) {
+  const post = await forumService.getCanonicalPostByArticleSlug(req.params.slug);
+  res.json({ ok: true, post });
+}
+
+export async function createArticleComment(req: AuthedRequest, res: Response) {
+  const authorId = req.user!.sub;
+  const { post, comment } = await forumService.addCommentToArticle(
+    req.params.slug,
+    authorId,
+    req.body
+  );
+  res.status(201).json({ ok: true, post, comment });
+}
+
 export async function search(req: Request, res: Response) {
   const q = String(req.query.q ?? "");
   const posts = await forumService.search(q);
