@@ -199,7 +199,10 @@ export function ForumPostCard({
   const visibleComments = commentsExpanded ? comments : comments.slice(0, 1)
 
   return (
-    <div className="rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6">
+    <div
+      id={`post-${post.id}`}
+      className="scroll-mt-24 rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6"
+    >
       <div className="flex items-start justify-between gap-3">
         {editing ? (
           <input

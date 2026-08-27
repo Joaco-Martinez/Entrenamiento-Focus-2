@@ -24,10 +24,12 @@ export default function ArticuloDetallePage() {
   const from = searchParams.get("from");
   const fromPostId = searchParams.get("post");
 
+  // /foro/<id> redirige de vuelta acá cuando el post tiene articleSlug, así
+  // que desde el artículo nunca hay que apuntar ahí: siempre al feed, con
+  // ancla al post cuando lo conocemos.
   const backHref =
-    from === "foro" ? (fromPostId ? `/foro/${fromPostId}` : "/foro") : "/articulos";
-  const backLabel =
-    from === "foro" ? (fromPostId ? "Volver al post" : "Volver al foro") : "Volver a artículos";
+    from === "foro" ? (fromPostId ? `/foro#post-${fromPostId}` : "/foro") : "/articulos";
+  const backLabel = from === "foro" ? "Volver al foro" : "Volver a artículos";
 
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
