@@ -265,6 +265,7 @@ export default function ForoPostPage() {
                   <PostBody
                     text={post.content}
                     textClassName="mt-6 whitespace-pre-wrap text-[16px] leading-[1.8] text-[#2a2620]"
+                    postId={post.id}
                   />
                 )}
 
@@ -322,6 +323,7 @@ export default function ForoPostPage() {
                       <PostBody
                         text={c.content}
                         textClassName="mt-2 whitespace-pre-wrap text-[14px] leading-[1.7] text-[#2a2620]"
+                        postId={post.id}
                       />
                     </div>
                   ))}

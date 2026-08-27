@@ -272,6 +272,7 @@ export default function ForoPage() {
                       text={post.content}
                       textClassName="mt-4 line-clamp-2 text-[14px] leading-[1.6] text-[#6b6153]"
                       highlightQuery={activeQuery}
+                      postId={post.id}
                     />
                   )
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { articlesService, Article } from "@/services/articles.service";
 import { ArrowLeft, Newspaper } from "lucide-react";
 
@@ -18,6 +18,15 @@ function formatDate(value?: string | null) {
 export default function ArticuloDetallePage() {
   const params = useParams();
   const slug = params.slug as string;
+
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const fromPostId = searchParams.get("post");
+
+  const backHref =
+    from === "foro" ? (fromPostId ? `/foro/${fromPostId}` : "/foro") : "/articulos";
+  const backLabel =
+    from === "foro" ? (fromPostId ? "Volver al post" : "Volver al foro") : "Volver a artículos";
 
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,11 +95,11 @@ export default function ArticuloDetallePage() {
     <section className="min-h-screen bg-[#f4ecdf] px-4 py-16 text-[#2a2620] md:py-24">
       <div className="mx-auto max-w-[1180px]">
         <Link
-          href="/articulos"
+          href={backHref}
           className="mb-10 inline-flex items-center gap-2 text-sm font-medium text-[#6b6153] transition hover:text-[#a67c27]"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver a artículos
+          {backLabel}
         </Link>
 
         <article className="mx-auto max-w-[800px]">
