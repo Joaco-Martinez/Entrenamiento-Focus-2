@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumPost } from "@/services/forum.service"
+import { PostBody, extractArticleSlugs } from "@/components/PostBody"
 
 function authorName(author: ForumPost["author"]) {
   const name = [author?.firstName, author?.lastName].filter(Boolean).join(" ")
@@ -220,13 +221,10 @@ export default function ForoPage() {
               <div className="grid gap-5 md:grid-cols-2">
                 {sortedPosts.map((post) => {
                   const matchedComment = findMatchedComment(post, activeQuery)
+                  const hasArticleLink = extractArticleSlugs(post.content).length > 0
 
-                  return (
-                    <Link
-                      key={post.id}
-                      href={`/foro/${post.id}`}
-                      className="group rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6 transition-all duration-300 hover:border-[#a67c27]/40 hover:bg-[#a67c27]/[0.05]"
-                    >
+                  const header = (
+                    <>
                       <h2 className="text-[20px] font-medium leading-tight text-[#2a2620] transition-colors group-hover:text-[#a67c27]">
                         {highlight(post.title, activeQuery)}
                       </h2>
@@ -234,11 +232,11 @@ export default function ForoPage() {
                       <p className="mt-2 text-[13px] text-[#6b6153]">
                         {authorName(post.author)} · {formatDate(post.createdAt)}
                       </p>
+                    </>
+                  )
 
-                      <p className="mt-4 line-clamp-2 text-[14px] leading-[1.6] text-[#6b6153]">
-                        {highlight(post.content, activeQuery)}
-                      </p>
-
+                  const footer = (
+                    <>
                       {matchedComment && (
                         <div className="mt-4 rounded-2xl border border-[#2a2620]/10 bg-[#f4ecdf] p-4">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-[#a67c27]">
@@ -268,6 +266,45 @@ export default function ForoPage() {
                       <p className="mt-4 text-[13px] text-[#6b6153]">
                         {post._count?.comments ?? post.comments?.length ?? 0} comentarios
                       </p>
+                    </>
+                  )
+
+                  const cardBody = (
+                    <PostBody
+                      text={post.content}
+                      textClassName="mt-4 line-clamp-2 text-[14px] leading-[1.6] text-[#6b6153]"
+                      highlightQuery={activeQuery}
+                    />
+                  )
+
+                  if (hasArticleLink) {
+                    return (
+                      <div
+                        key={post.id}
+                        className="group rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6 transition-all duration-300 hover:border-[#a67c27]/40 hover:bg-[#a67c27]/[0.05]"
+                      >
+                        <Link href={`/foro/${post.id}`} className="block">
+                          {header}
+                        </Link>
+
+                        {cardBody}
+
+                        <Link href={`/foro/${post.id}`} className="block">
+                          {footer}
+                        </Link>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <Link
+                      key={post.id}
+                      href={`/foro/${post.id}`}
+                      className="group rounded-[28px] border border-[#2a2620]/10 bg-[#faf6ee] p-6 transition-all duration-300 hover:border-[#a67c27]/40 hover:bg-[#a67c27]/[0.05]"
+                    >
+                      {header}
+                      {cardBody}
+                      {footer}
                     </Link>
                   )
                 })}
