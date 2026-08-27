@@ -115,15 +115,16 @@ export function ForumPostCard({
     }
   }
 
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm("¿Seguro que querés eliminar este comentario?")) return
+  const handleDeleteComment = async (comment: ForumComment) => {
+    const author = displayAuthorName(comment.author)
+    if (!confirm(`¿Eliminar el comentario de ${author}? Esta acción no se puede deshacer.`)) return
 
     const previousComments = comments
-    setComments((prev) => prev.filter((c) => c.id !== commentId))
+    setComments((prev) => prev.filter((c) => c.id !== comment.id))
     setCommentCount((c) => Math.max(0, c - 1))
 
     try {
-      await forumService.removeComment(commentId)
+      await forumService.removeComment(comment.id)
     } catch {
       setComments(previousComments)
       setCommentCount((c) => c + 1)
@@ -193,7 +194,7 @@ export function ForumPostCard({
       {visibleComments.length > 0 && (
         <div className="mt-5 space-y-3">
           {visibleComments.map((c) => (
-            <CommentItem key={c.id} comment={c} onDelete={() => handleDeleteComment(c.id)} />
+            <CommentItem key={c.id} comment={c} onDelete={() => handleDeleteComment(c)} />
           ))}
         </div>
       )}
