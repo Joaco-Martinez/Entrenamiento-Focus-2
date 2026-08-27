@@ -5,12 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumComment, ForumPost } from "@/services/forum.service"
-import { PostBody } from "@/components/PostBody"
-
-function authorName(author: { firstName: string | null; lastName: string | null } | null | undefined) {
-  const name = [author?.firstName, author?.lastName].filter(Boolean).join(" ")
-  return name || "Usuario"
-}
+import { PostBody, extractArticleSlugs, displayAuthorName } from "@/components/PostBody"
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("es-AR", {
@@ -219,7 +214,12 @@ export default function ForoPostPage() {
                 </div>
 
                 <p className="mt-3 text-[13px] text-[#6b6153]">
-                  {authorName(post.author)} · {formatDate(post.createdAt)}
+                  <span className={post.author?.role === "ADMIN" ? "text-[#a67c27]" : undefined}>
+                    {displayAuthorName(post.author, {
+                      isArticlePost: extractArticleSlugs(post.content).length > 0,
+                    })}
+                  </span>{" "}
+                  · {formatDate(post.createdAt)}
                 </p>
 
                 {editing ? (
@@ -298,8 +298,12 @@ export default function ForoPostPage() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <p className="text-[13px] text-[#6b6153]">
-                          <span className="font-medium text-[#6b6153]">
-                            {authorName(c.author)}
+                          <span
+                            className={`font-medium ${
+                              c.author?.role === "ADMIN" ? "text-[#a67c27]" : "text-[#6b6153]"
+                            }`}
+                          >
+                            {displayAuthorName(c.author)}
                           </span>{" "}
                           · {formatDate(c.createdAt)}
                         </p>

@@ -4,6 +4,7 @@ export type ForumAuthor = {
   id: string
   firstName: string | null
   lastName: string | null
+  role?: string
 }
 
 export type ForumComment = {

@@ -4,12 +4,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumPost } from "@/services/forum.service"
-import { PostBody, extractArticleSlugs } from "@/components/PostBody"
-
-function authorName(author: ForumPost["author"]) {
-  const name = [author?.firstName, author?.lastName].filter(Boolean).join(" ")
-  return name || "Usuario"
-}
+import { PostBody, extractArticleSlugs, displayAuthorName } from "@/components/PostBody"
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("es-AR", {
@@ -230,7 +225,10 @@ export default function ForoPage() {
                       </h2>
 
                       <p className="mt-2 text-[13px] text-[#6b6153]">
-                        {authorName(post.author)} · {formatDate(post.createdAt)}
+                        <span className={post.author?.role === "ADMIN" ? "text-[#a67c27]" : undefined}>
+                          {displayAuthorName(post.author, { isArticlePost: hasArticleLink })}
+                        </span>{" "}
+                        · {formatDate(post.createdAt)}
                       </p>
                     </>
                   )
@@ -241,7 +239,7 @@ export default function ForoPage() {
                         <div className="mt-4 rounded-2xl border border-[#2a2620]/10 bg-[#f4ecdf] p-4">
                           <p className="text-[11px] uppercase tracking-[0.2em] text-[#a67c27]">
                             Coincidencia en un comentario de{" "}
-                            {authorName(matchedComment.author)}
+                            {displayAuthorName(matchedComment.author)}
                           </p>
 
                           <p className="mt-2 line-clamp-2 text-[13px] leading-[1.6] text-[#6b6153]">

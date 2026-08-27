@@ -5,6 +5,7 @@ const authorSelect = {
   id: true,
   firstName: true,
   lastName: true,
+  role: true,
 } as const;
 
 export async function listPosts() {

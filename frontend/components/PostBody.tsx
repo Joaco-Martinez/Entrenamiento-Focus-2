@@ -5,6 +5,17 @@ import { useEffect, useState } from "react"
 import { articlesService, Article } from "@/services/articles.service"
 import { Newspaper } from "lucide-react"
 
+export function displayAuthorName(
+  author: { firstName: string | null; lastName: string | null; role?: string } | null | undefined,
+  options: { isArticlePost?: boolean } = {}
+) {
+  if (author?.role === "ADMIN") {
+    return options.isArticlePost ? "Artículo Focus" : "Entrenamiento Focus"
+  }
+  const name = [author?.firstName, author?.lastName].filter(Boolean).join(" ")
+  return name || "Usuario"
+}
+
 function linkifyText(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g
   const parts = text.split(urlRegex)
