@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
-import { forumService, ForumPost } from "@/services/forum.service"
+import { forumService, ForumComment, ForumPost } from "@/services/forum.service"
 import { displayAuthorName, formatDateTime, linkifyText } from "@/components/PostBody"
 import { CommentItem, CommentComposer } from "@/components/CommentThread"
 
@@ -29,7 +29,7 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
   const canDelete = (authorId: string) => isAdmin || user?.id === authorId
 
   const handleDeletePost = async () => {
-    if (!confirm("¿Seguro que querés eliminar este post? Esta acción no se puede deshacer.")) return
+    if (!confirm(`¿Eliminar el post "${post.title}"? Esta acción no se puede deshacer.`)) return
 
     try {
       await forumService.remove(post.id)
@@ -79,11 +79,12 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
     }
   }
 
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm("¿Seguro que querés eliminar este comentario?")) return
+  const handleDeleteComment = async (comment: ForumComment) => {
+    const author = displayAuthorName(comment.author)
+    if (!confirm(`¿Eliminar el comentario de ${author}? Esta acción no se puede deshacer.`)) return
 
     try {
-      await forumService.removeComment(commentId)
+      await forumService.removeComment(comment.id)
       await reload()
     } catch (e: any) {
       alert(e?.message || "No se pudo eliminar el comentario")
@@ -119,7 +120,7 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
               )}
 
               {canDelete(post.authorId) && !editing && (
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 items-center gap-8">
                   <button
                     type="button"
                     onClick={handleStartEdit}
@@ -131,7 +132,7 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
                   <button
                     type="button"
                     onClick={handleDeletePost}
-                    className="rounded-full border border-red-700/30 px-4 py-1.5 text-[12px] font-medium text-red-700 transition hover:bg-red-700/10"
+                    className="text-[12px] font-medium text-red-700/60 underline-offset-2 transition hover:text-red-700 hover:underline"
                   >
                     Eliminar
                   </button>
@@ -213,7 +214,7 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
 
             <div className="mt-5 space-y-4">
               {(post.comments ?? []).map((c) => (
-                <CommentItem key={c.id} comment={c} onDelete={() => handleDeleteComment(c.id)} />
+                <CommentItem key={c.id} comment={c} onDelete={() => handleDeleteComment(c)} />
               ))}
 
               {(post.comments ?? []).length === 0 && (

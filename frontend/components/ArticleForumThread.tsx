@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { forumService, ForumPost } from "@/services/forum.service"
+import { forumService, ForumPost, ForumComment } from "@/services/forum.service"
 import { CommentItem, CommentComposer } from "@/components/CommentThread"
+import { displayAuthorName } from "@/components/PostBody"
 
 export function ArticleForumThread({ slug }: { slug: string }) {
   const [post, setPost] = useState<ForumPost | null>(null)
@@ -26,11 +27,12 @@ export function ArticleForumThread({ slug }: { slug: string }) {
     await load()
   }
 
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm("¿Seguro que querés eliminar este comentario?")) return
+  const handleDeleteComment = async (comment: ForumComment) => {
+    const author = displayAuthorName(comment.author)
+    if (!confirm(`¿Eliminar el comentario de ${author}? Esta acción no se puede deshacer.`)) return
 
     try {
-      await forumService.removeComment(commentId)
+      await forumService.removeComment(comment.id)
       await load()
     } catch (e: any) {
       alert(e?.message || "No se pudo eliminar el comentario")
@@ -55,7 +57,7 @@ export function ArticleForumThread({ slug }: { slug: string }) {
 
       <div className="mt-5 space-y-4">
         {comments.map((c) => (
-          <CommentItem key={c.id} comment={c} onDelete={() => handleDeleteComment(c.id)} />
+          <CommentItem key={c.id} comment={c} onDelete={() => handleDeleteComment(c)} />
         ))}
 
         {comments.length === 0 && (
