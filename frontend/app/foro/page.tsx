@@ -213,7 +213,7 @@ export default function ForoPage() {
             )}
 
             {!loading && sortedPosts.length > 0 && (
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="mx-auto flex max-w-3xl flex-col gap-5">
                 {sortedPosts.map((post) => {
                   const matchedComment = findMatchedComment(post, activeQuery)
                   const hasArticleLink = extractArticleSlugs(post.content).length > 0
