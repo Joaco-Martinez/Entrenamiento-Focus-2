@@ -15,7 +15,18 @@ forumRoutes.get("/posts", asyncHandler(forumController.list));
 
 forumRoutes.get("/search", asyncHandler(forumController.search));
 
+forumRoutes.get("/by-article/:slug", asyncHandler(forumController.getByArticleSlug));
+
+forumRoutes.post(
+  "/by-article/:slug/comments",
+  authRequired,
+  validateBody(createCommentSchema),
+  asyncHandler(forumController.createArticleComment)
+);
+
 forumRoutes.get("/posts/:id", asyncHandler(forumController.get));
+
+forumRoutes.get("/posts/:id/comments", asyncHandler(forumController.getComments));
 
 forumRoutes.post(
   "/posts",
