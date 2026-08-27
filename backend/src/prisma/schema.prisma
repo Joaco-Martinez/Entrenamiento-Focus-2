@@ -316,19 +316,17 @@ model ServiceRequest {
 }
 
 model ForumPost {
-  id          String   @id @default(uuid())
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  title       String
-  content     String
-  tags        String[] @default([])
-  articleSlug String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  comments    ForumComment[]
+  id        String   @id @default(uuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  title     String
+  content   String
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comments  ForumComment[]
 
   @@index([authorId])
-  @@index([articleSlug])
 }
 
 model ForumComment {

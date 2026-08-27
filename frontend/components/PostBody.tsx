@@ -16,17 +16,7 @@ export function displayAuthorName(
   return name || "Usuario"
 }
 
-export function formatDateTime(value: string) {
-  return new Date(value).toLocaleDateString("es-AR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-}
-
-export function linkifyText(text: string) {
+function linkifyText(text: string) {
   const urlRegex = /(https?:\/\/[^\s]+)/g
   const parts = text.split(urlRegex)
 
@@ -47,29 +37,47 @@ export function linkifyText(text: string) {
   )
 }
 
-/**
- * Removes the raw URL that points to the given article slug from the
- * displayed text: the preview card already links there, showing the bare
- * URL too is redundant.
- */
-export function stripArticleUrl(text: string, slug: string): string {
-  const urlRegex = /https?:\/\/[^\s]+/g
+function highlightMatch(text: string, query: string) {
+  if (!query.trim()) return text
 
-  return text
-    .replace(urlRegex, (raw) => {
-      try {
-        const url = new URL(raw)
-        const match = url.pathname.match(/^\/articulos\/([^/?#]+)\/?$/)
-        if (match && decodeURIComponent(match[1]) === slug) return ""
-        return raw
-      } catch {
-        return raw
-      }
-    })
-    .trim()
+  const idx = text.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return text
+
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="rounded bg-[#a67c27]/25 px-0.5 text-[#2a2620]">
+        {text.slice(idx, idx + query.length)}
+      </mark>
+      {text.slice(idx + query.length)}
+    </>
+  )
 }
 
-export function ArticlePreviewCard({ slug, postId }: { slug: string; postId?: string }) {
+export function extractArticleSlugs(text: string): string[] {
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const matches = text.match(urlRegex) || []
+  const slugs: string[] = []
+
+  matches.forEach((raw) => {
+    try {
+      const url = new URL(raw)
+      if (url.host !== window.location.host) return
+
+      const match = url.pathname.match(/^\/articulos\/([^/]+)\/?$/)
+      if (match) {
+        const slug = decodeURIComponent(match[1])
+        if (!slugs.includes(slug)) slugs.push(slug)
+      }
+    } catch {
+      // URL malformada, se ignora
+    }
+  })
+
+  return slugs
+}
+
+function ArticlePreviewCard({ slug, postId }: { slug: string; postId?: string }) {
   const [article, setArticle] = useState<Article | null>(null)
 
   useEffect(() => {
@@ -123,5 +131,31 @@ export function ArticlePreviewCard({ slug, postId }: { slug: string; postId?: st
         </span>
       </div>
     </Link>
+  )
+}
+
+export function PostBody({
+  text,
+  textClassName,
+  highlightQuery,
+  postId,
+}: {
+  text: string
+  textClassName: string
+  highlightQuery?: string
+  postId?: string
+}) {
+  const articleSlugs = extractArticleSlugs(text)
+
+  return (
+    <>
+      <p className={textClassName}>
+        {highlightQuery !== undefined ? highlightMatch(text, highlightQuery) : linkifyText(text)}
+      </p>
+
+      {articleSlugs.map((slug) => (
+        <ArticlePreviewCard key={slug} slug={slug} postId={postId} />
+      ))}
+    </>
   )
 }

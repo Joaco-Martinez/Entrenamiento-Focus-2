@@ -24,14 +24,10 @@ export type ForumPost = {
   title: string
   content: string
   tags: string[]
-  articleSlug: string | null
   createdAt: string
   updatedAt: string
   _count?: { comments: number }
-  /** In feed/search responses: only the oldest comment (see commentCount for the total). */
   comments?: ForumComment[]
-  /** Only present in search results, when the match was found inside a comment. */
-  matchedComment?: ForumComment | null
 }
 
 export type CreateForumPostDto = {
@@ -44,8 +40,7 @@ export type UpdateForumPostDto = Partial<CreateForumPostDto>
 
 export const forumService = {
   /**
-   * List all forum posts (public). Each post carries only its oldest
-   * comment plus the total count — call getComments() to load the rest.
+   * List all forum posts (public).
    */
   async getAll(): Promise<{ posts: ForumPost[] }> {
     const data = await apiFetch(`/forum/posts`)
@@ -63,38 +58,6 @@ export const forumService = {
   async getById(id: string): Promise<{ post: ForumPost }> {
     const data = await apiFetch(`/forum/posts/${id}`)
     return data as { post: ForumPost }
-  },
-
-  /**
-   * All comments for a post, oldest first. Used to expand a feed card.
-   */
-  async getComments(postId: string): Promise<{ comments: ForumComment[] }> {
-    const data = await apiFetch(`/forum/posts/${postId}/comments`)
-    return data as { comments: ForumComment[] }
-  },
-
-  /**
-   * The canonical (oldest) forum post linked to an article, with its full
-   * comment thread. Null if no post links that article yet.
-   */
-  async getByArticleSlug(slug: string): Promise<{ post: ForumPost | null }> {
-    const data = await apiFetch(`/forum/by-article/${encodeURIComponent(slug)}`)
-    return data as { post: ForumPost | null }
-  },
-
-  /**
-   * Comment on an article. Requires auth. Attaches to the canonical post
-   * for that slug, creating it first if none exists yet.
-   */
-  async addArticleComment(
-    slug: string,
-    content: string
-  ): Promise<{ post: ForumPost; comment: ForumComment }> {
-    const data = await apiFetch(`/forum/by-article/${encodeURIComponent(slug)}/comments`, {
-      method: "POST",
-      body: JSON.stringify({ content }),
-    })
-    return data as { post: ForumPost; comment: ForumComment }
   },
 
   /**
