@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { articlesService, Article } from "@/services/articles.service";
+import { ArticleForumThread } from "@/components/ArticleForumThread";
 import { ArrowLeft, Newspaper } from "lucide-react";
 
 function formatDate(value?: string | null) {
@@ -140,6 +141,8 @@ export default function ArticuloDetallePage() {
               ))}
           </div>
         </article>
+
+        <ArticleForumThread slug={article.slug} />
       </div>
     </section>
   );
