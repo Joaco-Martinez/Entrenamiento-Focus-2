@@ -12,9 +12,19 @@ export type ForumComment = {
   postId: string
   authorId: string
   author: ForumAuthor
-  content: string
+  content: string | null
+  audioUrl: string | null
+  audioDuration: number | null
+  /** Onda del reproductor (48 valores 0-100). Vacío en comentarios viejos. */
+  audioPeaks: number[]
   createdAt: string
   updatedAt: string
+}
+
+/** Un comentario nuevo: texto, audio, o los dos (nunca ninguno). */
+export type NewCommentInput = {
+  content?: string
+  audio?: { blob: Blob; mimeType: string; peaks?: number[] }
 }
 
 export type ForumPost = {
@@ -41,6 +51,30 @@ export type CreateForumPostDto = {
 }
 
 export type UpdateForumPostDto = Partial<CreateForumPostDto>
+
+function audioExtension(mimeType: string): string {
+  if (mimeType.includes("mp4")) return "m4a"
+  if (mimeType.includes("ogg")) return "ogg"
+  if (mimeType.includes("wav")) return "wav"
+  return "webm"
+}
+
+function buildCommentBody(input: NewCommentInput): BodyInit {
+  if (input.audio) {
+    const formData = new FormData()
+    if (input.content) formData.append("content", input.content)
+    formData.append(
+      "audio",
+      input.audio.blob,
+      `voice-note.${audioExtension(input.audio.mimeType)}`
+    )
+    if (input.audio.peaks && input.audio.peaks.length) {
+      formData.append("audioPeaks", JSON.stringify(input.audio.peaks))
+    }
+    return formData
+  }
+  return JSON.stringify({ content: input.content })
+}
 
 export const forumService = {
   /**
@@ -94,11 +128,11 @@ export const forumService = {
    */
   async addArticleComment(
     slug: string,
-    content: string
+    input: NewCommentInput
   ): Promise<{ post: ForumPost; comment: ForumComment }> {
     const data = await apiFetch(`/forum/by-article/${encodeURIComponent(slug)}/comments`, {
       method: "POST",
-      body: JSON.stringify({ content }),
+      body: buildCommentBody(input),
     })
     return data as { post: ForumPost; comment: ForumComment }
   },
@@ -117,10 +151,13 @@ export const forumService = {
   /**
    * Add a comment to a post. Requires auth.
    */
-  async addComment(postId: string, content: string): Promise<{ comment: ForumComment }> {
+  async addComment(
+    postId: string,
+    input: NewCommentInput
+  ): Promise<{ comment: ForumComment }> {
     const data = await apiFetch(`/forum/posts/${postId}/comments`, {
       method: "POST",
-      body: JSON.stringify({ content }),
+      body: buildCommentBody(input),
     })
     return data as { comment: ForumComment }
   },

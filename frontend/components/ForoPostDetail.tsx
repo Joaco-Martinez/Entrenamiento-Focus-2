@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
-import { forumService, ForumComment, ForumPost } from "@/services/forum.service"
+import { forumService, ForumComment, ForumPost, NewCommentInput } from "@/services/forum.service"
 import { displayAuthorName, formatDateTime, linkifyText } from "@/components/PostBody"
 import { CommentItem, CommentComposer } from "@/components/CommentThread"
 
@@ -91,8 +91,8 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
     }
   }
 
-  const handleAddComment = async (content: string) => {
-    await forumService.addComment(post.id, content)
+  const handleAddComment = async (input: NewCommentInput) => {
+    await forumService.addComment(post.id, input)
     await reload()
   }
 

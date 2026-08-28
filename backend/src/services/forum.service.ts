@@ -1,6 +1,7 @@
 import { prisma } from "../prisma/client";
 import { ApiError } from "../common/errors/ApiError";
 import { extractArticleSlugFromText } from "../common/utils/articleLink";
+import { cloudinary } from "../config/cloudinary";
 
 const authorSelect = {
   id: true,
@@ -19,6 +20,35 @@ async function resolveArticleSlug(content: string): Promise<string | null> {
   });
 
   return article ? article.slug : null;
+}
+
+/**
+ * Sube una nota de voz a Cloudinary (resource_type "video": así es como
+ * Cloudinary maneja audio, no existe un tipo "audio" separado) y devuelve la
+ * URL y duración reales que Cloudinary calculó — nunca se confía en un dato
+ * de duración mandado por el cliente.
+ */
+async function uploadCommentAudio(
+  file: Express.Multer.File | undefined
+): Promise<{ audioUrl?: string; audioDuration?: number }> {
+  if (!file) return {};
+
+  const uploaded = await new Promise<any>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "foro/audios", resource_type: "video" },
+      (err, result) => {
+        if (err || !result) return reject(err);
+        resolve(result);
+      }
+    );
+    stream.end(file.buffer);
+  });
+
+  return {
+    audioUrl: uploaded.secure_url,
+    audioDuration:
+      typeof uploaded.duration === "number" ? Math.round(uploaded.duration) : undefined,
+  };
 }
 
 /**
@@ -111,9 +141,55 @@ export async function getCanonicalPostByArticleSlug(slug: string) {
   });
 }
 
-export async function addCommentToArticle(slug: string, authorId: string, data: any) {
+const WAVEFORM_BARS = 48;
+
+/**
+ * audioPeaks es puramente decorativo (la onda del reproductor) y lo calcula
+ * el navegador al grabar — nunca se re-decodifica el audio acá. Solo se
+ * sanea la forma: array de hasta 48 enteros 0-100.
+ */
+function parseAudioPeaks(raw: unknown): number[] {
+  if (typeof raw !== "string" || !raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .slice(0, WAVEFORM_BARS)
+      .map((v) => Math.max(0, Math.min(100, Math.round(Number(v) || 0))));
+  } catch {
+    return [];
+  }
+}
+
+async function buildCommentCreateData(data: any, file: Express.Multer.File | undefined) {
+  const { audioUrl, audioDuration } = await uploadCommentAudio(file);
+  const content =
+    typeof data.content === "string" && data.content.trim() ? data.content.trim() : null;
+
+  if (!content && !audioUrl) {
+    throw new ApiError(400, "El comentario no puede estar vacío: escribí algo o grabá un audio.");
+  }
+
+  return {
+    content,
+    audioUrl: audioUrl ?? null,
+    audioDuration: audioDuration ?? null,
+    audioPeaks: audioUrl ? parseAudioPeaks(data.audioPeaks) : [],
+  };
+}
+
+export async function addCommentToArticle(
+  slug: string,
+  authorId: string,
+  data: any,
+  file?: Express.Multer.File
+) {
   const article = await prisma.article.findUnique({ where: { slug } });
   if (!article) throw new ApiError(404, "Article not found");
+
+  // Se valida/sube el audio antes de tocar la base, para no dejar un post
+  // canónico huérfano si el comentario termina siendo inválido.
+  const commentData = await buildCommentCreateData(data, file);
 
   let post = await prisma.forumPost.findFirst({
     where: { articleSlug: slug },
@@ -132,7 +208,7 @@ export async function addCommentToArticle(slug: string, authorId: string, data: 
   }
 
   const comment = await prisma.forumComment.create({
-    data: { ...data, postId: post.id, authorId },
+    data: { ...commentData, postId: post.id, authorId },
     include: { author: { select: authorSelect } },
   });
 
@@ -148,12 +224,19 @@ export async function createPost(authorId: string, data: any) {
   });
 }
 
-export async function createComment(postId: string, authorId: string, data: any) {
+export async function createComment(
+  postId: string,
+  authorId: string,
+  data: any,
+  file?: Express.Multer.File
+) {
   const post = await prisma.forumPost.findUnique({ where: { id: postId } });
   if (!post) throw new ApiError(404, "Post not found");
 
+  const commentData = await buildCommentCreateData(data, file);
+
   return prisma.forumComment.create({
-    data: { ...data, postId, authorId },
+    data: { ...commentData, postId, authorId },
     include: { author: { select: authorSelect } },
   });
 }

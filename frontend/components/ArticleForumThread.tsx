@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { forumService, ForumPost, ForumComment } from "@/services/forum.service"
+import { forumService, ForumPost, ForumComment, NewCommentInput } from "@/services/forum.service"
 import { CommentItem, CommentComposer } from "@/components/CommentThread"
 import { displayAuthorName } from "@/components/PostBody"
 
@@ -22,8 +22,8 @@ export function ArticleForumThread({ slug }: { slug: string }) {
     load()
   }, [slug])
 
-  const handleAddComment = async (content: string) => {
-    await forumService.addArticleComment(slug, content)
+  const handleAddComment = async (input: NewCommentInput) => {
+    await forumService.addArticleComment(slug, input)
     await load()
   }
 

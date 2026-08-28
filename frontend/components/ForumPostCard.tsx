@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
-import { forumService, ForumPost, ForumComment } from "@/services/forum.service"
+import { forumService, ForumPost, ForumComment, NewCommentInput } from "@/services/forum.service"
 import {
   displayAuthorName,
   formatDateTime,
@@ -92,33 +92,42 @@ export function ForumPostCard({
     }
   }
 
-  const handleAddComment = async (content: string) => {
-    const tempId = `temp-${Date.now()}`
-    const optimistic: ForumComment = {
-      id: tempId,
-      postId: post.id,
-      authorId: user?.id ?? "",
-      author: {
-        id: user?.id ?? "",
-        firstName: user?.firstName ?? null,
-        lastName: user?.lastName ?? null,
-        role: user?.role,
-      },
-      content,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
+  const handleAddComment = async (input: NewCommentInput) => {
     const previousComments = comments
     const previousCount = commentCount
     const previousExpanded = commentsExpanded
 
-    setComments((prev) => [...prev, optimistic])
+    // Optimistic solo para texto: un audio recién grabado no tiene URL
+    // todavía (se sube recién al enviar), así que no hay nada que mostrar
+    // de antemano. Igual queda expandido para que el resultado real aparezca
+    // apenas termine de subir.
+    let tempId: string | null = null
+    if (input.content) {
+      tempId = `temp-${Date.now()}`
+      const optimistic: ForumComment = {
+        id: tempId,
+        postId: post.id,
+        authorId: user?.id ?? "",
+        author: {
+          id: user?.id ?? "",
+          firstName: user?.firstName ?? null,
+          lastName: user?.lastName ?? null,
+          role: user?.role,
+        },
+        content: input.content,
+        audioUrl: null,
+        audioDuration: null,
+        audioPeaks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      setComments((prev) => [...prev, optimistic])
+      setCommentCount((c) => c + 1)
+    }
     setCommentsExpanded(true)
-    setCommentCount((c) => c + 1)
 
     try {
-      await forumService.addComment(post.id, content)
+      await forumService.addComment(post.id, input)
       const { comments: all } = await forumService.getComments(post.id)
       setComments(all)
       setCommentCount(all.length)

@@ -332,14 +332,17 @@ model ForumPost {
 }
 
 model ForumComment {
-  id        String    @id @default(uuid())
-  postId    String
-  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User      @relation(fields: [authorId], references: [id])
-  content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String    @id @default(uuid())
+  postId        String
+  post          ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  content       String?
+  audioUrl      String?
+  audioDuration Int?
+  audioPeaks    Int[]     @default([])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([postId])
   @@index([authorId])

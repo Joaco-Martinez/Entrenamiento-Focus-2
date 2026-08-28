@@ -28,7 +28,8 @@ export async function createArticleComment(req: AuthedRequest, res: Response) {
   const { post, comment } = await forumService.addCommentToArticle(
     req.params.slug,
     authorId,
-    req.body
+    req.body,
+    req.file
   );
   res.status(201).json({ ok: true, post, comment });
 }
@@ -48,7 +49,12 @@ export async function create(req: AuthedRequest, res: Response) {
 
 export async function createComment(req: AuthedRequest, res: Response) {
   const authorId = req.user!.sub;
-  const comment = await forumService.createComment(req.params.id, authorId, req.body);
+  const comment = await forumService.createComment(
+    req.params.id,
+    authorId,
+    req.body,
+    req.file
+  );
   res.status(201).json({ ok: true, comment });
 }
 
