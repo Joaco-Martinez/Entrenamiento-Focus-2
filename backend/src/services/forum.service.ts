@@ -30,7 +30,7 @@ async function resolveArticleSlug(content: string): Promise<string | null> {
  */
 async function uploadCommentAudio(
   file: Express.Multer.File | undefined
-): Promise<{ audioUrl?: string; audioDuration?: number }> {
+): Promise<{ audioUrl?: string; audioDuration?: number; audioPublicId?: string }> {
   if (!file) return {};
 
   const uploaded = await new Promise<any>((resolve, reject) => {
@@ -46,6 +46,7 @@ async function uploadCommentAudio(
 
   return {
     audioUrl: uploaded.secure_url,
+    audioPublicId: uploaded.public_id,
     audioDuration:
       typeof uploaded.duration === "number" ? Math.round(uploaded.duration) : undefined,
   };
@@ -162,7 +163,7 @@ function parseAudioPeaks(raw: unknown): number[] {
 }
 
 async function buildCommentCreateData(data: any, file: Express.Multer.File | undefined) {
-  const { audioUrl, audioDuration } = await uploadCommentAudio(file);
+  const { audioUrl, audioDuration, audioPublicId } = await uploadCommentAudio(file);
   const content =
     typeof data.content === "string" && data.content.trim() ? data.content.trim() : null;
 
@@ -173,6 +174,7 @@ async function buildCommentCreateData(data: any, file: Express.Multer.File | und
   return {
     content,
     audioUrl: audioUrl ?? null,
+    audioPublicId: audioPublicId ?? null,
     audioDuration: audioDuration ?? null,
     audioPeaks: audioUrl ? parseAudioPeaks(data.audioPeaks) : [],
   };
@@ -290,6 +292,23 @@ export async function updatePost(postId: string, userId: string, isAdmin: boolea
   });
 }
 
+/**
+ * Best-effort: nunca tira. Un problema de red/credenciales con Cloudinary no
+ * puede impedir borrar un post o comentario del foro — solo queda logueado.
+ */
+async function destroyCommentAudio(comment: { id: string; audioPublicId: string | null }) {
+  if (!comment.audioPublicId) return;
+
+  try {
+    await cloudinary.uploader.destroy(comment.audioPublicId, { resource_type: "video" });
+  } catch (err) {
+    console.error(
+      `No se pudo borrar de Cloudinary el audio del comentario ${comment.id} (public_id=${comment.audioPublicId}):`,
+      err
+    );
+  }
+}
+
 export async function deletePost(postId: string, userId: string, isAdmin: boolean) {
   const post = await prisma.forumPost.findUnique({ where: { id: postId } });
   if (!post) throw new ApiError(404, "Post not found");
@@ -298,6 +317,15 @@ export async function deletePost(postId: string, userId: string, isAdmin: boolea
     throw new ApiError(403, "No autorizado");
   }
 
+  const commentsWithAudio = await prisma.forumComment.findMany({
+    where: { postId, audioPublicId: { not: null } },
+    select: { id: true, audioPublicId: true },
+  });
+
+  await Promise.all(commentsWithAudio.map((c) => destroyCommentAudio(c)));
+
+  // ForumComment.post tiene onDelete: Cascade — borrar el post ya borra sus
+  // comentarios en la base.
   return prisma.forumPost.delete({ where: { id: postId } });
 }
 
@@ -308,6 +336,8 @@ export async function deleteComment(commentId: string, userId: string, isAdmin: 
   if (!isAdmin && comment.authorId !== userId) {
     throw new ApiError(403, "No autorizado");
   }
+
+  await destroyCommentAudio(comment);
 
   return prisma.forumComment.delete({ where: { id: commentId } });
 }

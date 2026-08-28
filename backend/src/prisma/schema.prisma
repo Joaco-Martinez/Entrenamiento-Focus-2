@@ -339,6 +339,7 @@ model ForumComment {
   author        User      @relation(fields: [authorId], references: [id])
   content       String?
   audioUrl      String?
+  audioPublicId String?
   audioDuration Int?
   audioPeaks    Int[]     @default([])
   createdAt     DateTime  @default(now())
