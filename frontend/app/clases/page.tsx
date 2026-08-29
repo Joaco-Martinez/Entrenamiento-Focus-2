@@ -13,9 +13,9 @@ function formatUsd(value?: number | null) {
   return `US$${value.toLocaleString("en-US")}`;
 }
 
-function formatArs(value?: number | null) {
+function formatArsEquivalent(value?: number | null) {
   if (!value) return null;
-  return `$${value.toLocaleString("es-AR")}`;
+  return `≈ $${value.toLocaleString("es-AR")} ARS con Mercado Pago`;
 }
 
 function formatDuration(seconds?: number | null) {
@@ -134,11 +134,11 @@ export default function ClasesPage() {
                           <div className="flex items-center justify-between pt-1">
                             <div className="flex flex-col">
                               <span className="text-2xl font-extrabold text-primary">
-                                {formatUsd(item.usdPrice) ?? formatArs(item.arPrice)}
+                                {formatUsd(item.usdPrice)}
                               </span>
-                              {formatUsd(item.usdPrice) && formatArs(item.arPrice) ? (
+                              {formatArsEquivalent(item.arPrice) ? (
                                 <span className="text-xs text-muted-foreground">
-                                  {formatArs(item.arPrice)}
+                                  {formatArsEquivalent(item.arPrice)}
                                 </span>
                               ) : null}
                             </div>

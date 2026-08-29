@@ -339,8 +339,8 @@ function ClaseModal({
 }) {
   const [titleValue, setTitleValue] = useState(claseItem?.title ?? "");
   const [description, setDescription] = useState(claseItem?.description ?? "");
-  const [usdPrice, setUsdPrice] = useState<number>(claseItem?.usdPrice ?? 0);
-  const [arPrice, setArPrice] = useState<number>(claseItem?.arPrice ?? 0);
+  const [usdPrice, setUsdPrice] = useState<number | "">(claseItem?.usdPrice || "");
+  const [arPrice, setArPrice] = useState<number | "">(claseItem?.arPrice || "");
 
   const [coverImageUrl, setCoverImageUrl] = useState<string | null | undefined>(
     claseItem?.coverImageUrl
@@ -355,13 +355,13 @@ function ClaseModal({
     if (!titleValue.trim() || titleValue.trim().length < 2) {
       return "El título debe tener al menos 2 caracteres.";
     }
-    if (!Number.isFinite(usdPrice) || usdPrice < 0) {
+    if (usdPrice !== "" && (!Number.isFinite(Number(usdPrice)) || Number(usdPrice) < 0)) {
       return "El precio USD debe ser 0 o mayor.";
     }
-    if (!Number.isFinite(arPrice) || arPrice < 0) {
+    if (arPrice !== "" && (!Number.isFinite(Number(arPrice)) || Number(arPrice) < 0)) {
       return "El precio ARS debe ser 0 o mayor.";
     }
-    if (usdPrice <= 0 && arPrice <= 0) {
+    if ((usdPrice === "" || Number(usdPrice) <= 0) && (arPrice === "" || Number(arPrice) <= 0)) {
       return "Cargá al menos un precio (USD o ARS) para que se pueda comprar.";
     }
     return null;
@@ -380,8 +380,8 @@ function ClaseModal({
       const dto: CreateClassDto = {
         title: titleValue.trim(),
         description: description.trim() || undefined,
-        usdPrice: Number(usdPrice),
-        arPrice: Number(arPrice),
+        usdPrice: usdPrice === "" ? 0 : Number(usdPrice),
+        arPrice: arPrice === "" ? 0 : Number(arPrice),
       };
 
       await onSubmit(dto);
@@ -502,11 +502,14 @@ function ClaseModal({
                         </label>
                         <input
                           value={usdPrice}
-                          onChange={(e) => setUsdPrice(Number(e.target.value))}
+                          onChange={(e) =>
+                            setUsdPrice(e.target.value === "" ? "" : Number(e.target.value))
+                          }
                           type="number"
                           step="1"
                           min={0}
-                          className="h-12 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
+                          placeholder="10"
+                          className="h-12 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none transition placeholder:text-white/30 focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
                         />
                       </div>
 
@@ -516,14 +519,17 @@ function ClaseModal({
                         </label>
                         <input
                           value={arPrice}
-                          onChange={(e) => setArPrice(Number(e.target.value))}
+                          onChange={(e) =>
+                            setArPrice(e.target.value === "" ? "" : Number(e.target.value))
+                          }
                           type="number"
                           step="1"
                           min={0}
-                          className="h-12 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
+                          placeholder="10000"
+                          className="h-12 w-full rounded-2xl border border-white/10 bg-black/40 px-4 text-white outline-none transition placeholder:text-white/30 focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
                         />
                         <p className="mt-2 text-xs text-white/45">
-                          Si lo dejás en 0, la clase no se puede comprar por
+                          Si lo dejás vacío, la clase no se puede comprar por
                           Mercado Pago (solo por PayPal).
                         </p>
                       </div>
