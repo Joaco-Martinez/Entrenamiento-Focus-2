@@ -3,7 +3,8 @@ import { ApiError } from "../common/errors/ApiError";
 import { PaymentProvider } from "@prisma/client";
 
 type CreateOrderItemInput = {
-  productId: string;
+  productId?: string;
+  classId?: string;
   quantity: number;
 };
 
@@ -37,26 +38,39 @@ export async function createOrder(
 
   const currency = provider === "MERCADOPAGO" ? "ARS" : "USD";
 
-  const products = await prisma.product.findMany({
-    where: {
-      id: { in: items.map((i) => i.productId) },
-      isActive: true,
-    },
-  });
+  const productItems = items.filter((i) => i.productId);
+  const classItems = items.filter((i) => i.classId);
 
-  if (products.length !== items.length) {
+  const products = productItems.length
+    ? await prisma.product.findMany({
+        where: {
+          id: { in: productItems.map((i) => i.productId!) },
+          isActive: true,
+        },
+      })
+    : [];
+
+  if (products.length !== productItems.length) {
     throw new ApiError(400, "Some products not found or inactive");
   }
 
-  const itemRows = items.map((i: any) => {
-    const product = products.find((p: any) => p.id === i.productId);
+  const classes = classItems.length
+    ? await prisma.videoClass.findMany({
+        where: {
+          id: { in: classItems.map((i) => i.classId!) },
+          status: "PUBLISHED",
+        },
+      })
+    : [];
 
-    if (!product) {
-      throw new ApiError(400, `Product not found: ${i.productId}`);
-    }
+  if (classes.length !== classItems.length) {
+    throw new ApiError(400, "Some classes not found or not published");
+  }
+
+  const productRows = productItems.map((i) => {
+    const product = products.find((p) => p.id === i.productId)!;
 
     const quantity = Number(i.quantity);
-
     if (!Number.isInteger(quantity) || quantity <= 0) {
       throw new ApiError(400, `Invalid quantity for product ${product.id}`);
     }
@@ -70,12 +84,30 @@ export async function createOrder(
       throw new ApiError(400, `Invalid price for product ${product.id}`);
     }
 
-    return {
-      productId: product.id,
-      quantity,
-      unitPrice,
-    };
+    return { productId: product.id, quantity, unitPrice };
   });
+
+  const classRows = classItems.map((i) => {
+    const videoClass = classes.find((c) => c.id === i.classId)!;
+
+    const quantity = Number(i.quantity);
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new ApiError(400, `Invalid quantity for class ${videoClass.id}`);
+    }
+
+    const unitPrice =
+      provider === "MERCADOPAGO"
+        ? Number(videoClass.arPrice)
+        : Number(videoClass.usdPrice);
+
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      throw new ApiError(400, `Invalid price for class ${videoClass.id}`);
+    }
+
+    return { classId: videoClass.id, quantity, unitPrice };
+  });
+
+  const itemRows = [...productRows, ...classRows];
 
   const totalAmount = itemRows.reduce(
     (acc, item) => acc + item.unitPrice * item.quantity,
@@ -98,7 +130,7 @@ export async function createOrder(
       },
     },
     include: {
-      items: { include: { product: true } },
+      items: { include: { product: true, videoClass: true } },
     },
   });
 
@@ -110,7 +142,7 @@ export async function getMyOrders(userId: string) {
     where: { userId },
     orderBy: { createdAt: "desc" },
     include: {
-      items: { include: { product: true } },
+      items: { include: { product: true, videoClass: true } },
       payments: true,
     },
   });
@@ -122,10 +154,24 @@ export async function adminList(status?: string) {
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { id: true, email: true } },
-      items: { include: { product: true } },
+      items: { include: { product: true, videoClass: true } },
       payments: true,
     },
   });
+}
+
+/**
+ * Usado por los controllers de MP/PayPal para decidir si el paso disparado
+ * por el navegador (confirm-payment / capture) puede otorgar acceso o no.
+ * Para clases el acceso SOLO lo otorga el webhook (ver markPaid): el
+ * redirect puede ejecutar el cobro (PayPal) o mostrar el estado, pero nunca
+ * llama a markPaid cuando la orden tiene items de clases.
+ */
+export async function orderHasClassItems(orderId: string) {
+  const count = await prisma.orderItem.count({
+    where: { orderId, classId: { not: null } },
+  });
+  return count > 0;
 }
 
 export async function markPaid(orderId: string, externalId?: string, raw?: any) {
@@ -135,6 +181,7 @@ export async function markPaid(orderId: string, externalId?: string, raw?: any) 
       items: {
         include: {
           product: true,
+          videoClass: true,
         },
       },
     },
@@ -149,7 +196,7 @@ export async function markPaid(orderId: string, externalId?: string, raw?: any) 
       where: { id: orderId },
       include: {
         user: { select: { id: true, email: true } },
-        items: { include: { product: true } },
+        items: { include: { product: true, videoClass: true } },
         payments: true,
       },
     });
@@ -194,29 +241,34 @@ export async function markPaid(orderId: string, externalId?: string, raw?: any) 
 
     const items = await tx.orderItem.findMany({
       where: { orderId },
-      include: { product: true },
+      include: { product: true, videoClass: true },
     });
 
-    const grants = items
-      .filter((i: any) => !i.product.isSubscription)
-      .map((i: any) => ({
-        userId: order.userId,
-        productId: i.productId,
-        orderId,
-      }));
+    const productGrants = items
+      .filter((i) => i.productId && !i.product?.isSubscription)
+      .map((i) => ({ userId: order.userId, productId: i.productId!, orderId }));
 
-    for (const g of grants) {
+    const classGrants = items
+      .filter((i) => i.classId)
+      .map((i) => ({ userId: order.userId, classId: i.classId!, orderId }));
+
+    for (const g of productGrants) {
       await tx.accessGrant.upsert({
         where: {
-          userId_productId: {
-            userId: g.userId,
-            productId: g.productId,
-          },
+          userId_productId: { userId: g.userId, productId: g.productId },
         },
         create: g,
-        update: {
-          orderId: g.orderId,
+        update: { orderId: g.orderId },
+      });
+    }
+
+    for (const g of classGrants) {
+      await tx.accessGrant.upsert({
+        where: {
+          userId_classId: { userId: g.userId, classId: g.classId },
         },
+        create: g,
+        update: { orderId: g.orderId },
       });
     }
 
@@ -224,7 +276,7 @@ export async function markPaid(orderId: string, externalId?: string, raw?: any) 
       where: { id: orderId },
       include: {
         user: { select: { id: true, email: true } },
-        items: { include: { product: true } },
+        items: { include: { product: true, videoClass: true } },
         payments: true,
       },
     });

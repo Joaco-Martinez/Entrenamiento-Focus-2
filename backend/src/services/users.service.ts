@@ -34,14 +34,14 @@ export async function getMyOrders(userId: string) {
 
 export async function getMyPurchases(userId: string) {
   const grants = await prisma.accessGrant.findMany({
-    where: { userId },
+    where: { userId, productId: { not: null } },
     include: { product: true },
   });
 
   return grants.map((g) => ({
     productId: g.productId,
-    title: g.product.title,
-    coverImageUrl: g.product.coverImageUrl,
+    title: g.product!.title,
+    coverImageUrl: g.product!.coverImageUrl,
     createdAt: g.createdAt,
   }));
 }

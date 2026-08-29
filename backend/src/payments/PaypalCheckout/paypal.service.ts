@@ -49,6 +49,7 @@ export async function createPaypalCheckout(
       items: {
         include: {
           product: true,
+          videoClass: true,
         },
       },
     },
@@ -66,17 +67,23 @@ export async function createPaypalCheckout(
     throw new ApiError(400, "Invalid totalAmount");
   }
 
-  const items = order.items.map((item: any) => ({
-    name: item.product.title,
-    description: item.product.description ?? undefined,
-    sku: item.product.id,
-    quantity: String(item.quantity),
-    unit_amount: {
-      currency_code: order.currency,
-      value: Number(item.unitPrice).toFixed(2),
-    },
-    category: "DIGITAL_GOODS",
-  }));
+  const items = order.items.map((item) => {
+    const name = item.product?.title ?? item.videoClass?.title ?? "Item";
+    const description = item.product?.description ?? undefined;
+    const sku = item.product?.id ?? item.videoClass?.id ?? item.id;
+
+    return {
+      name,
+      description,
+      sku,
+      quantity: String(item.quantity),
+      unit_amount: {
+        currency_code: order.currency,
+        value: Number(item.unitPrice).toFixed(2),
+      },
+      category: "DIGITAL_GOODS",
+    };
+  });
 
   const response = await axios.post(
     `${env.PAYPAL_BASE_URL}/v2/checkout/orders`,
@@ -171,6 +178,18 @@ export async function capturePaypalCheckout(
   const captureId =
     response.data?.purchase_units?.[0]?.payments?.captures?.[0]?.id ??
     paypalOrderId;
+
+  // El capture es necesario para cobrar (PayPal no cobra solo), pero para
+  // clases el acceso lo otorga únicamente el webhook PAYMENT.CAPTURE.COMPLETED,
+  // no este endpoint disparado por el navegador al volver de PayPal.
+  if (await ordersService.orderHasClassItems(order.id)) {
+    return {
+      ok: true,
+      status: response.data.status,
+      raw: response.data,
+      pendingWebhook: true,
+    };
+  }
 
   await ordersService.markPaid(order.id, String(captureId), response.data);
 

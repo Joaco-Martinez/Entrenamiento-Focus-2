@@ -14,6 +14,13 @@ type PurchasedProduct = {
   orderId?: string;
 };
 
+type PurchasedClase = {
+  id: string;
+  title: string;
+  slug: string;
+  coverImageUrl?: string | null;
+};
+
 type AccessMap = Record<
   string,
   {
@@ -76,6 +83,30 @@ const router = useRouter();
             slug: item?.product?.slug ?? null,
             coverImageUrl: item?.product?.coverImageUrl ?? null,
             orderId: order.id,
+          });
+        }
+      }
+    }
+
+    return Array.from(map.values());
+  }, [orders]);
+
+  const purchasedClasses = useMemo(() => {
+    const map = new Map<string, PurchasedClase>();
+
+    for (const order of orders) {
+      if (!Array.isArray(order.items)) continue;
+
+      for (const item of order.items) {
+        const videoClass = item?.videoClass;
+        if (!videoClass?.id) continue;
+
+        if (!map.has(videoClass.id)) {
+          map.set(videoClass.id, {
+            id: videoClass.id,
+            title: videoClass.title,
+            slug: videoClass.slug,
+            coverImageUrl: videoClass.coverImageUrl,
           });
         }
       }
@@ -423,6 +454,55 @@ const router = useRouter();
                 </div>
               );
             })}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-black/30 p-6">
+        <div className="mb-5">
+          <h2 className="text-xl font-bold">Mis clases</h2>
+          <p className="mt-1 text-sm text-white/60">
+            Clases de video que compraste.
+          </p>
+        </div>
+
+        {purchasedClasses.length === 0 ? (
+          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-white/60">
+            Todavía no compraste ninguna clase.
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {purchasedClasses.map((clase) => (
+              <div
+                key={clase.id}
+                className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+              >
+                <div className="mb-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+                  {clase.coverImageUrl ? (
+                    <img
+                      src={clase.coverImageUrl}
+                      alt={clase.title}
+                      className="h-40 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-40 items-center justify-center text-sm text-white/40">
+                      Sin imagen
+                    </div>
+                  )}
+                </div>
+
+                <h3 className="text-base font-semibold text-white">{clase.title}</h3>
+
+                <div className="mt-4">
+                  <Link
+                    href={`/clases/${clase.slug}/ver`}
+                    className="inline-flex rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-500/15"
+                  >
+                    Ver clase
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

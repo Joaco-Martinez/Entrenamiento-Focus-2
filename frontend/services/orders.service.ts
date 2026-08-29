@@ -15,7 +15,8 @@ export type OrderStatus =
 
 export type OrderItem = {
   title?: string;
-  productId: string;
+  productId?: string | null;
+  classId?: string | null;
   quantity: number;
   unitPrice?: number;
 
@@ -30,7 +31,14 @@ export type OrderItem = {
     isSubscription: boolean;
     requiresPremium: boolean;
     resourceType: "LINK" | "FILE";
-  };
+  } | null;
+
+  videoClass?: {
+    id: string;
+    slug: string;
+    title: string;
+    coverImageUrl?: string | null;
+  } | null;
 };
 
 export type Order = {
@@ -58,7 +66,10 @@ export const ordersService = {
   async create(payload: {
     country: string;
     provider: "MERCADOPAGO" | "PAYPAL";
-    items: { productId: string; quantity: number }[];
+    items: (
+      | { productId: string; quantity: number }
+      | { classId: string; quantity: number }
+    )[];
   }): Promise<{ ok?: boolean; order: Order }> {
     return apiFetch("/orders", {
       method: "POST",

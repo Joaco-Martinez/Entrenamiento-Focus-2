@@ -91,7 +91,7 @@ export async function processPayment(req: RequestWithUser, res: Response) {
     const status = result?.status;
     const statusDetail = result?.status_detail;
 
-    if (status === "approved") {
+    if (status === "approved" && !(await ordersService.orderHasClassItems(orderId))) {
       await ordersService.markPaid(orderId, String(result.id), result);
     }
 
@@ -225,6 +225,21 @@ export async function confirmPayment(req: RequestWithUser, res: Response) {
         status: result.status,
         statusDetail: result.statusDetail,
         raw: result.raw,
+      });
+    }
+
+    // Para clases el acceso lo otorga únicamente el webhook (no este endpoint
+    // disparado por el redirect del navegador), aunque acá ya verificamos el
+    // pago en vivo contra la API de MP. Evita que un redirect manipulado
+    // pueda adelantarse a la confirmación real.
+    if (await ordersService.orderHasClassItems(result.orderId)) {
+      return res.status(200).json({
+        message:
+          "Pago aprobado. Tu acceso se habilita automáticamente en instantes (se confirma por webhook).",
+        approved: false,
+        orderId: result.orderId,
+        paymentId: result.paymentId,
+        status: result.status,
       });
     }
 

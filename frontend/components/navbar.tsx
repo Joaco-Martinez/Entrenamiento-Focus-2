@@ -24,6 +24,7 @@ export function Navbar() {
     ...(showForo ? [{ href: "/foro", label: "Foro" }] : []),
     { href: "/servicios", label: "Servicios" },
     { href: "/recursos", label: "Productos" },
+    { href: "/clases", label: "Clases" },
   ]
 
   const go = (href: string) => {

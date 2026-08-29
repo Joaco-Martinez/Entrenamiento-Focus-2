@@ -65,6 +65,11 @@ enum ServiceRequestStatus {
   DELIVERED
 }
 
+enum VideoClassStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model SubscriptionLinkIntent {
   id        String @id @default(uuid())
 
@@ -129,6 +134,7 @@ subscriptionLinkIntents SubscriptionLinkIntent[]
   serviceRequests ServiceRequest[]
   forumPosts    ForumPost[]
   forumComments ForumComment[]
+  videoClasses  VideoClass[]
 }
 
 model Product {
@@ -184,11 +190,16 @@ model Order {
 model OrderItem {
   id String @id @default(uuid())
 
-  orderId   String
-  productId String
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  // Un OrderItem es de un Product O de una VideoClass, nunca los dos
+  // (constraint reforzada también a nivel DB, ver migración).
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  classId    String?
+  videoClass VideoClass? @relation(fields: [classId], references: [id])
 
   quantity  Int @default(1)
   unitPrice Int // en centavos (o pesos, pero dejalo consistente)
@@ -197,6 +208,7 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+  @@index([classId])
 }
 
 model Payment {
@@ -238,19 +250,25 @@ model Payment {
 }
 
 model AccessGrant {
-  id        String @id @default(uuid())
-  userId    String
-  productId String
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  // Igual que en OrderItem: exactamente uno de los dos.
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  classId    String?
+  videoClass VideoClass? @relation(fields: [classId], references: [id])
 
   orderId   String?
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+  @@unique([userId, classId])
   @@index([userId])
   @@index([productId])
+  @@index([classId])
   @@index([orderId])
 }
 
@@ -347,6 +365,36 @@ model ForumComment {
 
   @@index([postId])
   @@index([authorId])
+}
+
+model VideoClass {
+  id          String @id @default(uuid())
+  title       String
+  slug        String @unique
+  description String?
+
+  coverImageUrl       String?
+  coverImagePublicId  String?
+
+  bunnyVideoId    String?
+  durationSeconds Int?
+
+  arPrice  Int @default(0)
+  usdPrice Int @default(0)
+
+  status VideoClassStatus @default(DRAFT)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems   OrderItem[]
+  accessGrants AccessGrant[]
+
+  @@index([status])
+  @@index([createdById])
 }
 
 model Article {
