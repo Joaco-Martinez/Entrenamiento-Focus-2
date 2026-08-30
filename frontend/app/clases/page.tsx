@@ -65,11 +65,13 @@ export default function ClasesPage() {
             </div>
 
             <h1 className="text-balance text-4xl font-bold md:text-6xl">
-              Clases <span className="text-primary">de video</span>
+              Clases <span className="text-primary">Focus</span>
             </h1>
 
             <p className="mx-auto max-w-3xl text-lg text-muted-foreground md:text-xl">
-              Clases grabadas, a tu ritmo, sobre producción, mezcla y mastering.
+              Producción, mezcla y mastering avanzado sobre proyectos reales.
+              Sesiones donde ves cada decisión y por qué se toma, no es teoría
+              suelta.
             </p>
 
             <div className="mx-auto h-1 w-16 rounded-full bg-primary" />

@@ -18,6 +18,22 @@ export async function getAccess(req: any, res: Response) {
   res.json({ ok: true, ...data });
 }
 
+export async function getPlayback(req: any, res: Response) {
+  const userId = req.user.sub;
+  const data = await classesService.getPlaybackInfo(userId, req.params.slug);
+  res.json({ ok: true, ...data });
+}
+
+export async function saveProgress(req: any, res: Response) {
+  const userId = req.user.sub;
+  await classesService.saveWatchProgress(
+    userId,
+    req.params.slug,
+    req.body?.positionSeconds
+  );
+  res.json({ ok: true });
+}
+
 export async function listAdmin(req: Request, res: Response) {
   const classes = await classesService.listAdmin();
   res.json({ ok: true, classes });

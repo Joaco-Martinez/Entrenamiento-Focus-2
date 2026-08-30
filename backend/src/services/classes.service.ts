@@ -4,6 +4,8 @@ import { generateUniqueSlug } from "../common/utils/slug";
 import { cloudinary } from "../config/cloudinary";
 import * as bunnyService from "./bunny.service";
 
+const BUNNY_STATUS_FINISHED = 4;
+
 const publicSelect = {
   id: true,
   title: true,
@@ -131,8 +133,6 @@ export async function initVideoUpload(id: string) {
   return bunnyService.generateTusSignature(videoId);
 }
 
-const BUNNY_STATUS_FINISHED = 4;
-
 export async function getVideoStatus(id: string) {
   const item = await getAdminById(id);
 
@@ -156,4 +156,91 @@ export async function getVideoStatus(id: string) {
   }
 
   return status;
+}
+
+/**
+ * Punto único de verificación para reproducir. Se llama en cada intento de
+ * arrancar o renovar la reproducción: siempre vuelve a chequear la compra
+ * contra la base y recién ahí firma una URL de Bunny de vida corta. Nunca
+ * confía en nada que venga del navegador más allá del id del usuario logueado
+ * (sacado del JWT) y el slug de la clase.
+ */
+export async function getPlaybackInfo(userId: string, slug: string) {
+  const item = await prisma.videoClass.findUnique({ where: { slug } });
+  if (!item) throw new ApiError(404, "Clase no encontrada");
+
+  const grant = await prisma.accessGrant.findUnique({
+    where: { userId_classId: { userId, classId: item.id } },
+  });
+  if (!grant) throw new ApiError(403, "No compraste esta clase");
+
+  if (!item.bunnyVideoId) {
+    throw new ApiError(409, "Esta clase todavía no tiene un video cargado");
+  }
+
+  const bunnyStatus = await bunnyService.getVideoStatus(item.bunnyVideoId);
+  if (bunnyStatus.status !== BUNNY_STATUS_FINISHED) {
+    throw new ApiError(409, "El video todavía se está procesando");
+  }
+
+  // Watermark: se resuelve acá, con el id del usuario ya autenticado, nunca
+  // con datos que pudiera mandar el cliente.
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, firstName: true, lastName: true },
+  });
+  if (!user) throw new ApiError(404, "Usuario no encontrado");
+
+  // Filtramos partes que por datos viejos/mal cargados coincidan con el email,
+  // para no terminar mostrando el mail duplicado en la marca de agua.
+  const emailLower = user.email.toLowerCase();
+  const fullName = [user.firstName, user.lastName]
+    .filter((part) => Boolean(part) && part!.toLowerCase() !== emailLower)
+    .join(" ")
+    .trim();
+
+  const progress = await prisma.classWatchProgress.findUnique({
+    where: { userId_classId: { userId, classId: item.id } },
+  });
+
+  const resumeFromSeconds = progress?.positionSeconds ?? 0;
+
+  const { embedUrl, expiresAt } = bunnyService.generatePlaybackUrl(
+    item.bunnyVideoId,
+    resumeFromSeconds
+  );
+
+  return {
+    embedUrl,
+    expiresAt,
+    resumeFromSeconds,
+    watermark: {
+      name: fullName || user.email,
+      email: user.email,
+    },
+  };
+}
+
+export async function saveWatchProgress(
+  userId: string,
+  slug: string,
+  positionSeconds: number
+) {
+  const item = await prisma.videoClass.findUnique({ where: { slug } });
+  if (!item) throw new ApiError(404, "Clase no encontrada");
+
+  const grant = await prisma.accessGrant.findUnique({
+    where: { userId_classId: { userId, classId: item.id } },
+  });
+  if (!grant) throw new ApiError(403, "No compraste esta clase");
+
+  const safePosition = Math.max(0, Math.floor(Number(positionSeconds) || 0));
+
+  await prisma.classWatchProgress.upsert({
+    where: { userId_classId: { userId, classId: item.id } },
+    create: { userId, classId: item.id, positionSeconds: safePosition },
+    update: { positionSeconds: safePosition },
+  });
+
+  return { ok: true };
 }

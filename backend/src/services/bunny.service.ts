@@ -39,6 +39,38 @@ export async function getVideoStatus(videoId: string) {
   }
 }
 
+// Vida corta a propósito: si alguien copia la URL firmada, deja de andar
+// a los pocos minutos. El frontend la vuelve a pedir antes de que venza.
+const PLAYBACK_TOKEN_TTL_SECONDS = 4 * 60;
+
+/**
+ * Firma de "Embed View Token Authentication" de Bunny Stream: habilita el
+ * embed en iframe.mediadelivery.net para ese video puntual durante `expires`.
+ * El BUNNY_TOKEN_AUTH_KEY nunca sale de este módulo.
+ */
+export function generatePlaybackUrl(videoId: string, resumeFromSeconds?: number) {
+  const expires = Math.floor(Date.now() / 1000) + PLAYBACK_TOKEN_TTL_SECONDS;
+
+  const token = crypto
+    .createHash("sha256")
+    .update(`${env.BUNNY_TOKEN_AUTH_KEY}${videoId}${expires}`)
+    .digest("hex");
+
+  const params = new URLSearchParams({
+    token,
+    expires: String(expires),
+    autoplay: "false",
+  });
+
+  if (resumeFromSeconds && resumeFromSeconds > 0) {
+    params.set("t", String(Math.floor(resumeFromSeconds)));
+  }
+
+  const embedUrl = `https://iframe.mediadelivery.net/embed/${env.BUNNY_STREAM_LIBRARY_ID}/${videoId}?${params.toString()}`;
+
+  return { embedUrl, expiresAt: expires };
+}
+
 export function generateTusSignature(videoId: string) {
   const expire = Math.floor(Date.now() / 1000) + TUS_SIGNATURE_TTL_SECONDS;
   const libraryId = env.BUNNY_STREAM_LIBRARY_ID;

@@ -102,4 +102,21 @@ export const classesService = {
   async getAccess(slug: string): Promise<{ ok: boolean; hasAccess: boolean }> {
     return apiFetch(`/clases/${slug}/access`);
   },
+
+  async getPlayback(slug: string): Promise<{
+    ok: boolean;
+    embedUrl: string;
+    expiresAt: number;
+    resumeFromSeconds: number;
+    watermark: { name: string; email: string };
+  }> {
+    return apiFetch(`/clases/${slug}/playback`);
+  },
+
+  async saveProgress(slug: string, positionSeconds: number): Promise<{ ok: boolean }> {
+    return apiFetch(`/clases/${slug}/progress`, {
+      method: "POST",
+      body: JSON.stringify({ positionSeconds }),
+    });
+  },
 };

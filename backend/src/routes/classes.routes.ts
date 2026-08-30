@@ -7,6 +7,7 @@ import { adminOnly } from "../common/middlewares/adminOnly";
 import {
   createClassSchema,
   updateClassSchema,
+  saveProgressSchema,
 } from "../schemas/classes.schemas";
 import * as classesController from "../controllers/classes.controller";
 
@@ -93,6 +94,19 @@ classesRoutes.get(
   "/:slug/access",
   authRequired,
   asyncHandler(classesController.getAccess)
+);
+
+classesRoutes.get(
+  "/:slug/playback",
+  authRequired,
+  asyncHandler(classesController.getPlayback)
+);
+
+classesRoutes.post(
+  "/:slug/progress",
+  authRequired,
+  validateBody(saveProgressSchema),
+  asyncHandler(classesController.saveProgress)
 );
 
 classesRoutes.get("/:slug", asyncHandler(classesController.getBySlug));

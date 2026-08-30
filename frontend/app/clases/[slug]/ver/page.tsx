@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Clapperboard, Lock } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { classesService, VideoClass } from "@/services/classes.service";
+import ProtectedClassPlayer from "@/components/player/ProtectedClassPlayer";
 
 export default function VerClasePage() {
   const params = useParams();
@@ -72,19 +73,20 @@ export default function VerClasePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#070707] px-4 text-center text-white">
-      <Clapperboard className="h-10 w-10 text-primary" />
-      <h1 className="text-2xl font-bold">{item?.title}</h1>
-      <p className="max-w-md text-white/60">
-        Ya tenés acceso a esta clase. El reproductor todavía no está
-        disponible, muy pronto vas a poder verla acá.
-      </p>
-      <Link
-        href="/dashboard"
-        className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-white/15 px-4 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/[0.05]"
-      >
-        Volver a mi panel
-      </Link>
+    <div className="min-h-screen bg-[#070707] px-4 py-10 text-white md:px-8">
+      <div className="mx-auto max-w-5xl space-y-4">
+        <Link
+          href={`/clases/${slug}`}
+          className="inline-flex items-center gap-2 text-sm font-medium text-white/60 transition hover:text-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver a la clase
+        </Link>
+
+        <h1 className="text-2xl font-bold md:text-3xl">{item?.title}</h1>
+
+        <ProtectedClassPlayer slug={slug} />
+      </div>
     </div>
   );
 }

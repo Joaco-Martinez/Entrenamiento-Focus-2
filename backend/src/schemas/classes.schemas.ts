@@ -10,3 +10,7 @@ export const createClassSchema = z.object({
 export const updateClassSchema = createClassSchema.partial().extend({
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
 });
+
+export const saveProgressSchema = z.object({
+  positionSeconds: z.number().min(0),
+});

@@ -135,6 +135,7 @@ subscriptionLinkIntents SubscriptionLinkIntent[]
   forumPosts    ForumPost[]
   forumComments ForumComment[]
   videoClasses  VideoClass[]
+  classWatchProgress ClassWatchProgress[]
 }
 
 model Product {
@@ -390,11 +391,29 @@ model VideoClass {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orderItems   OrderItem[]
-  accessGrants AccessGrant[]
+  orderItems     OrderItem[]
+  accessGrants   AccessGrant[]
+  watchProgress  ClassWatchProgress[]
 
   @@index([status])
   @@index([createdById])
+}
+
+model ClassWatchProgress {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  classId    String
+  videoClass VideoClass @relation(fields: [classId], references: [id])
+
+  positionSeconds Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, classId])
+  @@index([classId])
 }
 
 model Article {
