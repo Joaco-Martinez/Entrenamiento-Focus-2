@@ -5,18 +5,15 @@ import { classesService } from "@/services/classes.service";
 import { BunnyPlayerBridge } from "@/lib/playerjsBridge";
 import { RefreshCw } from "lucide-react";
 
-// Posiciones preestablecidas para la marca de agua: bordes y esquinas, nunca
-// el centro (para no tapar lo importante del video). Cambia cada ~30s.
+// Solo dos posiciones, nunca arriba a la derecha (ahí va la cámara en las
+// clases). Arranca arriba a la izquierda. Despegadas del borde y del área de
+// controles del reproductor (que vive abajo).
 const WATERMARK_POSITIONS: Array<{ top: string; left: string }> = [
-  { top: "6%", left: "5%" },
-  { top: "6%", left: "70%" },
-  { top: "88%", left: "5%" },
-  { top: "88%", left: "68%" },
-  { top: "46%", left: "3%" },
-  { top: "46%", left: "80%" },
+  { top: "9%", left: "6%" }, // arriba a la izquierda
+  { top: "76%", left: "56%" }, // abajo a la derecha
 ];
 
-const WATERMARK_INTERVAL_MS = 30_000;
+const WATERMARK_INTERVAL_MS = 5 * 60_000;
 const PROGRESS_SAVE_INTERVAL_MS = 15_000;
 const REFRESH_MARGIN_SECONDS = 45;
 
@@ -143,7 +140,7 @@ export default function ProtectedClassPlayer({ slug }: { slug: string }) {
     };
   }, [slug]);
 
-  // Posición de la marca de agua: cambia sola cada ~30s.
+  // Posición de la marca de agua: alterna sola cada 5 minutos.
   useEffect(() => {
     const interval = setInterval(() => {
       setWatermarkIndex((i) => (i + 1) % WATERMARK_POSITIONS.length);
@@ -185,12 +182,10 @@ export default function ProtectedClassPlayer({ slug }: { slug: string }) {
 
       {watermark && (
         <div
-          className="pointer-events-none absolute select-none whitespace-nowrap text-[11px] font-medium text-white/35 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] transition-all duration-1000 md:text-xs"
+          className="pointer-events-none absolute select-none whitespace-nowrap text-[9px] font-medium text-white/20 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] transition-[top,left] duration-[1500ms] ease-in-out md:text-[10px]"
           style={{ top: pos.top, left: pos.left }}
         >
-          {watermark.name.toLowerCase() === watermark.email.toLowerCase()
-            ? watermark.email
-            : `${watermark.name} · ${watermark.email}`}
+          {watermark.email}
         </div>
       )}
 
