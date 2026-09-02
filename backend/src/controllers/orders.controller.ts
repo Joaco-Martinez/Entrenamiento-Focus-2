@@ -54,11 +54,24 @@ export async function adminMarkPaid(req: AuthedRequest, res: Response) {
   });
 }
 
+export async function adminCancel(req: AuthedRequest, res: Response) {
+  const { orderId } = req.params;
+
+  const order = await ordersService.cancelOrder(orderId);
+
+  return res.json({
+    ok: true,
+    message: "Orden cancelada",
+    order,
+  });
+}
+
 export async function adminGrantAccess(req: AuthedRequest, res: Response) {
   const accessGrant = await ordersService.grantAccessManual({
     userId: req.body.userId,
     email: req.body.email,
     productId: req.body.productId,
+    classId: req.body.classId,
     orderId: req.body.orderId,
   });
 

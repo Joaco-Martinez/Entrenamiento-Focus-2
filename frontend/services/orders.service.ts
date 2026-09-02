@@ -104,10 +104,21 @@ export const ordersService = {
     });
   },
 
+  async adminCancel(orderId: string): Promise<{
+    ok: boolean;
+    message?: string;
+    order?: Order;
+  }> {
+    return apiFetch(`/orders/admin/orders/${orderId}/cancel`, {
+      method: "PATCH",
+    });
+  },
+
   async adminGrantAccess(body: {
     userId?: string;
     email?: string;
-    productId: string;
+    productId?: string;
+    classId?: string;
     orderId?: string;
   }): Promise<{
     ok: boolean;

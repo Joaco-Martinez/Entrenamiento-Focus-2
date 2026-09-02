@@ -289,14 +289,70 @@ export async function markPaid(orderId: string, externalId?: string, raw?: any) 
 }
 
 /**
+ * Cancela a mano una orden que quedó abandonada (intento de compra que nunca
+ * se completó). No toca nada si ya está PAID, para no poder revertir por
+ * error una compra real ya otorgada.
+ */
+export async function cancelOrder(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+  if (!order) {
+    throw new ApiError(404, "Order not found");
+  }
+
+  if (order.status === "PAID") {
+    throw new ApiError(400, "Cannot cancel an order that is already paid");
+  }
+
+  if (order.status === "CANCELLED") {
+    return order;
+  }
+
+  return prisma.order.update({
+    where: { id: orderId },
+    data: { status: "CANCELLED", cancelledAt: new Date() },
+  });
+}
+
+/**
+ * Guardado best-effort de los identificadores de MP en la orden, para poder
+ * reconciliar más adelante sin depender del search por external_reference
+ * (ver reconcileMercadoPagoOrder). Se llama desde createPreference
+ * (preferenceId, siempre disponible) y desde confirmPayment (paymentId,
+ * cuando el redirect lo trae). No lanza si la orden no existe: es auxiliar,
+ * nunca debe romper el flujo principal de compra.
+ */
+export async function setMercadoPagoIdentifiers(
+  orderId: string,
+  data: { preferenceId?: string; paymentId?: string }
+) {
+  const update: Record<string, string> = {};
+  if (data.preferenceId) update.mpPreferenceId = data.preferenceId;
+  if (data.paymentId) update.mpPaymentId = data.paymentId;
+
+  if (Object.keys(update).length === 0) return;
+
+  await prisma.order.updateMany({
+    where: { id: orderId },
+    data: update,
+  });
+}
+
+/**
  * Red de seguridad para cuando el webhook de MP nunca llegó (o llegó y se
  * perdió por algún motivo). No confía en nada que venga del navegador más
  * allá del orderId a mirar: la verdad sobre si el pago está aprobado se le
- * pregunta en vivo a la API de Mercado Pago con el access token del servidor
- * (búsqueda por external_reference, que es el orderId que le pasamos a MP al
- * crear la preferencia). Si hay un pago aprobado, otorga el acceso vía
- * markPaid, que ya es idempotente (no duplica pagos ni accessGrants si esto
- * se llama varias veces o si el webhook termina llegando después).
+ * pregunta en vivo a la API de Mercado Pago con el access token del servidor.
+ * Si hay un pago aprobado, otorga el acceso vía markPaid, que ya es
+ * idempotente (no duplica pagos ni accessGrants si esto se llama varias
+ * veces o si el webhook termina llegando después).
+ *
+ * Camino principal: si guardamos mpPaymentId (del redirect de vuelta del
+ * checkout), lo consultamos directo con GET /v1/payments/{id} — confiable,
+ * un solo recurso puntual. Recién si no tenemos ese dato caemos al search
+ * por external_reference, que en la práctica resultó no ser confiable (no
+ * siempre indexa/devuelve un pago que existe y está aprobado): es el último
+ * recurso, no el camino principal.
  */
 export async function reconcileMercadoPagoOrder(orderId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
@@ -311,16 +367,43 @@ export async function reconcileMercadoPagoOrder(orderId: string) {
   // convertirse en un 500 para el usuario: simplemente no logramos reconciliar
   // y devolvemos la orden como sigue (probablemente PENDING).
   try {
-    const search = await paymentClient.search({
-      options: {
-        external_reference: orderId,
-        sort: "date_created",
-        criteria: "desc",
-      },
-    });
+    let approvedPayment: any = null;
 
-    const results = unwrapMpResponse<{ results?: any[] }>(search)?.results ?? [];
-    const approvedPayment = results.find((p) => p?.status === "approved");
+    // Camino principal. Su propio try/catch: si falla (id viejo/inválido,
+    // error puntual de MP), no debe abortar todo el intento de reconciliar
+    // — tiene que caer igual al último recurso de abajo.
+    if (order.mpPaymentId) {
+      try {
+        const payment = await paymentClient.get({ id: order.mpPaymentId });
+        const data = unwrapMpResponse<any>(payment);
+        if (data?.status === "approved") {
+          approvedPayment = data;
+        }
+      } catch (error) {
+        console.error("reconcileMercadoPagoOrder: fallo el GET directo, cae a search", {
+          orderId,
+          mpPaymentId: order.mpPaymentId,
+          error,
+        });
+      }
+    }
+
+    // Último recurso: search por external_reference. En la práctica resultó
+    // no ser confiable (no siempre indexa/devuelve un pago que existe y está
+    // aprobado), así que solo se usa cuando no tenemos un mpPaymentId, o el
+    // GET directo de arriba no encontró nada aprobado.
+    if (!approvedPayment) {
+      const search = await paymentClient.search({
+        options: {
+          external_reference: orderId,
+          sort: "date_created",
+          criteria: "desc",
+        },
+      });
+
+      const results = unwrapMpResponse<{ results?: any[] }>(search)?.results ?? [];
+      approvedPayment = results.find((p) => p?.status === "approved") ?? null;
+    }
 
     if (!approvedPayment) {
       return order;
@@ -420,16 +503,29 @@ export async function reconcilePendingClassOrders(userId: string, classId: strin
   return false;
 }
 
+/**
+ * Otorga acceso a mano, sin depender de una orden pagada. Es el último
+ * recurso para cuando una compra real se pierde (webhook y reconciliación
+ * fallaron los dos) y no queda otra que un admin la resuelva manualmente.
+ * Acepta productId O classId (nunca los dos), igual que OrderItem/AccessGrant
+ * en el schema.
+ */
 export async function grantAccessManual(input: {
   userId?: string;
   email?: string;
-  productId: string;
+  productId?: string;
+  classId?: string;
   orderId?: string;
 }) {
-  const productId = input.productId?.trim();
+  const productId = input.productId?.trim() || undefined;
+  const classId = input.classId?.trim() || undefined;
 
-  if (!productId) {
-    throw new ApiError(400, "productId is required");
+  if (!productId && !classId) {
+    throw new ApiError(400, "productId or classId is required");
+  }
+
+  if (productId && classId) {
+    throw new ApiError(400, "Pass only one of productId or classId");
   }
 
   if (!input.userId && !input.email) {
@@ -448,19 +544,27 @@ export async function grantAccessManual(input: {
     throw new ApiError(404, "User not found");
   }
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-  });
+  const product = productId
+    ? await prisma.product.findUnique({ where: { id: productId } })
+    : null;
 
-  if (!product) {
+  if (productId && !product) {
     throw new ApiError(404, "Product not found");
   }
 
-  if (product.isSubscription) {
+  if (product?.isSubscription) {
     throw new ApiError(
       400,
       "This product is a subscription. Use the subscriptions flow."
     );
+  }
+
+  const videoClass = classId
+    ? await prisma.videoClass.findUnique({ where: { id: classId } })
+    : null;
+
+  if (classId && !videoClass) {
+    throw new ApiError(404, "Class not found");
   }
 
   let finalOrderId = input.orderId;
@@ -478,7 +582,8 @@ export async function grantAccessManual(input: {
       throw new ApiError(400, "Order does not belong to this user");
     }
   } else {
-    const unitPrice = Number(product.arPrice ?? 0);
+    const rawPrice = Number((product ?? videoClass)!.arPrice ?? 0);
+    const unitPrice = Number.isFinite(rawPrice) && rawPrice > 0 ? rawPrice : 0;
 
     const manualOrder = await prisma.order.create({
       data: {
@@ -486,12 +591,12 @@ export async function grantAccessManual(input: {
         provider: "MERCADOPAGO",
         status: "PAID",
         currency: "ARS",
-        totalAmount: Number.isFinite(unitPrice) && unitPrice > 0 ? unitPrice : 0,
+        totalAmount: unitPrice,
         items: {
           create: {
-            productId: product.id,
+            ...(product ? { productId: product.id } : { classId: videoClass!.id }),
             quantity: 1,
-            unitPrice: Number.isFinite(unitPrice) && unitPrice > 0 ? unitPrice : 0,
+            unitPrice,
           },
         },
         payments: {
@@ -511,26 +616,29 @@ export async function grantAccessManual(input: {
     finalOrderId = manualOrder.id;
   }
 
- const accessGrant = await prisma.accessGrant.upsert({
-  where: {
-    userId_productId: {
-      userId: user.id,
-      productId: product.id,
-    },
-  },
-  create: {
-    userId: user.id,
-    productId: product.id,
-    orderId: finalOrderId,
-  },
-  update: {
-    orderId: finalOrderId,
-  },
-  include: {
-    user: { select: { id: true, email: true } },
-    product: true,
-  },
-});
+  const accessGrant = product
+    ? await prisma.accessGrant.upsert({
+        where: {
+          userId_productId: { userId: user.id, productId: product.id },
+        },
+        create: { userId: user.id, productId: product.id, orderId: finalOrderId },
+        update: { orderId: finalOrderId },
+        include: {
+          user: { select: { id: true, email: true } },
+          product: true,
+        },
+      })
+    : await prisma.accessGrant.upsert({
+        where: {
+          userId_classId: { userId: user.id, classId: videoClass!.id },
+        },
+        create: { userId: user.id, classId: videoClass!.id, orderId: finalOrderId },
+        update: { orderId: finalOrderId },
+        include: {
+          user: { select: { id: true, email: true } },
+          videoClass: true,
+        },
+      });
 
   return accessGrant;
 }

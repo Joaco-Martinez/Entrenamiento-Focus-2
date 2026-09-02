@@ -52,6 +52,13 @@ ordersRoutes.patch(
   asyncHandler(ordersController.adminMarkPaid)
 );
 
+ordersRoutes.patch(
+  "/admin/orders/:orderId/cancel",
+  authRequired,
+  adminOnly,
+  asyncHandler(ordersController.adminCancel)
+);
+
 ordersRoutes.post(
   "/admin/access-grants",
   authRequired,

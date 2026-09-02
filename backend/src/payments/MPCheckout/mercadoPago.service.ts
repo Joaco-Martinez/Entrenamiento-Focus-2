@@ -1,5 +1,6 @@
 import * as ordersService from "../../services/orders.service";
 import { paymentClient, preferenceClient, unwrapMpResponse } from "./mpClient";
+import { env } from "../../config/env";
 
 export type MpItemInput = {
   id: string;
@@ -58,11 +59,26 @@ export async function processPayment(data: ProcessPaymentInput) {
   return unwrapMpResponse(response);
 }
 
+// Default correcto (sin el "www.api." que dejó el webhook roto en
+// producción) para cuando MP_NOTIFICATION_URL no está seteada. No podemos
+// darnos el lujo de romper el checkout completo por una variable de entorno
+// que nadie puede cargar de un día para el otro: un default bien escrito es
+// muchísimo mejor que fallar la compra, y de paso mejor que el default roto
+// que había antes.
+const DEFAULT_MP_NOTIFICATION_URL =
+  "https://api.entrenamientofocus.com.ar/mercadopago_checkout/webhook";
+
 export async function createPreference(data: CreatePreferenceInput) {
   const frontendUrl = process.env.CORS_ORIGIN || "http://localhost:3000";
-  const notificationUrl =
-    process.env.MP_NOTIFICATION_URL ||
-    "https://www.api.entrenamientofocus.com.ar/mercadopago_checkout/webhook";
+
+  const notificationUrl = env.MP_NOTIFICATION_URL || DEFAULT_MP_NOTIFICATION_URL;
+
+  if (!env.MP_NOTIFICATION_URL) {
+    console.warn(
+      "MP_NOTIFICATION_URL no está configurada, usando el default:",
+      DEFAULT_MP_NOTIFICATION_URL
+    );
+  }
 
   const response = await preferenceClient.create({
     body: {
@@ -96,7 +112,24 @@ export async function createPreference(data: CreatePreferenceInput) {
     },
   });
 
-  return unwrapMpResponse(response);
+  const preference = unwrapMpResponse<any>(response);
+
+  // Guardado best-effort: si esto falla no debe tirar abajo la creación de la
+  // preferencia (el usuario ya tiene con qué pagar). Sirve para que
+  // reconcileMercadoPagoOrder pueda reconciliar sin depender del search por
+  // external_reference (ver orders.service.ts).
+  try {
+    await ordersService.setMercadoPagoIdentifiers(data.orderId, {
+      preferenceId: preference?.id ? String(preference.id) : undefined,
+    });
+  } catch (error) {
+    console.error("No se pudo guardar mpPreferenceId en la orden", {
+      orderId: data.orderId,
+      error,
+    });
+  }
+
+  return preference;
 }
 
 import crypto from "crypto";
@@ -132,11 +165,30 @@ export async function confirmPayment(input: {
   }
 
   const status = String(paymentData?.status || "").toLowerCase();
+  const resolvedPaymentId = paymentData?.id ? String(paymentData.id) : paymentId || null;
+
+  // Best-effort, igual que en createPreference: si el pago todavía no está
+  // aprobado (pending/in_process) igual nos sirve guardar el paymentId acá,
+  // para que la reconciliación de más adelante (getAccess/getPlaybackInfo)
+  // pueda consultarlo directo por GET /v1/payments/{id} sin depender del
+  // search por external_reference.
+  if (resolvedPaymentId) {
+    try {
+      await ordersService.setMercadoPagoIdentifiers(resolvedOrderId, {
+        paymentId: resolvedPaymentId,
+      });
+    } catch (error) {
+      console.error("No se pudo guardar mpPaymentId en la orden", {
+        orderId: resolvedOrderId,
+        error,
+      });
+    }
+  }
 
   return {
     ok: true,
     orderId: resolvedOrderId,
-    paymentId: paymentData?.id ? String(paymentData.id) : paymentId || null,
+    paymentId: resolvedPaymentId,
     status,
     statusDetail: paymentData?.status_detail || null,
     raw: paymentData || null,
