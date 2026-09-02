@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
 import * as webhooksService from "../services/webhooks.service";
 import { processMercadoPagoLinkWebhook } from "../payments/MPLinkSubscriptions/service";
+import { processWebhook as processMercadoPagoCheckoutWebhook } from "../payments/MPCheckout/mercadoPago.service";
+
+/**
+ * Ruta histórica de webhook de MP. Mercado Pago puede tener guardada esta URL
+ * (por MP_NOTIFICATION_URL mal configurada, o por notification_url de
+ * preferencias viejas) en vez de /mercadopago_checkout/webhook, que es la que
+ * usa el flujo activo de checkout/clases. Para no depender de que esa
+ * variable esté bien seteada en producción, cualquier evento de pago que
+ * llegue acá se procesa con el MISMO manejador que la ruta nueva
+ * (mercadoPago.service.processWebhook), así el resultado es idéntico sin
+ * importar a cuál de las dos URLs le pegue Mercado Pago.
+ */
 export async function mercadoPago(req: Request, res: Response) {
   try {
     const eventType =
@@ -21,25 +33,16 @@ export async function mercadoPago(req: Request, res: Response) {
       });
     }
 
-    // Si no querés procesar payments acá, ignoralo sin romper
-    if (eventType === "payment") {
-      return res.status(200).json({
-        ok: true,
-        ignored: true,
-        reason: "payment event ignored",
-      });
-    }
+    // Pagos únicos (compras de productos/clases): delegamos al mismo
+    // manejador que usa /mercadopago_checkout/webhook. processWebhook ya
+    // valida la firma y es un no-op silencioso si el evento no es "payment",
+    // así que es seguro reenviar acá cualquier cosa que no sea suscripción.
+    await processMercadoPagoCheckoutWebhook(req.body, req.query, req.headers);
 
-    // Si querés dejar otros eventos ignorados
     return res.status(200).json({
       ok: true,
-      ignored: true,
-      reason: `Unhandled event type: ${eventType}`,
+      source: "mp-checkout-webhook-via-legacy-route",
     });
-
-    // Si querés mantener lógica vieja para otros casos:
-    // const result = await oldMercadoPagoWebhook(req.body, req.query);
-    // return res.status(200).json(result);
   } catch (error: any) {
     console.error("Webhook /webhooks/mercadopago error:", error);
 

@@ -3,6 +3,7 @@ import { ApiError } from "../common/errors/ApiError";
 import { generateUniqueSlug } from "../common/utils/slug";
 import { cloudinary } from "../config/cloudinary";
 import * as bunnyService from "./bunny.service";
+import * as ordersService from "./orders.service";
 
 const BUNNY_STATUS_FINISHED = 4;
 
@@ -51,18 +52,40 @@ export async function getAdminById(id: string) {
 /**
  * Único lugar que decide si un usuario puede ver una clase comprada.
  * Nunca se resuelve en el frontend: se basa exclusivamente en si existe
- * un AccessGrant, que solo se crea cuando el webhook del proveedor de pago
- * confirma la compra (ver orders.service.markPaid).
+ * un AccessGrant, que normalmente crea el webhook del proveedor de pago
+ * (ver orders.service.markPaid) o el confirm-payment del redirect. A
+ * propósito NO filtra por status: publicada o no, quien ya compró la clase
+ * tiene que poder seguir accediendo. El status solo decide si la clase
+ * aparece en el catálogo y si se puede comprar (ver listPublic/getPublicBySlug).
+ *
+ * Si no hay grant, antes de decir que no, intentamos reconciliar contra la
+ * API del proveedor por si el webhook nunca llegó (red de seguridad, ver
+ * orders.service.reconcilePendingClassOrders). Si el usuario nunca tuvo una
+ * orden pendiente para esta clase, esto es un no-op rápido: no pega contra
+ * ninguna API externa.
+ *
+ * Devuelve también el título: la página /ver lo necesita y, a diferencia de
+ * getPublicBySlug, esta ruta no puede filtrar por PUBLISHED (rompería la
+ * reproducción de compradores de una clase despublicada).
  */
 export async function getAccess(userId: string, slug: string) {
   const item = await prisma.videoClass.findUnique({ where: { slug } });
   if (!item) throw new ApiError(404, "Clase no encontrada");
 
-  const grant = await prisma.accessGrant.findUnique({
+  let grant = await prisma.accessGrant.findUnique({
     where: { userId_classId: { userId, classId: item.id } },
   });
 
-  return { hasAccess: Boolean(grant) };
+  if (!grant) {
+    const reconciled = await ordersService.reconcilePendingClassOrders(userId, item.id);
+    if (reconciled) {
+      grant = await prisma.accessGrant.findUnique({
+        where: { userId_classId: { userId, classId: item.id } },
+      });
+    }
+  }
+
+  return { hasAccess: Boolean(grant), title: item.title };
 }
 
 export async function create(data: any, createdById: string) {
@@ -164,14 +187,27 @@ export async function getVideoStatus(id: string) {
  * contra la base y recién ahí firma una URL de Bunny de vida corta. Nunca
  * confía en nada que venga del navegador más allá del id del usuario logueado
  * (sacado del JWT) y el slug de la clase.
+ *
+ * Tampoco filtra por status, por la misma razón que getAccess: si la clase se
+ * despublica, quien ya la compró tiene que poder seguir reproduciéndola.
  */
 export async function getPlaybackInfo(userId: string, slug: string) {
   const item = await prisma.videoClass.findUnique({ where: { slug } });
   if (!item) throw new ApiError(404, "Clase no encontrada");
 
-  const grant = await prisma.accessGrant.findUnique({
+  let grant = await prisma.accessGrant.findUnique({
     where: { userId_classId: { userId, classId: item.id } },
   });
+
+  if (!grant) {
+    const reconciled = await ordersService.reconcilePendingClassOrders(userId, item.id);
+    if (reconciled) {
+      grant = await prisma.accessGrant.findUnique({
+        where: { userId_classId: { userId, classId: item.id } },
+      });
+    }
+  }
+
   if (!grant) throw new ApiError(403, "No compraste esta clase");
 
   if (!item.bunnyVideoId) {

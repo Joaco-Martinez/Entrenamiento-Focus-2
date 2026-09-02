@@ -1,6 +1,8 @@
 import { prisma } from "../prisma/client";
 import { ApiError } from "../common/errors/ApiError";
 import { PaymentProvider } from "@prisma/client";
+import { paymentClient, unwrapMpResponse } from "../payments/MPCheckout/mpClient";
+import { getPaypalOrder, capturePaypalOrder } from "../payments/PaypalCheckout/paypal.client";
 
 type CreateOrderItemInput = {
   productId?: string;
@@ -161,11 +163,12 @@ export async function adminList(status?: string) {
 }
 
 /**
- * Usado por los controllers de MP/PayPal para decidir si el paso disparado
- * por el navegador (confirm-payment / capture) puede otorgar acceso o no.
- * Para clases el acceso SOLO lo otorga el webhook (ver markPaid): el
- * redirect puede ejecutar el cobro (PayPal) o mostrar el estado, pero nunca
- * llama a markPaid cuando la orden tiene items de clases.
+ * Solo la usa hoy el flujo de pago directo con tarjeta de MP (processPayment
+ * en mercadoPago.controller.ts, sin uso actual en el frontend). Los flujos
+ * activos (confirmPayment de MP y capturePaypalCheckout de PayPal) ya no
+ * dependen de este gate: verifican el pago en vivo contra la API del
+ * proveedor y llaman a markPaid directamente, tanto para productos como para
+ * clases.
  */
 export async function orderHasClassItems(orderId: string) {
   const count = await prisma.orderItem.count({
@@ -283,6 +286,138 @@ export async function markPaid(orderId: string, externalId?: string, raw?: any) 
   });
 
   return result;
+}
+
+/**
+ * Red de seguridad para cuando el webhook de MP nunca llegó (o llegó y se
+ * perdió por algún motivo). No confía en nada que venga del navegador más
+ * allá del orderId a mirar: la verdad sobre si el pago está aprobado se le
+ * pregunta en vivo a la API de Mercado Pago con el access token del servidor
+ * (búsqueda por external_reference, que es el orderId que le pasamos a MP al
+ * crear la preferencia). Si hay un pago aprobado, otorga el acceso vía
+ * markPaid, que ya es idempotente (no duplica pagos ni accessGrants si esto
+ * se llama varias veces o si el webhook termina llegando después).
+ */
+export async function reconcileMercadoPagoOrder(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+  if (!order || order.status === "PAID" || order.provider !== "MERCADOPAGO") {
+    return order;
+  }
+
+  // Esto se dispara desde chequeos de acceso (getAccess/getPlaybackInfo) que
+  // deben seguir funcionando aunque la API de MP esté caída, el token esté
+  // mal configurado, o cualquier otro fallo de red. Un error acá no debe
+  // convertirse en un 500 para el usuario: simplemente no logramos reconciliar
+  // y devolvemos la orden como sigue (probablemente PENDING).
+  try {
+    const search = await paymentClient.search({
+      options: {
+        external_reference: orderId,
+        sort: "date_created",
+        criteria: "desc",
+      },
+    });
+
+    const results = unwrapMpResponse<{ results?: any[] }>(search)?.results ?? [];
+    const approvedPayment = results.find((p) => p?.status === "approved");
+
+    if (!approvedPayment) {
+      return order;
+    }
+
+    return await markPaid(orderId, String(approvedPayment.id), approvedPayment);
+  } catch (error) {
+    console.error("reconcileMercadoPagoOrder: fallo consultando la API de MP", {
+      orderId,
+      error,
+    });
+    return order;
+  }
+}
+
+/**
+ * Equivalente de reconcileMercadoPagoOrder para PayPal. providerRef guarda el
+ * id de la orden de PayPal (seteado en createPaypalCheckout), así que no hace
+ * falta buscar por referencia externa como con MP.
+ *
+ * Si la orden quedó "APPROVED" (el pagador aprobó pero el capture nunca se
+ * llegó a disparar, por ejemplo porque el navegador se cerró antes de volver
+ * del checkout) la capturamos ahora nosotros, servidor a servidor, en vez de
+ * dejarla colgada para siempre.
+ */
+export async function reconcilePayPalOrder(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+  if (
+    !order ||
+    order.status === "PAID" ||
+    order.provider !== "PAYPAL" ||
+    !order.providerRef
+  ) {
+    return order;
+  }
+
+  // Mismo criterio que reconcileMercadoPagoOrder: esto se dispara desde
+  // chequeos de acceso que deben seguir andando aunque la API de PayPal
+  // falle. Un error acá nunca debe tirar abajo el chequeo de acceso.
+  try {
+    let data = await getPaypalOrder(order.providerRef);
+
+    if (data?.status === "APPROVED") {
+      data = await capturePaypalOrder(order.providerRef);
+    }
+
+    if (data?.status !== "COMPLETED") {
+      return order;
+    }
+
+    const captureId =
+      data?.purchase_units?.[0]?.payments?.captures?.[0]?.id ?? order.providerRef;
+
+    return await markPaid(orderId, String(captureId), data);
+  } catch (error) {
+    console.error("reconcilePayPalOrder: fallo consultando la API de PayPal", {
+      orderId,
+      error,
+    });
+    return order;
+  }
+}
+
+/**
+ * Variante de reconcileMercadoPagoOrder/reconcilePayPalOrder para cuando no
+ * tenemos un orderId a mano (por ejemplo, el usuario vuelve a entrar a una
+ * clase días después de pagar, sin el query string del redirect). Busca las
+ * órdenes PENDING del usuario para esa clase puntual, en cualquiera de los
+ * dos proveedores, y las reconcilia una por una. Se usa como último recurso
+ * al chequear acceso (ver classes.service.ts): si no hay ninguna orden
+ * pendiente, no pega contra ninguna API externa.
+ */
+export async function reconcilePendingClassOrders(userId: string, classId: string) {
+  const pendingOrders = await prisma.order.findMany({
+    where: {
+      userId,
+      provider: { in: ["MERCADOPAGO", "PAYPAL"] },
+      status: "PENDING",
+      items: { some: { classId } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+
+  for (const order of pendingOrders) {
+    const reconciled =
+      order.provider === "MERCADOPAGO"
+        ? await reconcileMercadoPagoOrder(order.id)
+        : await reconcilePayPalOrder(order.id);
+
+    if (reconciled?.status === "PAID") {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export async function grantAccessManual(input: {

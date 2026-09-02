@@ -228,21 +228,13 @@ export async function confirmPayment(req: RequestWithUser, res: Response) {
       });
     }
 
-    // Para clases el acceso lo otorga únicamente el webhook (no este endpoint
-    // disparado por el redirect del navegador), aunque acá ya verificamos el
-    // pago en vivo contra la API de MP. Evita que un redirect manipulado
-    // pueda adelantarse a la confirmación real.
-    if (await ordersService.orderHasClassItems(result.orderId)) {
-      return res.status(200).json({
-        message:
-          "Pago aprobado. Tu acceso se habilita automáticamente en instantes (se confirma por webhook).",
-        approved: false,
-        orderId: result.orderId,
-        paymentId: result.paymentId,
-        status: result.status,
-      });
-    }
-
+    // El navegador solo nos dice QUÉ pago mirar (paymentId/externalReference).
+    // La verdad sobre si está aprobado sale de mercadoPagoService.confirmPayment,
+    // que ya consultó en vivo la API de MP con el access token del servidor
+    // (ver arriba, paymentClient.get). Por eso es seguro otorgar acceso acá
+    // también para clases: no estamos confiando en nada que el cliente pueda
+    // manipular, y markPaid es idempotente (si después llega el webhook o esta
+    // misma ruta se llama dos veces, no duplica pagos ni accessGrants).
     await ordersService.markPaid(
       result.orderId,
       String(result.paymentId),

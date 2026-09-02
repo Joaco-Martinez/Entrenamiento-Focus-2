@@ -3,6 +3,7 @@ import { prisma } from "../../prisma/client";
 import { env } from "../../config/env";
 import { ApiError } from "../../common/errors/ApiError";
 import * as ordersService from "../../services/orders.service";
+import { paypalAccessToken, capturePaypalOrder } from "./paypal.client";
 
 function requireUrl(name: string, value: string) {
   if (!value) throw new ApiError(400, `Missing ${name}`);
@@ -10,29 +11,6 @@ function requireUrl(name: string, value: string) {
     throw new ApiError(400, `${name} must be a valid URL`);
   }
   return value;
-}
-
-async function paypalAccessToken() {
-  if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) {
-    throw new ApiError(400, "Missing PayPal credentials");
-  }
-
-  const basic = Buffer.from(
-    `${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`
-  ).toString("base64");
-
-  const response = await axios.post(
-    `${env.PAYPAL_BASE_URL}/v1/oauth2/token`,
-    "grant_type=client_credentials",
-    {
-      headers: {
-        Authorization: `Basic ${basic}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    }
-  );
-
-  return response.data.access_token as string;
 }
 
 export async function createPaypalCheckout(
@@ -162,41 +140,25 @@ export async function capturePaypalCheckout(
     };
   }
 
-  const token = await paypalAccessToken();
-
-  const response = await axios.post(
-    `${env.PAYPAL_BASE_URL}/v2/checkout/orders/${paypalOrderId}/capture`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const data = await capturePaypalOrder(paypalOrderId);
 
   const captureId =
-    response.data?.purchase_units?.[0]?.payments?.captures?.[0]?.id ??
-    paypalOrderId;
+    data?.purchase_units?.[0]?.payments?.captures?.[0]?.id ?? paypalOrderId;
 
-  // El capture es necesario para cobrar (PayPal no cobra solo), pero para
-  // clases el acceso lo otorga únicamente el webhook PAYMENT.CAPTURE.COMPLETED,
-  // no este endpoint disparado por el navegador al volver de PayPal.
-  if (await ordersService.orderHasClassItems(order.id)) {
-    return {
-      ok: true,
-      status: response.data.status,
-      raw: response.data,
-      pendingWebhook: true,
-    };
+  // El navegador solo nos dice qué orden capturar. La verdad sobre si el pago
+  // se completó sale de la respuesta de PayPal a la captura en sí (server a
+  // server, con el access token del servidor) — no de nada que el cliente
+  // pueda manipular. Por eso es seguro otorgar acceso acá también para
+  // clases: markPaid es idempotente, así que si después llega el webhook
+  // PAYMENT.CAPTURE.COMPLETED, o esta ruta se llama dos veces, no duplica nada.
+  if (data.status === "COMPLETED") {
+    await ordersService.markPaid(order.id, String(captureId), data);
   }
-
-  await ordersService.markPaid(order.id, String(captureId), response.data);
 
   return {
     ok: true,
-    status: response.data.status,
-    raw: response.data,
+    status: data.status,
+    raw: data,
   };
 }
 

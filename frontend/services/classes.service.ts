@@ -99,7 +99,7 @@ export const classesService = {
     return apiFetch(`/clases/admin/clases/${id}/video/status`);
   },
 
-  async getAccess(slug: string): Promise<{ ok: boolean; hasAccess: boolean }> {
+  async getAccess(slug: string): Promise<{ ok: boolean; hasAccess: boolean; title?: string }> {
     return apiFetch(`/clases/${slug}/access`);
   },
 

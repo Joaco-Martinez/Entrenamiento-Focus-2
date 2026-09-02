@@ -24,6 +24,7 @@ import { ordersRoutes } from "./routes/orders.routes";
 import  manualSuscriptionRoutes  from "./routes/subscriptions.admin.routes";
 import { subscriptionsRoutes } from "./routes/subscriptions.routes";
 import { webhooksRoutes } from "./routes/webhooks.routes";
+import { diagnosticsRoutes } from "./routes/diagnostics.routes";
 import { paypalRoutes } from "./payments/PaypalCheckout/paypal.routes";
 import { paypalSubscriptionsRoutes } from "./payments/PaypalSuscriptions/paypalSubscriptions.routes";
 
@@ -80,6 +81,7 @@ app.use("/orders", ordersRoutes);
 
 app.use("/subscriptions", subscriptionsRoutes);
 app.use("/webhooks", webhooksRoutes);
+app.use("/admin", diagnosticsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

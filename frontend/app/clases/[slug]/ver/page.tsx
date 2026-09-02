@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { classesService, VideoClass } from "@/services/classes.service";
+import { classesService } from "@/services/classes.service";
 import ProtectedClassPlayer from "@/components/player/ProtectedClassPlayer";
 
 export default function VerClasePage() {
@@ -14,7 +14,7 @@ export default function VerClasePage() {
   const slug = params.slug as string;
   const { isAuth, loading: authLoading } = useAuth();
 
-  const [item, setItem] = useState<VideoClass | null>(null);
+  const [title, setTitle] = useState<string | null>(null);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,12 +28,12 @@ export default function VerClasePage() {
 
     const run = async () => {
       try {
-        const [claseRes, accessRes] = await Promise.all([
-          classesService.getBySlug(slug),
-          classesService.getAccess(slug),
-        ]);
+        // Solo /access, nunca /clases/:slug (el detalle público): ese último
+        // filtra por clase publicada, y quien ya compró la clase tiene que
+        // poder seguir viéndola aunque se haya despublicado del catálogo.
+        const accessRes = await classesService.getAccess(slug);
 
-        setItem(claseRes.class);
+        setTitle(accessRes.title ?? null);
         setHasAccess(Boolean(accessRes.hasAccess));
       } catch (err: any) {
         setError(err?.message || "No se pudo verificar el acceso a la clase.");
@@ -83,7 +83,7 @@ export default function VerClasePage() {
           Volver a la clase
         </Link>
 
-        <h1 className="text-2xl font-bold md:text-3xl">{item?.title}</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>
 
         <ProtectedClassPlayer slug={slug} />
       </div>

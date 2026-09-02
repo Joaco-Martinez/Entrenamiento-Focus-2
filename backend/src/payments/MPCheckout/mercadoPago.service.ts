@@ -1,18 +1,5 @@
-import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
 import * as ordersService from "../../services/orders.service";
-
-const accessToken = process.env.MP_ACCESS_TOKEN_CHECKOUT_BRICKS;
-
-if (!accessToken) {
-  throw new Error("Falta MP_ACCESS_TOKEN_CHECKOUT_BRICKS en variables de entorno");
-}
-
-const client = new MercadoPagoConfig({
-  accessToken,
-});
-
-const paymentClient = new Payment(client);
-const preferenceClient = new Preference(client);
+import { paymentClient, preferenceClient, unwrapMpResponse } from "./mpClient";
 
 export type MpItemInput = {
   id: string;
@@ -48,10 +35,6 @@ export type CreatePreferenceInput = {
   items: MpItemInput[];
   payer?: MpPayerInput;
 };
-
-function unwrapMpResponse<T = any>(payload: any): T {
-  return payload?.response ?? payload;
-}
 
 export async function processPayment(data: ProcessPaymentInput) {
   const response = await paymentClient.create({
