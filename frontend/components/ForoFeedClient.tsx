@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumPost } from "@/services/forum.service"
 import { ForumPostCard } from "@/components/ForumPostCard"
+import { ComunidadHeader } from "@/components/ComunidadHeader"
 
 function LoginRequiredModal({ onClose }: { onClose: () => void }) {
   const router = useRouter()
@@ -124,33 +125,33 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
     <>
       {showLoginModal && <LoginRequiredModal onClose={() => setShowLoginModal(false)} />}
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[13px] uppercase tracking-[0.3em] text-[#a67c27]">Comunidad</p>
+      <div className="space-y-4">
+        <ComunidadHeader active="foro" />
 
-          <h1 className="mt-3 text-[34px] font-light leading-[1.05] tracking-[-0.03em] text-[#2a2620] sm:text-[48px]">
-            Foro
-          </h1>
-        </div>
+        <p className="mx-auto max-w-2xl text-center text-base leading-relaxed text-[#6b6153] md:text-lg">
+          Un espacio para compartir conocimientos, descubrimientos,
+          herramientas y experiencias que puedan aportar valor a toda la
+          comunidad.
+        </p>
+      </div>
 
-        <div className="flex flex-col items-start gap-2 sm:items-end">
-          <button
-            type="button"
-            onClick={handleNewPostClick}
-            className="inline-flex w-fit items-center justify-center rounded-full bg-[#a67c27] px-6 py-3 text-[15px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f]"
-          >
-            Nuevo post
-          </button>
+      <div className="mt-10 flex flex-col items-center gap-2 sm:items-end">
+        <button
+          type="button"
+          onClick={handleNewPostClick}
+          className="inline-flex w-fit items-center justify-center rounded-full bg-[#a67c27] px-6 py-3 text-[15px] font-semibold text-[#2a2620] transition hover:scale-[1.02] hover:bg-[#c7952f]"
+        >
+          Nuevo post
+        </button>
 
-          {!isAuth && (
-            <p className="text-[14px] text-[#6b6153]">
-              <Link href="/login" className="text-[#a67c27] hover:underline">
-                Iniciá sesión
-              </Link>{" "}
-              para participar del foro.
-            </p>
-          )}
-        </div>
+        {!isAuth && (
+          <p className="text-[14px] text-[#6b6153]">
+            <Link href="/login" className="text-[#a67c27] hover:underline">
+              Iniciá sesión
+            </Link>{" "}
+            para participar del foro.
+          </p>
+        )}
       </div>
 
       <form
@@ -188,13 +189,6 @@ export function ForoFeedClient({ initialPosts }: { initialPosts: ForumPost[] }) 
           </button>
         )}
       </form>
-
-      <Link
-        href={onlyArticles ? "/foro" : "/foro?tipo=articulos"}
-        className="mt-4 inline-block text-[13px] text-[#a67c27] hover:underline"
-      >
-        {onlyArticles ? "← Ver todo el foro" : "Ver artículos Focus →"}
-      </Link>
 
       {activeQuery && (
         <p className="mt-4 text-[14px] text-[#6b6153]">
