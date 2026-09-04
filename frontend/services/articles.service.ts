@@ -8,6 +8,7 @@ export type Article = {
   content: string
   coverImageUrl?: string | null
   authorName: string
+  published: boolean
   createdAt: string
   updatedAt: string
 }
@@ -17,6 +18,7 @@ export type CreateArticleDto = {
   excerpt: string
   content: string
   authorName?: string
+  published?: boolean
 }
 
 export type UpdateArticleDto = Partial<CreateArticleDto>

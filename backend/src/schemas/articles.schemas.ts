@@ -5,6 +5,7 @@ export const createArticleSchema = z.object({
   excerpt: z.string().min(1),
   content: z.string().min(1),
   authorName: z.string().default("Entrenamiento Focus"),
+  published: z.boolean().default(true),
 });
 
 export const updateArticleSchema = createArticleSchema.partial();

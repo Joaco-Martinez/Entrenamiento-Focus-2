@@ -22,6 +22,8 @@ import {
   Upload,
   Link as LinkIcon,
   Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 function formatDate(value?: string | null) {
@@ -146,6 +148,18 @@ export default function AdminArticlesPage() {
     setOpenEdit(false);
     setEditing(null);
     await refresh(true);
+  };
+
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const onTogglePublished = async (a: Article) => {
+    setTogglingId(a.id);
+    try {
+      await articlesService.update(a.id, { published: !a.published });
+      await refresh(true);
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   const handleCopySlug = async (a: Article) => {
@@ -311,6 +325,26 @@ export default function AdminArticlesPage() {
                         <p className="mt-1 line-clamp-2 text-sm text-white/55">{a.excerpt}</p>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      disabled={togglingId === a.id}
+                      onClick={() => onTogglePublished(a)}
+                      className="mt-3"
+                      title="Cambiar entre publicado y borrador"
+                    >
+                      {a.published ? (
+                        <Badge className="border border-yellow-400/25 bg-yellow-400/10 text-yellow-200">
+                          <Eye className="h-3 w-3" />
+                          Publicado
+                        </Badge>
+                      ) : (
+                        <Badge className="border border-white/10 bg-white/5 text-white/50">
+                          <EyeOff className="h-3 w-3" />
+                          Borrador
+                        </Badge>
+                      )}
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
@@ -371,10 +405,11 @@ export default function AdminArticlesPage() {
             <table className="w-full table-fixed text-sm">
               <thead className="bg-white/[0.03] text-left text-white/50">
                 <tr>
-                  <th className="w-[38%] px-5 py-4 font-medium">Artículo</th>
-                  <th className="w-[16%] px-5 py-4 font-medium">Autor</th>
-                  <th className="w-[20%] px-5 py-4 font-medium">Slug</th>
-                  <th className="w-[12%] px-5 py-4 font-medium">Fecha</th>
+                  <th className="w-[34%] px-5 py-4 font-medium">Artículo</th>
+                  <th className="w-[14%] px-5 py-4 font-medium">Autor</th>
+                  <th className="w-[12%] px-5 py-4 font-medium">Estado</th>
+                  <th className="w-[16%] px-5 py-4 font-medium">Slug</th>
+                  <th className="w-[10%] px-5 py-4 font-medium">Fecha</th>
                   <th className="w-[14%] px-5 py-4 font-medium text-right">Acción</th>
                 </tr>
               </thead>
@@ -382,13 +417,13 @@ export default function AdminArticlesPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-white/60">
+                    <td colSpan={6} className="px-5 py-8 text-white/60">
                       Cargando artículos...
                     </td>
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-white/60">
+                    <td colSpan={6} className="px-5 py-8 text-white/60">
                       No hay artículos para mostrar.
                     </td>
                   </tr>
@@ -432,6 +467,27 @@ export default function AdminArticlesPage() {
                             <UserCircle2 className="h-4 w-4 text-white/35" />
                             {a.authorName}
                           </div>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <button
+                            type="button"
+                            disabled={togglingId === a.id}
+                            onClick={() => onTogglePublished(a)}
+                            title="Cambiar entre publicado y borrador"
+                          >
+                            {a.published ? (
+                              <Badge className="border border-yellow-400/25 bg-yellow-400/10 text-yellow-200">
+                                <Eye className="h-3 w-3" />
+                                Publicado
+                              </Badge>
+                            ) : (
+                              <Badge className="border border-white/10 bg-white/5 text-white/50">
+                                <EyeOff className="h-3 w-3" />
+                                Borrador
+                              </Badge>
+                            )}
+                          </button>
                         </td>
 
                         <td className="px-5 py-4">
@@ -515,6 +571,7 @@ export default function AdminArticlesPage() {
             excerpt: editing.excerpt,
             content: editing.content,
             authorName: editing.authorName,
+            published: editing.published,
           }}
           article={editing}
           onClose={() => {
@@ -537,6 +594,7 @@ type ArticleFormValues = {
   excerpt: string;
   content: string;
   authorName?: string;
+  published?: boolean;
 };
 
 function ArticleModal({
@@ -564,6 +622,7 @@ function ArticleModal({
   const [authorName, setAuthorName] = useState(
     defaultValues?.authorName ?? "Entrenamiento Focus"
   );
+  const [published, setPublished] = useState(defaultValues?.published ?? false);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -599,6 +658,7 @@ function ArticleModal({
         excerpt: excerpt.trim(),
         content: content.trim(),
         authorName: authorName.trim() || undefined,
+        published,
       };
 
       await onSubmit(dto);
@@ -709,6 +769,42 @@ function ArticleModal({
                 </div>
 
                 <div className="space-y-5">
+                  <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="mb-4 text-sm font-semibold text-white/85">Estado</p>
+
+                    <div className="inline-flex w-full items-center gap-1 rounded-2xl border border-white/10 bg-black/40 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setPublished(false)}
+                        className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                          !published
+                            ? "bg-white/10 text-white"
+                            : "text-white/45 hover:text-white/70"
+                        }`}
+                      >
+                        Borrador
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPublished(true)}
+                        className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                          published
+                            ? "bg-yellow-400/15 text-yellow-200"
+                            : "text-white/45 hover:text-white/70"
+                        }`}
+                      >
+                        Publicado
+                      </button>
+                    </div>
+
+                    <p className="mt-3 text-xs text-white/40">
+                      {published
+                        ? "Visible para cualquier visitante en /articulos."
+                        : "Solo vos lo ves y editás desde el admin."}
+                    </p>
+                  </div>
+
                   <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
                     <p className="mb-4 text-sm font-semibold text-white/85">Autor</p>
 
