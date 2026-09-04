@@ -3,12 +3,13 @@ import { generateUniqueSlug } from "../common/utils/slug";
 
 export async function listPublic() {
   return prisma.article.findMany({
+    where: { published: true },
     orderBy: { createdAt: "desc" },
   });
 }
 
 export async function getBySlug(slug: string) {
-  return prisma.article.findUnique({ where: { slug } });
+  return prisma.article.findFirst({ where: { slug, published: true } });
 }
 
 export async function listAdmin() {
