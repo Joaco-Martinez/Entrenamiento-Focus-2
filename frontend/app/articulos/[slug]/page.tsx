@@ -7,15 +7,6 @@ import { articlesService, Article } from "@/services/articles.service";
 import { ArticleForumThread } from "@/components/ArticleForumThread";
 import { ArrowLeft, Newspaper } from "lucide-react";
 
-function formatDate(value?: string | null) {
-  if (!value) return "";
-  return new Date(value).toLocaleDateString("es-AR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 export default function ArticuloDetallePage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -122,13 +113,9 @@ export default function ArticuloDetallePage() {
               {article.title}
             </h1>
 
-            <div className="flex items-center gap-2 text-sm text-[#6b6153]">
-              <span className="font-semibold text-[#a67c27]">
-                {article.authorName}
-              </span>
-              <span className="h-1 w-1 rounded-full bg-[#6b6153]" />
-              <span>{formatDate(article.createdAt)}</span>
-            </div>
+            <p className="text-base leading-relaxed text-[#6b6153] md:text-lg">
+              {article.excerpt}
+            </p>
           </div>
 
           <div className="space-y-6 border-t border-[#2a2620]/10 pt-8 text-[17px] leading-8 text-[#2a2620] md:text-lg md:leading-9">

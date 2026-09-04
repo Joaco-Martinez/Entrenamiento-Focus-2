@@ -4,15 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { articlesService, Article } from "@/services/articles.service";
 import { ArrowRight, Newspaper } from "lucide-react";
-
-function formatDate(value?: string | null) {
-  if (!value) return "";
-  return new Date(value).toLocaleDateString("es-AR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
+import { ComunidadHeader } from "@/components/ComunidadHeader";
 
 export default function ArticulosPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -40,19 +32,13 @@ export default function ArticulosPage() {
   return (
     <section className="min-h-screen bg-[#f4ecdf] px-4 py-16 text-[#2a2620] md:py-24">
       <div className="mx-auto max-w-[1180px]">
-        <div className="mb-14 space-y-4 text-center">
-          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#a67c27]/25 bg-[#a67c27]/10 px-3 py-1 text-xs font-medium tracking-[0.08em] text-[#a67c27]">
-            <Newspaper className="h-3.5 w-3.5" />
-            Blog curado
-          </div>
+        <div className="mb-14 space-y-4">
+          <ComunidadHeader active="articulos" />
 
-          <h1 className="text-balance text-4xl font-black tracking-tight md:text-5xl">
-            Artículos <span className="text-[#a67c27]">Focus</span>
-          </h1>
-
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[#6b6153] md:text-lg">
-            Ideas, técnicas y reflexiones sobre producción musical, mezcla y
-            mastering.
+          <p className="mx-auto max-w-2xl text-center text-base leading-relaxed text-[#6b6153] md:text-lg">
+            Existen distintas formas de aprender y siempre se puede ir más
+            allá, profundizando para entender realmente qué sucede detrás de
+            cada concepto.
           </p>
         </div>
 
@@ -101,12 +87,6 @@ export default function ArticulosPage() {
                 </div>
 
                 <div className="flex flex-1 flex-col gap-3 p-6">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.1em] text-[#6b6153]">
-                    <span>{article.authorName}</span>
-                    <span className="h-1 w-1 rounded-full bg-[#6b6153]" />
-                    <span>{formatDate(article.createdAt)}</span>
-                  </div>
-
                   <h2 className="line-clamp-2 text-xl font-bold leading-snug text-[#2a2620] transition group-hover:text-[#a67c27]">
                     {article.title}
                   </h2>
