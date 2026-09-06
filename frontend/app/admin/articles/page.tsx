@@ -30,6 +30,9 @@ import {
   List,
   ImagePlus,
   MousePointerClick,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react";
 
 function formatDate(value?: string | null) {
@@ -716,6 +719,35 @@ function ArticleModal({
     focusAndPlaceCursor(end + (prefixed.length - block.length));
   };
 
+  const PARAGRAPH_ALIGN_PREFIX = /^\[align:(center|right)\]\s?/;
+
+  const applyAlign = (target: "left" | "center" | "right") => {
+    const { start } = savedSelectionRef.current;
+
+    // El párrafo es el bloque de texto entre líneas en blanco antes y
+    // después del cursor (o los bordes del contenido).
+    const before = content.lastIndexOf("\n\n", Math.max(start - 1, 0));
+    const paraStart = before === -1 ? 0 : before + 2;
+    const afterIdx = content.indexOf("\n\n", start);
+    const paraEnd = afterIdx === -1 ? content.length : afterIdx;
+
+    const paragraph = content.slice(paraStart, paraEnd);
+    const existingMatch = paragraph.match(PARAGRAPH_ALIGN_PREFIX);
+    const stripped = existingMatch ? paragraph.slice(existingMatch[0].length) : paragraph;
+    const prefix = target === "left" ? "" : `[align:${target}] `;
+    const next = prefix + stripped;
+
+    const oldPrefixLen = existingMatch ? existingMatch[0].length : 0;
+    const offsetInParagraph = Math.min(
+      Math.max(0, start - paraStart - oldPrefixLen),
+      stripped.length
+    );
+    const cursor = paraStart + prefix.length + offsetInParagraph;
+
+    setContent(content.slice(0, paraStart) + next + content.slice(paraEnd));
+    focusAndPlaceCursor(cursor);
+  };
+
   const handleInsertImageClick = () => {
     saveCurrentSelection();
     contentImageInputRef.current?.click();
@@ -944,6 +976,38 @@ function ArticleModal({
                             className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08] hover:text-white"
                           >
                             <List className="h-4 w-4" />
+                          </button>
+
+                          <div className="mx-1 w-px self-stretch bg-white/10" />
+
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyAlign("left")}
+                            title="Alinear a la izquierda"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <AlignLeft className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyAlign("center")}
+                            title="Centrar"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <AlignCenter className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyAlign("right")}
+                            title="Alinear a la derecha"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <AlignRight className="h-4 w-4" />
                           </button>
 
                           <button
