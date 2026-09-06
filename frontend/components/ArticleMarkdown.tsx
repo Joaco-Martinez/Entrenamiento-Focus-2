@@ -10,6 +10,12 @@ import remarkGfm from "remark-gfm"
 // no como link de texto corriente. Un párrafo con una única imagen adentro
 // se arma como <figure> con epígrafe opcional (el "title" del markdown de
 // imagen, vía properties.title en hast).
+// Marcador de alineación de párrafo: texto plano literal al principio del
+// párrafo (ej. "[align:center] Texto..."), nunca HTML — así seguimos sin
+// necesitar rehype-raw. El editor del admin lo inserta/saca solo. Sin
+// marcador = izquierda (default), no cambia nada de lo ya escrito.
+const ALIGN_PREFIX = /^\[align:(center|right)\]\s?/
+
 function isSoleElement(node: any, tagName: string) {
   const meaningfulChildren = (node?.children ?? []).filter(
     (child: any) => !(child.type === "text" && !child.value?.trim())
@@ -58,7 +64,27 @@ function Paragraph({ node, children }: any) {
     )
   }
 
-  return <p className="whitespace-pre-line">{children}</p>
+  let align: "center" | "right" | null = null
+  let renderedChildren = children
+
+  if (Array.isArray(children) && typeof children[0] === "string") {
+    const match = children[0].match(ALIGN_PREFIX)
+    if (match) {
+      align = match[1] as "center" | "right"
+      const stripped = children[0].slice(match[0].length)
+      renderedChildren = stripped ? [stripped, ...children.slice(1)] : children.slice(1)
+    }
+  } else if (typeof children === "string") {
+    const match = children.match(ALIGN_PREFIX)
+    if (match) {
+      align = match[1] as "center" | "right"
+      renderedChildren = children.slice(match[0].length)
+    }
+  }
+
+  const alignClass = align === "center" ? " text-center" : align === "right" ? " text-right" : ""
+
+  return <p className={`whitespace-pre-line${alignClass}`}>{renderedChildren}</p>
 }
 
 export function ArticleMarkdown({ content }: { content: string }) {
