@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { articlesService, Article } from "@/services/articles.service";
 import { ArticleForumThread } from "@/components/ArticleForumThread";
+import { ArticleMarkdown } from "@/components/ArticleMarkdown";
 import { ArrowLeft, Newspaper } from "lucide-react";
 
 export default function ArticuloDetallePage() {
@@ -119,15 +120,7 @@ export default function ArticuloDetallePage() {
           </div>
 
           <div className="space-y-6 border-t border-[#2a2620]/10 pt-8 text-[17px] leading-8 text-[#2a2620] md:text-lg md:leading-9">
-            {article.content
-              .split(/\n{2,}/)
-              .map((paragraph) => paragraph.trim())
-              .filter(Boolean)
-              .map((paragraph, index) => (
-                <p key={index} className="whitespace-pre-line">
-                  {paragraph}
-                </p>
-              ))}
+            <ArticleMarkdown content={article.content} />
           </div>
         </article>
 

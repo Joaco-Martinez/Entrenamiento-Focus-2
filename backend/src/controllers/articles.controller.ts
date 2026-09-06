@@ -65,3 +65,31 @@ export async function uploadCover(req: Request, res: Response) {
     article,
   });
 }
+
+export async function uploadContentImage(req: Request, res: Response) {
+  if (!req.file) {
+    return res.status(400).json({
+      ok: false,
+      message: "Missing image",
+    });
+  }
+
+  const uploaded = await new Promise<{ secure_url: string }>(
+    (resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "focus/articles/content" },
+        (err, result) => {
+          if (err || !result) return reject(err);
+          resolve(result as any);
+        }
+      );
+
+      stream.end(req.file!.buffer);
+    }
+  );
+
+  return res.json({
+    ok: true,
+    url: uploaded.secure_url,
+  });
+}

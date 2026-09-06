@@ -62,6 +62,14 @@ articlesRoutes.post(
   asyncHandler(articlesController.uploadCover)
 );
 
+articlesRoutes.post(
+  "/admin/uploads/image",
+  authRequired,
+  adminOnly,
+  upload.single("image"),
+  asyncHandler(articlesController.uploadContentImage)
+);
+
 /**
  * DYNAMIC PUBLIC ROUTES
  * Siempre al final
