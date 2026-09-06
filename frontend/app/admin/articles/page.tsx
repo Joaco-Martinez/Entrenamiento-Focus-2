@@ -408,15 +408,16 @@ export default function AdminArticlesPage() {
         {/* desktop */}
         <section className="hidden xl:block">
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/35 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-            <table className="w-full table-fixed text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1000px] table-fixed text-sm">
               <thead className="bg-white/[0.03] text-left text-white/50">
                 <tr>
-                  <th className="w-[34%] px-5 py-4 font-medium">Artículo</th>
-                  <th className="w-[14%] px-5 py-4 font-medium">Autor</th>
-                  <th className="w-[12%] px-5 py-4 font-medium">Estado</th>
-                  <th className="w-[16%] px-5 py-4 font-medium">Slug</th>
-                  <th className="w-[10%] px-5 py-4 font-medium">Fecha</th>
-                  <th className="w-[14%] px-5 py-4 font-medium text-right">Acción</th>
+                  <th className="px-5 py-4 font-medium">Artículo</th>
+                  <th className="w-[130px] px-5 py-4 font-medium">Autor</th>
+                  <th className="w-[120px] px-5 py-4 font-medium">Estado</th>
+                  <th className="w-[170px] px-5 py-4 font-medium">Slug</th>
+                  <th className="w-[120px] px-5 py-4 font-medium">Fecha</th>
+                  <th className="w-[230px] px-5 py-4 font-medium text-right">Acción</th>
                 </tr>
               </thead>
 
@@ -469,9 +470,9 @@ export default function AdminArticlesPage() {
                         </td>
 
                         <td className="px-5 py-4">
-                          <div className="flex items-center gap-2 text-white/80">
-                            <UserCircle2 className="h-4 w-4 text-white/35" />
-                            {a.authorName}
+                          <div className="flex min-w-0 items-center gap-2 text-white/80">
+                            <UserCircle2 className="h-4 w-4 shrink-0 text-white/35" />
+                            <span className="truncate">{a.authorName}</span>
                           </div>
                         </td>
 
@@ -501,9 +502,10 @@ export default function AdminArticlesPage() {
                             type="button"
                             onClick={() => handleCopySlug(a)}
                             title="Copiar URL pública del artículo"
+                            className="block w-full min-w-0 text-left"
                           >
                             <Badge
-                              className={`border transition ${
+                              className={`w-full min-w-0 border transition ${
                                 copiedSlugId === a.id
                                   ? "border-yellow-400/30 bg-yellow-400/10 text-yellow-200"
                                   : "border-white/10 bg-white/5 text-white/70 hover:border-yellow-400/30 hover:bg-yellow-400/10 hover:text-yellow-200"
@@ -511,12 +513,12 @@ export default function AdminArticlesPage() {
                             >
                               {copiedSlugId === a.id ? (
                                 <>
-                                  <Check className="h-3 w-3" />
+                                  <Check className="h-3 w-3 shrink-0" />
                                   <span className="truncate">Copiado</span>
                                 </>
                               ) : (
                                 <>
-                                  <LinkIcon className="h-3 w-3" />
+                                  <LinkIcon className="h-3 w-3 shrink-0" />
                                   <span className="truncate">{a.slug}</span>
                                 </>
                               )}
@@ -524,12 +526,14 @@ export default function AdminArticlesPage() {
                           </button>
                         </td>
 
-                        <td className="px-5 py-4 text-white/80">{formatDate(a.createdAt)}</td>
+                        <td className="whitespace-nowrap px-5 py-4 text-white/80">
+                          {formatDate(a.createdAt)}
+                        </td>
 
                         <td className="px-5 py-4">
                           <div className="flex justify-end gap-2">
                             <button
-                              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/[0.06]"
+                              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/[0.06]"
                               onClick={() => {
                                 setEditing(a);
                                 setOpenEdit(true);
@@ -541,7 +545,7 @@ export default function AdminArticlesPage() {
 
                             <button
                               disabled={isBusy}
-                              className="inline-flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/15 disabled:opacity-50"
+                              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/15 disabled:opacity-50"
                               onClick={() => onDelete(a.id)}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -554,7 +558,8 @@ export default function AdminArticlesPage() {
                   })
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         </section>
       </div>
