@@ -85,4 +85,20 @@ export const articlesService = {
     });
     return data as { article: Article };
   },
+
+  /**
+   * Upload an image to embed in article content (admin only). Not tied to
+   * any article id, so it also works while writing a brand-new article
+   * that hasn't been saved yet.
+   */
+  async uploadContentImage(file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const data = await apiFetch(`/articles/admin/uploads/image`, {
+      method: "POST",
+      body: formData,
+    });
+    return data as { url: string };
+  },
 };

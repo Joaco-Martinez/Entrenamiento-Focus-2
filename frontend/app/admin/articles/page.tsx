@@ -7,6 +7,7 @@ import {
   CreateArticleDto,
   UpdateArticleDto,
 } from "@/services/articles.service";
+import { ArticleMarkdown } from "@/components/ArticleMarkdown";
 import { useAuth } from "@/context/AuthContext";
 import {
   Newspaper,
@@ -24,6 +25,11 @@ import {
   Check,
   Eye,
   EyeOff,
+  Bold,
+  Heading2,
+  List,
+  ImagePlus,
+  MousePointerClick,
 } from "lucide-react";
 
 function formatDate(value?: string | null) {
@@ -619,6 +625,20 @@ function ArticleModal({
   const [titleValue, setTitleValue] = useState(defaultValues?.title ?? "");
   const [excerpt, setExcerpt] = useState(defaultValues?.excerpt ?? "");
   const [content, setContent] = useState(defaultValues?.content ?? "");
+  const [contentPreview, setContentPreview] = useState(false);
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const savedSelectionRef = useRef({ start: 0, end: 0 });
+
+  const contentImageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingContentImage, setUploadingContentImage] = useState(false);
+  const [contentImageError, setContentImageError] = useState<string | null>(null);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [pendingImageCaption, setPendingImageCaption] = useState("");
+
+  const [showButtonComposer, setShowButtonComposer] = useState(false);
+  const [buttonText, setButtonText] = useState("");
+  const [buttonUrl, setButtonUrl] = useState("");
+
   const [authorName, setAuthorName] = useState(
     defaultValues?.authorName ?? "Entrenamiento Focus"
   );
@@ -641,6 +661,110 @@ function ArticleModal({
     if (!excerpt.trim()) return "El extracto es obligatorio.";
     if (!content.trim()) return "El contenido es obligatorio.";
     return null;
+  };
+
+  // Se guarda en cada interacción con el textarea (click, selección, tipeo)
+  // porque los botones de la barra le sacan el foco al textarea: para cuando
+  // corre el onClick del botón, selectionStart/End del DOM ya no sirven.
+  const saveCurrentSelection = () => {
+    const el = contentTextareaRef.current;
+    if (!el) return;
+    savedSelectionRef.current = { start: el.selectionStart, end: el.selectionEnd };
+  };
+
+  const focusAndPlaceCursor = (cursor: number) => {
+    savedSelectionRef.current = { start: cursor, end: cursor };
+    requestAnimationFrame(() => {
+      const el = contentTextareaRef.current;
+      el?.focus();
+      el?.setSelectionRange(cursor, cursor);
+    });
+  };
+
+  const insertAtSavedSelection = (text: string) => {
+    const { start, end } = savedSelectionRef.current;
+    setContent((prev) => prev.slice(0, start) + text + prev.slice(end));
+    focusAndPlaceCursor(start + text.length);
+  };
+
+  const applyWrap = (before: string, after: string, placeholder: string) => {
+    const { start, end } = savedSelectionRef.current;
+    const selected = content.slice(start, end) || placeholder;
+
+    setContent(content.slice(0, start) + before + selected + after + content.slice(end));
+    focusAndPlaceCursor(start + before.length + selected.length + after.length);
+  };
+
+  const applyLinePrefix = (prefix: string) => {
+    const { start, end } = savedSelectionRef.current;
+    const lineStart = content.lastIndexOf("\n", start - 1) + 1;
+    const lineEndIdx = content.indexOf("\n", end);
+    const lineEnd = lineEndIdx === -1 ? content.length : lineEndIdx;
+
+    const block = content.slice(lineStart, lineEnd);
+    const prefixed = block
+      .split("\n")
+      .map((line) => prefix + line)
+      .join("\n");
+
+    setContent(content.slice(0, lineStart) + prefixed + content.slice(lineEnd));
+    focusAndPlaceCursor(end + (prefixed.length - block.length));
+  };
+
+  const handleInsertImageClick = () => {
+    saveCurrentSelection();
+    contentImageInputRef.current?.click();
+  };
+
+  const handleContentImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setContentImageError(null);
+    setUploadingContentImage(true);
+
+    try {
+      const { url } = await articlesService.uploadContentImage(file);
+      setPendingImageUrl(url);
+      setPendingImageCaption("");
+    } catch (err: any) {
+      setContentImageError(err?.message || "No se pudo subir la imagen.");
+    } finally {
+      setUploadingContentImage(false);
+    }
+  };
+
+  const confirmInsertImage = () => {
+    if (!pendingImageUrl) return;
+
+    const caption = pendingImageCaption.trim().replace(/"/g, "'");
+    const markdown = caption
+      ? `\n\n![](${pendingImageUrl} "${caption}")\n\n`
+      : `\n\n![](${pendingImageUrl})\n\n`;
+
+    insertAtSavedSelection(markdown);
+    setPendingImageUrl(null);
+    setPendingImageCaption("");
+  };
+
+  const cancelInsertImage = () => {
+    setPendingImageUrl(null);
+    setPendingImageCaption("");
+  };
+
+  const handleOpenButtonComposer = () => {
+    saveCurrentSelection();
+    setButtonText("");
+    setButtonUrl("");
+    setShowButtonComposer(true);
+  };
+
+  const confirmInsertButton = () => {
+    if (!buttonText.trim() || !buttonUrl.trim()) return;
+
+    insertAtSavedSelection(`\n\n[${buttonText.trim()}](${buttonUrl.trim()})\n\n`);
+    setShowButtonComposer(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -690,7 +814,7 @@ function ArticleModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 px-4 py-8 backdrop-blur-sm">
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-6xl">
         <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.10),transparent_30%),linear-gradient(180deg,#0F0F0F_0%,#090909_100%)] shadow-[0_30px_100px_rgba(0,0,0,0.55)]">
           <div className="border-b border-white/8 px-5 py-5 sm:px-6">
             <div className="flex items-start justify-between gap-4">
@@ -755,16 +879,204 @@ function ArticleModal({
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-white/85">
-                      Contenido
-                    </label>
-                    <textarea
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                      rows={10}
-                      className="w-full resize-none rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
-                      placeholder="Contenido completo del artículo..."
-                    />
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <label className="text-sm font-semibold text-white/85">Contenido</label>
+
+                      <div className="flex overflow-hidden rounded-xl border border-white/10 lg:hidden">
+                        <button
+                          type="button"
+                          onClick={() => setContentPreview(false)}
+                          className={`px-3 py-1.5 text-xs font-semibold transition ${
+                            !contentPreview
+                              ? "bg-white/10 text-white"
+                              : "text-white/45 hover:text-white/70"
+                          }`}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setContentPreview(true)}
+                          className={`px-3 py-1.5 text-xs font-semibold transition ${
+                            contentPreview
+                              ? "bg-yellow-400/15 text-yellow-200"
+                              : "text-white/45 hover:text-white/70"
+                          }`}
+                        >
+                          Vista previa
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      <div className={contentPreview ? "hidden lg:block" : "block"}>
+                        <div className="mb-2 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyWrap("**", "**", "texto en negrita")}
+                            title="Negrita"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <Bold className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyLinePrefix("## ")}
+                            title="Subtítulo"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <Heading2 className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyLinePrefix("- ")}
+                            title="Lista"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <List className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={handleInsertImageClick}
+                            disabled={uploadingContentImage}
+                            title="Insertar imagen"
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <ImagePlus className="h-4 w-4" />
+                            {uploadingContentImage ? "Subiendo..." : "Insertar imagen"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={handleOpenButtonComposer}
+                            title="Insertar botón"
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <MousePointerClick className="h-4 w-4" />
+                            Insertar botón
+                          </button>
+
+                          <input
+                            ref={contentImageInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleContentImageChange}
+                          />
+                        </div>
+
+                        {contentImageError && (
+                          <p className="mb-2 text-xs text-red-300">{contentImageError}</p>
+                        )}
+
+                        {pendingImageUrl && (
+                          <div className="mb-3 space-y-3 rounded-2xl border border-yellow-400/20 bg-yellow-400/5 p-3">
+                            <div className="aspect-video w-full max-w-xs overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={pendingImageUrl} alt="" className="h-full w-full object-cover" />
+                            </div>
+
+                            <input
+                              value={pendingImageCaption}
+                              onChange={(e) => setPendingImageCaption(e.target.value)}
+                              placeholder="Epígrafe opcional, ej: Figura 1: cadena de mastering"
+                              className="h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-yellow-400/50"
+                            />
+
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={confirmInsertImage}
+                                className="rounded-xl bg-yellow-400/15 px-4 py-2 text-xs font-semibold text-yellow-200 transition hover:bg-yellow-400/25"
+                              >
+                                Insertar en el texto
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelInsertImage}
+                                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-white/60 transition hover:bg-white/[0.05]"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {showButtonComposer && (
+                          <div className="mb-3 space-y-3 rounded-2xl border border-yellow-400/20 bg-yellow-400/5 p-3">
+                            <input
+                              value={buttonText}
+                              onChange={(e) => setButtonText(e.target.value)}
+                              placeholder="Texto del botón, ej: Escuchar en Spotify"
+                              className="h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-yellow-400/50"
+                            />
+                            <input
+                              value={buttonUrl}
+                              onChange={(e) => setButtonUrl(e.target.value)}
+                              placeholder="https://..."
+                              className="h-10 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-sm text-white placeholder:text-white/35 outline-none focus:border-yellow-400/50"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={confirmInsertButton}
+                                disabled={!buttonText.trim() || !buttonUrl.trim()}
+                                className="rounded-xl bg-yellow-400/15 px-4 py-2 text-xs font-semibold text-yellow-200 transition hover:bg-yellow-400/25 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Insertar en el texto
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowButtonComposer(false)}
+                                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-white/60 transition hover:bg-white/[0.05]"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <textarea
+                          ref={contentTextareaRef}
+                          value={content}
+                          onChange={(e) => {
+                            setContent(e.target.value);
+                            saveCurrentSelection();
+                          }}
+                          onSelect={saveCurrentSelection}
+                          onClick={saveCurrentSelection}
+                          onKeyUp={saveCurrentSelection}
+                          onFocus={saveCurrentSelection}
+                          rows={24}
+                          className="min-h-[480px] w-full resize-y rounded-2xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-sm text-white placeholder:text-white/35 outline-none transition focus:border-yellow-400/50 focus:ring-2 focus:ring-yellow-400/15"
+                          placeholder="Contenido completo del artículo, en Markdown..."
+                        />
+                      </div>
+
+                      <div className={contentPreview ? "block" : "hidden lg:block"}>
+                        <p className="mb-2 hidden text-sm font-semibold text-white/40 lg:block">
+                          Vista previa
+                        </p>
+
+                        <div className="min-h-[480px] max-h-[720px] overflow-y-auto rounded-2xl border border-white/10 bg-[#f4ecdf] p-6 text-[#2a2620]">
+                          {content.trim() ? (
+                            <ArticleMarkdown content={content} />
+                          ) : (
+                            <p className="text-sm text-[#6b6153]">
+                              Todavía no hay contenido para previsualizar.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
