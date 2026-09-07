@@ -37,6 +37,7 @@ export function Navbar() {
   }
 
   const dashboardHref = isAdmin ? "/admin" : "/dashboard"
+  const dashboardLabel = isAdmin ? "Panel admin" : "Mis Compras"
 
   return (
     <>
@@ -92,7 +93,7 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <Button onClick={() => go(dashboardHref)}>Mis Compras</Button>
+                <Button onClick={() => go(dashboardHref)}>{dashboardLabel}</Button>
 
                 <Button variant="ghost" onClick={handleLogout}>
                   Cerrar sesión
@@ -194,7 +195,7 @@ export function Navbar() {
                       onClick={() => go(dashboardHref)}
                       className="block w-full rounded-xl bg-primary px-3 py-3 text-left font-semibold text-primary-foreground transition hover:opacity-90"
                     >
-                      Mis Compras
+                      {dashboardLabel}
                     </button>
 
                     <button
