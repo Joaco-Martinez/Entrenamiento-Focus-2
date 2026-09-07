@@ -108,15 +108,42 @@ export default function AdminClasesPage() {
   };
 
   const onDelete = async (id: string) => {
+    const item = items.find((c) => c.id === id);
+    const title = item?.title || "esta clase";
+
     const ok = confirm(
-      "¿Eliminar esta clase? Se borra también el video de Bunny y la portada de Cloudinary. No se puede deshacer."
+      `¿Eliminar "${title}"? Se borra también el video de Bunny y la portada de Cloudinary. No se puede deshacer.`
     );
     if (!ok) return;
 
+    setError(null);
     setDeletingId(id);
     try {
       await classesService.remove(id);
       await refresh(true);
+    } catch (err: any) {
+      if (err?.data?.requiresConfirmation) {
+        const buyersCount = err.data.buyersCount ?? 0;
+        const buyersLine =
+          buyersCount === 1
+            ? "1 persona compró esta clase y va a perder el acceso."
+            : `${buyersCount} personas compraron esta clase y van a perder el acceso.`;
+
+        const confirmed = confirm(
+          `"${title}": ${buyersLine} El video también se va a borrar de Bunny y no se puede recuperar. ¿Borrar igual?`
+        );
+
+        if (confirmed) {
+          try {
+            await classesService.remove(id, true);
+            await refresh(true);
+          } catch (err2: any) {
+            setError(err2?.message || "No se pudo eliminar la clase.");
+          }
+        }
+      } else {
+        setError(err?.message || "No se pudo eliminar la clase.");
+      }
     } finally {
       setDeletingId(null);
     }

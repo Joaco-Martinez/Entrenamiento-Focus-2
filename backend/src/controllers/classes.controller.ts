@@ -55,7 +55,22 @@ export async function update(req: Request, res: Response) {
 }
 
 export async function remove(req: Request, res: Response) {
-  await classesService.remove(req.params.id);
+  const confirmed = req.query.confirm === "true" || req.body?.confirm === true;
+  const result = await classesService.remove(req.params.id, confirmed);
+
+  if (result.requiresConfirmation) {
+    const { buyersCount } = result;
+    return res.status(409).json({
+      ok: false,
+      requiresConfirmation: true,
+      buyersCount,
+      message:
+        buyersCount === 1
+          ? "1 persona compró esta clase y va a perder el acceso."
+          : `${buyersCount} personas compraron esta clase y van a perder el acceso.`,
+    });
+  }
+
   res.json({ ok: true });
 }
 

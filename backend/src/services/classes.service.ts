@@ -104,20 +104,56 @@ export async function update(id: string, data: any) {
   return prisma.videoClass.update({ where: { id }, data });
 }
 
-export async function remove(id: string) {
+/**
+ * AccessGrant es la fuente de verdad de quién tiene acceso hoy (ver
+ * getAccess): cuenta compradores reales y también accesos otorgados a mano,
+ * a diferencia de OrderItem que solo refleja órdenes.
+ *
+ * Si hay compradores y todavía no vino la confirmación explícita, no se
+ * borra nada: se corta acá y se le devuelve el conteo al caller para que
+ * decida con el costo a la vista.
+ *
+ * El borrado en Bunny/Cloudinary va DESPUÉS de que la base confirmó el
+ * delete, nunca antes: si se hiciera al revés y el delete de la base
+ * fallara, el video ya estaría perdido con la clase todavía viva en el
+ * catálogo. Con este orden, en el peor caso (falla Bunny) lo que queda
+ * huérfano es un archivo en Bunny, nunca el estado de la base.
+ */
+export async function remove(id: string, confirmed: boolean) {
   const item = await getAdminById(id);
 
-  if (item.bunnyVideoId) {
-    await bunnyService.deleteVideo(item.bunnyVideoId);
+  const buyersCount = await prisma.accessGrant.count({ where: { classId: id } });
+  if (buyersCount > 0 && !confirmed) {
+    return { requiresConfirmation: true as const, buyersCount };
   }
 
-  if (item.coverImagePublicId) {
-    await cloudinary.uploader.destroy(item.coverImagePublicId, {
-      resource_type: "image",
-    });
+  await prisma.$transaction([
+    prisma.classWatchProgress.deleteMany({ where: { classId: id } }),
+    prisma.videoClass.delete({ where: { id } }),
+  ]);
+
+  try {
+    if (item.bunnyVideoId) {
+      await bunnyService.deleteVideo(item.bunnyVideoId);
+    }
+
+    if (item.coverImagePublicId) {
+      await cloudinary.uploader.destroy(item.coverImagePublicId, {
+        resource_type: "image",
+      });
+    }
+  } catch (err) {
+    console.error(
+      "La clase se borró de la base pero falló el borrado en Bunny/Cloudinary:",
+      err
+    );
+    throw new ApiError(
+      502,
+      "La clase se eliminó, pero no se pudo borrar el video de Bunny o la portada. Borralos manualmente."
+    );
   }
 
-  await prisma.videoClass.delete({ where: { id } });
+  return { requiresConfirmation: false as const };
 }
 
 export async function setCover(

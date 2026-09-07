@@ -76,8 +76,14 @@ export const classesService = {
     });
   },
 
-  async remove(id: string): Promise<{ ok: boolean }> {
-    return apiFetch(`/clases/admin/clases/${id}`, { method: "DELETE" });
+  async remove(
+    id: string,
+    confirm = false
+  ): Promise<{ ok: boolean }> {
+    return apiFetch(
+      `/clases/admin/clases/${id}${confirm ? "?confirm=true" : ""}`,
+      { method: "DELETE" }
+    );
   },
 
   async uploadCover(id: string, file: File): Promise<{ class: VideoClass }> {
