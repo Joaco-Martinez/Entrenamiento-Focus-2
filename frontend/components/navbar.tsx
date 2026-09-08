@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext"
 import { useCart } from "@/context/CartContext"
 import { CartDrawer } from "@/components/cart/Cart"
 import { UserAvatar } from "@/components/UserAvatar"
+import { UserAccountMenu } from "@/components/UserAccountMenu"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -98,19 +99,13 @@ export function Navbar() {
               <div className="flex items-center gap-3">
                 <Button onClick={() => go(dashboardHref)}>{dashboardLabel}</Button>
 
-                <Button variant="ghost" onClick={handleLogout}>
-                  Cerrar sesión
-                </Button>
-
-                <button
-                  type="button"
-                  onClick={() => go("/mi-cuenta")}
-                  title="Mi cuenta"
-                  aria-label="Mi cuenta"
-                  className="rounded-full transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  <UserAvatar name={accountName} avatarUrl={user?.avatarUrl} size={36} />
-                </button>
+                <UserAccountMenu
+                  name={fullName}
+                  email={user?.email ?? ""}
+                  avatarUrl={user?.avatarUrl}
+                  onViewProfile={() => go("/mi-cuenta")}
+                  onLogout={handleLogout}
+                />
               </div>
             )}
           </div>
@@ -211,22 +206,30 @@ export function Navbar() {
                       {dashboardLabel}
                     </button>
 
+                    <div className="mt-2 flex items-center gap-3 rounded-xl border-t border-white/10 px-3 pb-1 pt-4">
+                      <UserAvatar name={accountName} avatarUrl={user?.avatarUrl} size={36} />
+                      <div className="min-w-0">
+                        {fullName && (
+                          <p className="truncate text-sm font-medium text-foreground">{fullName}</p>
+                        )}
+                        <p className="truncate text-xs text-white/50">{user?.email}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => go("/mi-cuenta")}
+                      className="block w-full rounded-xl px-3 py-3 text-left font-medium text-foreground transition-colors hover:bg-white/[0.04] hover:text-primary"
+                    >
+                      Ver perfil
+                    </button>
+
                     <button
                       type="button"
                       onClick={handleLogout}
                       className="block w-full rounded-xl px-3 py-3 text-left font-medium text-red-400 transition-colors hover:bg-red-500/10"
                     >
                       Cerrar sesión
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => go("/mi-cuenta")}
-                      title="Mi cuenta"
-                      aria-label="Mi cuenta"
-                      className="flex w-full items-center justify-center rounded-xl px-3 py-3 transition-colors hover:bg-white/[0.04]"
-                    >
-                      <UserAvatar name={accountName} avatarUrl={user?.avatarUrl} size={40} />
                     </button>
                   </>
                 )}
