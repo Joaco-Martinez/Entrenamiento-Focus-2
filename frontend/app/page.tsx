@@ -81,24 +81,44 @@ export default function EntrenamientoFocusPage() {
             </p>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-10 sm:flex-row">
-            <Link
-              href="/servicios"
-              className="group w-full max-w-[360px] rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-14 py-5 text-center transition hover:bg-[#c8a84b] sm:w-auto"
-            >
-              <span className="text-[16px] font-bold text-[#f0ede6] transition group-hover:text-[#111110]">
-                Servicios →
-              </span>
-            </Link>
+          <div className="flex flex-col items-center gap-6">
+            {/* Accesos principales */}
+            <div className="flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row sm:gap-6">
+              <Link
+                href="/clases"
+                className="w-full max-w-[360px] rounded-full bg-[#c8a84b] px-10 py-4 text-center transition hover:scale-[1.02] hover:bg-[#d8b85b] sm:w-auto"
+              >
+                <span className="text-[16px] font-bold text-[#111110]">
+                  Clases Focus →
+                </span>
+              </Link>
 
-            <Link
-              href="/recursos"
-              className="group w-full max-w-[360px] rounded-xl border border-[#c8a84b]/30 bg-[#111110] px-14 py-5 text-center transition hover:bg-[#c8a84b] sm:w-auto"
-            >
-              <span className="text-[16px] font-bold text-[#f0ede6] transition group-hover:text-[#111110]">
+              <Link
+                href="/servicios"
+                className="w-full max-w-[360px] rounded-full bg-[#c8a84b] px-10 py-4 text-center transition hover:scale-[1.02] hover:bg-[#d8b85b] sm:w-auto"
+              >
+                <span className="text-[16px] font-bold text-[#111110]">
+                  Servicios →
+                </span>
+              </Link>
+            </div>
+
+            {/* Accesos secundarios */}
+            <div className="flex w-full flex-col items-center justify-center gap-2 sm:w-auto sm:flex-row sm:gap-8">
+              <Link
+                href="/recursos"
+                className="w-full max-w-[360px] rounded-full px-6 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 transition hover:text-[#c8a84b] sm:w-auto sm:px-3 sm:py-2"
+              >
                 Productos →
-              </span>
-            </Link>
+              </Link>
+
+              <Link
+                href="/articulos"
+                className="w-full max-w-[360px] rounded-full px-6 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 transition hover:text-[#c8a84b] sm:w-auto sm:px-3 sm:py-2"
+              >
+                Artículos →
+              </Link>
+            </div>
           </div>
         </div>
       </section>
