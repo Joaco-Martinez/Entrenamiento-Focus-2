@@ -81,44 +81,34 @@ export default function EntrenamientoFocusPage() {
             </p>
           </div>
 
-          <div className="flex flex-col items-center gap-6">
-            {/* Accesos principales */}
-            <div className="flex w-full flex-col items-center justify-center gap-4 sm:w-auto sm:flex-row sm:gap-6">
-              <Link
-                href="/clases"
-                className="w-full max-w-[360px] rounded-full bg-[#c8a84b] px-10 py-4 text-center transition hover:scale-[1.02] hover:bg-[#d8b85b] sm:w-auto"
-              >
-                <span className="text-[16px] font-bold text-[#111110]">
-                  Clases Focus →
-                </span>
-              </Link>
+          <div className="grid grid-cols-2 justify-items-center gap-x-8 gap-y-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-10 sm:gap-y-3">
+            <Link
+              href="/clases"
+              className="rounded-full px-3 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 underline-offset-4 transition hover:text-[#d8b85b] hover:underline sm:text-[16px]"
+            >
+              Clases Focus →
+            </Link>
 
-              <Link
-                href="/servicios"
-                className="w-full max-w-[360px] rounded-full bg-[#c8a84b] px-10 py-4 text-center transition hover:scale-[1.02] hover:bg-[#d8b85b] sm:w-auto"
-              >
-                <span className="text-[16px] font-bold text-[#111110]">
-                  Servicios →
-                </span>
-              </Link>
-            </div>
+            <Link
+              href="/servicios"
+              className="rounded-full px-3 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 underline-offset-4 transition hover:text-[#d8b85b] hover:underline sm:text-[16px]"
+            >
+              Servicios →
+            </Link>
 
-            {/* Accesos secundarios */}
-            <div className="flex w-full flex-col items-center justify-center gap-2 sm:w-auto sm:flex-row sm:gap-8">
-              <Link
-                href="/recursos"
-                className="w-full max-w-[360px] rounded-full px-6 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 transition hover:text-[#c8a84b] sm:w-auto sm:px-3 sm:py-2"
-              >
-                Productos →
-              </Link>
+            <Link
+              href="/recursos"
+              className="rounded-full px-3 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 underline-offset-4 transition hover:text-[#d8b85b] hover:underline sm:text-[16px]"
+            >
+              Productos →
+            </Link>
 
-              <Link
-                href="/articulos"
-                className="w-full max-w-[360px] rounded-full px-6 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 transition hover:text-[#c8a84b] sm:w-auto sm:px-3 sm:py-2"
-              >
-                Artículos →
-              </Link>
-            </div>
+            <Link
+              href="/articulos"
+              className="rounded-full px-3 py-3 text-center text-[14px] font-semibold text-[#f0ede6]/70 underline-offset-4 transition hover:text-[#d8b85b] hover:underline sm:text-[16px]"
+            >
+              Artículos →
+            </Link>
           </div>
         </div>
       </section>
