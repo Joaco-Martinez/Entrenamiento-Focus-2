@@ -8,14 +8,17 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/context/AuthContext"
 import { useCart } from "@/context/CartContext"
 import { CartDrawer } from "@/components/cart/Cart"
+import { UserAvatar } from "@/components/UserAvatar"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
 
   const router = useRouter()
-  const { isAuth, isAdmin, logout } = useAuth()
+  const { isAuth, isAdmin, logout, user, fullName } = useAuth()
   const { totalItems } = useCart()
+
+  const accountName = fullName || user?.email || "Usuario"
 
   const navItems = [
     { href: "/", label: "Inicio" },
@@ -95,13 +98,19 @@ export function Navbar() {
               <div className="flex items-center gap-3">
                 <Button onClick={() => go(dashboardHref)}>{dashboardLabel}</Button>
 
-                <Button variant="ghost" onClick={() => go("/mi-cuenta")}>
-                  Mi cuenta
-                </Button>
-
                 <Button variant="ghost" onClick={handleLogout}>
                   Cerrar sesión
                 </Button>
+
+                <button
+                  type="button"
+                  onClick={() => go("/mi-cuenta")}
+                  title="Mi cuenta"
+                  aria-label="Mi cuenta"
+                  className="rounded-full transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <UserAvatar name={accountName} avatarUrl={user?.avatarUrl} size={36} />
+                </button>
               </div>
             )}
           </div>
@@ -204,18 +213,20 @@ export function Navbar() {
 
                     <button
                       type="button"
-                      onClick={() => go("/mi-cuenta")}
-                      className="block w-full rounded-xl px-3 py-3 text-left font-medium text-foreground transition-colors hover:bg-white/[0.04] hover:text-primary"
-                    >
-                      Mi cuenta
-                    </button>
-
-                    <button
-                      type="button"
                       onClick={handleLogout}
                       className="block w-full rounded-xl px-3 py-3 text-left font-medium text-red-400 transition-colors hover:bg-red-500/10"
                     >
                       Cerrar sesión
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => go("/mi-cuenta")}
+                      title="Mi cuenta"
+                      aria-label="Mi cuenta"
+                      className="flex w-full items-center justify-center rounded-xl px-3 py-3 transition-colors hover:bg-white/[0.04]"
+                    >
+                      <UserAvatar name={accountName} avatarUrl={user?.avatarUrl} size={40} />
                     </button>
                   </>
                 )}
