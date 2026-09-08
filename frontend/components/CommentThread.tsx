@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext"
 import { ForumComment, NewCommentInput } from "@/services/forum.service"
 import { displayAuthorName, formatDateTime, linkifyText } from "@/components/PostBody"
 import { ActionsMenu } from "@/components/ActionsMenu"
+import { UserAvatar } from "@/components/UserAvatar"
 import {
   MAX_RECORDING_SECONDS,
   LiveWaveform,
@@ -30,16 +31,24 @@ export function CommentItem({
   return (
     <div className="rounded-2xl border border-[#2a2620]/10 bg-[#faf6ee] p-4">
       <div className="flex items-start justify-between gap-4">
-        <p className="text-[13px] text-[#6b6153]">
-          <span
-            className={`font-medium ${
-              comment.author?.role === "ADMIN" ? "text-[#a67c27]" : "text-[#6b6153]"
-            }`}
-          >
-            {displayAuthorName(comment.author)}
-          </span>{" "}
-          · {formatDateTime(comment.createdAt)}
-        </p>
+        <div className="flex items-center gap-2.5">
+          <UserAvatar
+            name={displayAuthorName(comment.author)}
+            avatarUrl={comment.author?.avatarUrl}
+            size={32}
+          />
+
+          <p className="text-[13px] text-[#6b6153]">
+            <span
+              className={`font-medium ${
+                comment.author?.role === "ADMIN" ? "text-[#a67c27]" : "text-[#6b6153]"
+              }`}
+            >
+              {displayAuthorName(comment.author)}
+            </span>{" "}
+            · {formatDateTime(comment.createdAt)}
+          </p>
+        </div>
 
         {canDelete && onDelete && (
           <ActionsMenu items={[{ label: "Eliminar", onClick: onDelete, destructive: true }]} />

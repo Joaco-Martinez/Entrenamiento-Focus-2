@@ -1,6 +1,9 @@
 import { prisma } from "../prisma/client";
 import { ApiError } from "../common/errors/ApiError";
 import { Prisma } from "@prisma/client";
+import { cloudinary } from "../config/cloudinary";
+
+const AVATAR_FOLDER = "focus/avatars";
 
 export async function getMe(userId: string) {
   const u = await prisma.user.findUnique({
@@ -13,12 +16,75 @@ export async function getMe(userId: string) {
       lastName: true,
       phone: true,
       country: true,
+      avatarUrl: true,
       createdAt: true,
     },
   });
 
   if (!u) throw new ApiError(404, "User not found");
   return u;
+}
+
+/**
+ * Sube el avatar a Cloudinary recortado a cuadrado (crop "fill" con gravity
+ * "face" para centrar la cara cuando se detecta) y borra el avatar anterior
+ * del usuario, si tenía uno.
+ */
+export async function updateAvatar(userId: string, buffer: Buffer) {
+  const previous = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { avatarPublicId: true },
+  });
+
+  const uploaded = await new Promise<{ secure_url: string; public_id: string }>(
+    (resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: AVATAR_FOLDER,
+          transformation: [{ width: 512, height: 512, crop: "fill", gravity: "face" }],
+        },
+        (err, result) => {
+          if (err || !result) return reject(err);
+          resolve(result as any);
+        }
+      );
+
+      stream.end(buffer);
+    }
+  );
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      avatarUrl: uploaded.secure_url,
+      avatarPublicId: uploaded.public_id,
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      firstName: true,
+      lastName: true,
+      phone: true,
+      country: true,
+      avatarUrl: true,
+    },
+  });
+
+  // Best-effort: un problema de red/credenciales con Cloudinary al borrar el
+  // avatar viejo no puede impedir que la subida del nuevo se dé por exitosa.
+  if (previous?.avatarPublicId) {
+    try {
+      await cloudinary.uploader.destroy(previous.avatarPublicId);
+    } catch (err) {
+      console.error(
+        `No se pudo borrar de Cloudinary el avatar anterior del usuario ${userId} (public_id=${previous.avatarPublicId}):`,
+        err
+      );
+    }
+  }
+
+  return user;
 }
 
 export async function getMyOrders(userId: string) {

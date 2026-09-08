@@ -95,6 +95,10 @@ export function Navbar() {
               <div className="flex items-center gap-3">
                 <Button onClick={() => go(dashboardHref)}>{dashboardLabel}</Button>
 
+                <Button variant="ghost" onClick={() => go("/mi-cuenta")}>
+                  Mi cuenta
+                </Button>
+
                 <Button variant="ghost" onClick={handleLogout}>
                   Cerrar sesión
                 </Button>
@@ -196,6 +200,14 @@ export function Navbar() {
                       className="block w-full rounded-xl bg-primary px-3 py-3 text-left font-semibold text-primary-foreground transition hover:opacity-90"
                     >
                       {dashboardLabel}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => go("/mi-cuenta")}
+                      className="block w-full rounded-xl px-3 py-3 text-left font-medium text-foreground transition-colors hover:bg-white/[0.04] hover:text-primary"
+                    >
+                      Mi cuenta
                     </button>
 
                     <button

@@ -8,6 +8,7 @@ export type LoginResponse = {
     firstName?: string | null;
     lastName?: string | null;
     country?: string | null;
+    avatarUrl?: string | null;
     isPremium?: boolean;
     subscriptionId?: string | null;
   };
@@ -21,6 +22,7 @@ export type MeResponse = {
     firstName?: string | null;
     lastName?: string | null;
     country?: string | null;
+    avatarUrl?: string | null;
     isPremium?: boolean;
     subscriptionId?: string | null;
   };

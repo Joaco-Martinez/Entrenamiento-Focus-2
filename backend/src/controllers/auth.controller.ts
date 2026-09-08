@@ -50,6 +50,7 @@ export async function me(req: Request, res: Response) {
       firstName: true,
       lastName: true,
       country: true,
+      avatarUrl: true,
     },
   });
 

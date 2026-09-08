@@ -42,6 +42,7 @@ export async function register(data: {
       lastName: true,
       phone: true,
       country: true,
+      avatarUrl: true,
     },
   });
 
@@ -80,6 +81,7 @@ export async function login(data: { email: string; password: string }) {
       firstName: user.firstName,
       lastName: user.lastName,
       country: user.country,
+      avatarUrl: user.avatarUrl,
     },
     token,
   };

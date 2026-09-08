@@ -18,6 +18,7 @@ export type AuthUser = {
   firstName: string | null;
   lastName: string | null;
   country: string | null;
+  avatarUrl?: string | null;
   isPremium?: boolean;
   subscriptionId?: string | null;
 };
@@ -51,6 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     firstName: raw.firstName ?? null,
     lastName: raw.lastName ?? null,
     country: raw.country ?? "arg",
+    avatarUrl: raw.avatarUrl ?? null,
     isPremium: raw.isPremium ?? false,
     subscriptionId: raw.subscriptionId ?? null,
   });

@@ -53,6 +53,15 @@ export const usersService = {
     return apiFetch("/users/me");
   },
 
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    return apiFetch("/users/me/avatar", {
+      method: "POST",
+      body: formData,
+    });
+  },
+
   async getMyOrders() {
     return apiFetch("/users/me/orders");
   },

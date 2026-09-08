@@ -121,6 +121,9 @@ model User {
   lastName  String?
   country   String? @default("arg")
 
+  avatarUrl      String?
+  avatarPublicId String?
+
  resetPasswordCode          String?
   resetPasswordCodeExpiresAt DateTime?
   resetPasswordRequestedAt   DateTime?

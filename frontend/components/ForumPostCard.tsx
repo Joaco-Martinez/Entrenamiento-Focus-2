@@ -12,6 +12,7 @@ import {
 } from "@/components/PostBody"
 import { CommentItem, CommentComposer } from "@/components/CommentThread"
 import { ActionsMenu } from "@/components/ActionsMenu"
+import { UserAvatar } from "@/components/UserAvatar"
 
 function highlightMatch(text: string, query?: string) {
   if (!query || !query.trim()) return text
@@ -113,6 +114,7 @@ export function ForumPostCard({
           firstName: user?.firstName ?? null,
           lastName: user?.lastName ?? null,
           role: user?.role,
+          avatarUrl: user?.avatarUrl ?? null,
         },
         content: input.content,
         audioUrl: null,
@@ -236,12 +238,20 @@ export function ForumPostCard({
         )}
       </div>
 
-      <p className="mt-2 text-[13px] text-[#6b6153]">
-        <span className={postData.author?.role === "ADMIN" ? "text-[#a67c27]" : undefined}>
-          {displayAuthorName(postData.author, { isArticlePost })}
-        </span>{" "}
-        · {formatDateTime(postData.createdAt)}
-      </p>
+      <div className="mt-2 flex items-center gap-2.5">
+        <UserAvatar
+          name={displayAuthorName(postData.author, { isArticlePost })}
+          avatarUrl={postData.author?.avatarUrl}
+          size={30}
+        />
+
+        <p className="text-[13px] text-[#6b6153]">
+          <span className={postData.author?.role === "ADMIN" ? "text-[#a67c27]" : undefined}>
+            {displayAuthorName(postData.author, { isArticlePost })}
+          </span>{" "}
+          · {formatDateTime(postData.createdAt)}
+        </p>
+      </div>
 
       {editing ? (
         <div className="mt-4 space-y-3">

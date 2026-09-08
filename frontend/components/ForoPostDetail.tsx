@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext"
 import { forumService, ForumComment, ForumPost, NewCommentInput } from "@/services/forum.service"
 import { displayAuthorName, formatDateTime, linkifyText } from "@/components/PostBody"
 import { CommentItem, CommentComposer } from "@/components/CommentThread"
+import { UserAvatar } from "@/components/UserAvatar"
 
 export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
   const router = useRouter()
@@ -140,12 +141,20 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
               )}
             </div>
 
-            <p className="mt-3 text-[13px] text-[#6b6153]">
-              <span className={post.author?.role === "ADMIN" ? "text-[#a67c27]" : undefined}>
-                {displayAuthorName(post.author)}
-              </span>{" "}
-              · {formatDateTime(post.createdAt)}
-            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <UserAvatar
+                name={displayAuthorName(post.author)}
+                avatarUrl={post.author?.avatarUrl}
+                size={36}
+              />
+
+              <p className="text-[13px] text-[#6b6153]">
+                <span className={post.author?.role === "ADMIN" ? "text-[#a67c27]" : undefined}>
+                  {displayAuthorName(post.author)}
+                </span>{" "}
+                · {formatDateTime(post.createdAt)}
+              </p>
+            </div>
 
             {editing ? (
               <div className="mt-6 space-y-3">

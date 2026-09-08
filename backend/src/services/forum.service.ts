@@ -8,6 +8,7 @@ const authorSelect = {
   firstName: true,
   lastName: true,
   role: true,
+  avatarUrl: true,
 } as const;
 
 async function resolveArticleSlug(content: string): Promise<string | null> {

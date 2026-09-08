@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { AuthedRequest } from "../common/middlewares/authRequired";
+import { ApiError } from "../common/errors/ApiError";
 import * as usersService from "../services/users.service";
 
 export async function me(req: AuthedRequest, res: Response) {
@@ -44,6 +45,21 @@ export async function mySubscription(req: AuthedRequest, res: Response) {
 
   const subscription = await usersService.getMySubscription(userId);
   return res.json({ ok: true, subscription });
+}
+
+export async function uploadAvatar(req: AuthedRequest, res: Response) {
+  const userId = req.user?.id || req.user?.sub;
+
+  if (!userId) {
+    return res.status(401).json({ ok: false, message: "No autenticado" });
+  }
+
+  if (!req.file) {
+    throw new ApiError(400, "Falta la imagen");
+  }
+
+  const user = await usersService.updateAvatar(userId, req.file.buffer);
+  return res.json({ ok: true, user });
 }
 
 /* =========================
