@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+
 const stats = [
   {
     number: "15",
@@ -191,10 +193,13 @@ export default function FrancoCanoPage() {
         </div>
 
         <div className="relative min-h-[420px] overflow-hidden bg-[#161616] md:min-h-full">
-          <img
+          <Image
             src="/franco-cano.png"
             alt="Franco Cano"
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-85"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+            className="object-cover object-center opacity-85"
           />
 
           <div className="absolute inset-0 bg-[#0A0A0A]/25" />
