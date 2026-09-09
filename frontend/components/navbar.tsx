@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -10,12 +10,15 @@ import { useCart } from "@/context/CartContext"
 import { CartDrawer } from "@/components/cart/Cart"
 import { UserAvatar } from "@/components/UserAvatar"
 import { UserAccountMenu } from "@/components/UserAccountMenu"
+import { cn } from "@/lib/utils"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
 
   const router = useRouter()
+  const pathname = usePathname()
+  const isHome = pathname === "/"
   const { isAuth, isAdmin, logout, user, fullName } = useAuth()
   const { totalItems } = useCart()
 
@@ -45,7 +48,14 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/5 bg-background/45 backdrop-blur-xl supports-[backdrop-filter]:bg-background/35">
+      <nav
+        className={cn(
+          "fixed left-0 right-0 top-0 z-50",
+          isHome
+            ? "border-b-0 bg-gradient-to-b from-black/55 via-black/20 to-transparent"
+            : "border-b border-white/5 bg-background/45 backdrop-blur-xl supports-[backdrop-filter]:bg-background/35"
+        )}
+      >
         <div className="flex h-16 w-full items-center justify-between px-6 sm:px-10 lg:px-16">
           <button
             type="button"

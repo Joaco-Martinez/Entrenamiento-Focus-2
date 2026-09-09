@@ -48,6 +48,8 @@ export default function EntrenamientoFocusPage() {
           />
 
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,17,16,0.78)_0%,rgba(17,17,16,0.55)_35%,rgba(17,17,16,0.22)_65%,rgba(17,17,16,0.04)_100%)]" />
+
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-[#111110]" />
         </div>
 
         <div className="relative flex min-h-[calc(100dvh-64px)] items-center py-16 pl-[380px] pr-10 lg:pr-12">
