@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext"
 import { CartDrawer } from "@/components/cart/Cart"
 import { UserAvatar } from "@/components/UserAvatar"
 import { UserAccountMenu } from "@/components/UserAccountMenu"
+import { useNavThemeValue } from "@/context/NavThemeContext"
 import { cn } from "@/lib/utils"
 
 export function Navbar() {
@@ -17,10 +18,21 @@ export function Navbar() {
   const [cartOpen, setCartOpen] = useState(false)
 
   const router = useRouter()
-  const pathname = usePathname()
-  const isHome = pathname === "/"
+  const theme = useNavThemeValue()
+  const isLight = theme === "light"
   const { isAuth, isAdmin, logout, user, fullName } = useAuth()
   const { totalItems } = useCart()
+
+  // Colores de la barra según el fondo de cada página (declarado con useNavTheme).
+  const text = isLight ? "text-[#2a2620]" : "text-foreground"
+  const textMuted = isLight ? "text-[#2a2620]/75" : "text-white/80"
+  const accent = isLight ? "text-[#a67c27]" : "text-primary"
+  const hoverAccent = isLight ? "hover:text-[#a67c27]" : "hover:text-primary"
+  const hoverInvert = isLight ? "group-hover:text-[#2a2620]" : "group-hover:text-white"
+  const iconBorder = isLight ? "border-[#2a2620]/15" : "border-white/10"
+  const iconBg = isLight ? "bg-[#2a2620]/[0.04]" : "bg-white/[0.03]"
+  const iconBgHover = isLight ? "hover:bg-[#2a2620]/[0.08]" : "hover:bg-white/[0.08]"
+  const iconHoverText = isLight ? "hover:text-[#2a2620]" : "hover:text-white"
 
   const accountName = fullName || user?.email || "Usuario"
 
@@ -48,24 +60,17 @@ export function Navbar() {
 
   return (
     <>
-      <nav
-        className={cn(
-          "fixed left-0 right-0 top-0 z-50",
-          isHome
-            ? "border-b-0 bg-gradient-to-b from-black/55 via-black/20 to-transparent"
-            : "border-b border-white/5 bg-background/45 backdrop-blur-xl supports-[backdrop-filter]:bg-background/35"
-        )}
-      >
+      <nav className="fixed left-0 right-0 top-0 z-50 bg-transparent">
         <div className="flex h-16 w-full items-center justify-between px-6 sm:px-10 lg:px-16">
           <button
             type="button"
             onClick={() => go("/")}
             className="group -ml-1 text-xl font-bold tracking-tight transition-colors"
           >
-            <span className="text-foreground transition-colors group-hover:text-primary">
+            <span className={cn(text, "transition-colors", hoverAccent)}>
               ENTRENAMIENTO
             </span>{" "}
-            <span className="text-primary transition-colors group-hover:text-white">
+            <span className={cn(accent, "transition-colors", hoverInvert)}>
               FOCUS
             </span>
           </button>
@@ -76,7 +81,7 @@ export function Navbar() {
                 key={item.href}
                 type="button"
                 onClick={() => go(item.href)}
-                className="font-medium text-foreground transition-colors hover:text-primary"
+                className={cn("font-medium transition-colors", text, hoverAccent)}
               >
                 {item.label}
               </button>
@@ -85,7 +90,14 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="relative rounded-full border border-white/10 bg-white/[0.03] p-2 text-white/80 transition hover:bg-white/[0.08] hover:text-white"
+              className={cn(
+                "relative rounded-full border p-2 transition",
+                iconBorder,
+                iconBg,
+                textMuted,
+                iconBgHover,
+                iconHoverText
+              )}
               aria-label="Abrir carrito"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -98,7 +110,7 @@ export function Navbar() {
             </button>
 
             {!isAuth ? (
-              <div className="flex items-center gap-3">
+              <div className={cn("flex items-center gap-3", text)}>
                 <Button variant="ghost" onClick={() => go("/login")}>
                   Login
                 </Button>
@@ -124,7 +136,13 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/80 transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-95"
+              className={cn(
+                "relative flex h-10 w-10 items-center justify-center rounded-full border transition active:scale-95",
+                iconBorder,
+                iconBg,
+                textMuted,
+                "hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+              )}
               aria-label="Abrir carrito"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -140,7 +158,13 @@ export function Navbar() {
               type="button"
               onClick={() => setIsOpen((v) => !v)}
               aria-label="Toggle menu"
-              className="group relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/80 transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary active:scale-95"
+              className={cn(
+                "group relative flex h-10 w-10 items-center justify-center rounded-full border transition active:scale-95",
+                iconBorder,
+                iconBg,
+                textMuted,
+                "hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+              )}
             >
               <span className="relative flex h-5 w-5 flex-col items-center justify-center gap-[5px]">
                 <span

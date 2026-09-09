@@ -5,8 +5,11 @@ import { useEffect, useState } from "react";
 import { articlesService, Article } from "@/services/articles.service";
 import { ArrowRight, Newspaper } from "lucide-react";
 import { ComunidadHeader } from "@/components/ComunidadHeader";
+import { useNavTheme } from "@/context/NavThemeContext";
 
 export default function ArticulosPage() {
+  useNavTheme("light");
+
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

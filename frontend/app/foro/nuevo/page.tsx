@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { forumService } from "@/services/forum.service"
+import { useNavTheme } from "@/context/NavThemeContext"
 
 function ForoProximamente() {
   return (
@@ -23,6 +24,8 @@ function ForoProximamente() {
 }
 
 export default function NuevoPostPage() {
+  useNavTheme("light")
+
   const forumEnabled = process.env.NEXT_PUBLIC_SHOW_FORO === "true"
 
   const router = useRouter()

@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation"
 import { ForumPost } from "@/services/forum.service"
 import { ForoPostDetail } from "@/components/ForoPostDetail"
+import { SetNavTheme } from "@/components/SetNavTheme"
 
 function ForoProximamente() {
   return (
     <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
+      <SetNavTheme theme="light" />
+
       <div className="text-center">
         <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#2a2620] sm:text-[40px]">
           Foro <span className="text-[#a67c27]">próximamente</span>
@@ -48,5 +51,10 @@ export default async function ForoPostPage({ params }: { params: Promise<{ id: s
     redirect(`/articulos/${post.articleSlug}?from=foro&post=${post.id}`)
   }
 
-  return <ForoPostDetail initialPost={post} />
+  return (
+    <>
+      <SetNavTheme theme="light" />
+      <ForoPostDetail initialPost={post} />
+    </>
+  )
 }

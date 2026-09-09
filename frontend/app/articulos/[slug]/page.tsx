@@ -7,8 +7,11 @@ import { articlesService, Article } from "@/services/articles.service";
 import { ArticleForumThread } from "@/components/ArticleForumThread";
 import { ArticleMarkdown } from "@/components/ArticleMarkdown";
 import { ArrowLeft, Newspaper } from "lucide-react";
+import { useNavTheme } from "@/context/NavThemeContext";
 
 export default function ArticuloDetallePage() {
+  useNavTheme("light");
+
   const params = useParams();
   const slug = params.slug as string;
 

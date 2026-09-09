@@ -75,40 +75,11 @@ export default function LoginPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#111110] text-[#f0ede6]">
+    <div className="mt-16 min-h-screen bg-[#111110] text-[#f0ede6]">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[#c8a84b]/10 blur-[120px]" />
         <div className="absolute bottom-[-120px] right-[-120px] h-[420px] w-[420px] rounded-full bg-[#c8a84b]/5 blur-[120px]" />
       </div>
-
-      <header className="relative z-10 border-b border-[#3a3a36] bg-[#111110]/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <div className="text-sm font-semibold tracking-[0.25em] text-[#f0ede6]">
-            ENTRENAMIENTO <span className="text-[#c8a84b]">FOCUS</span>
-          </div>
-
-          <nav className="hidden gap-8 text-sm text-[#f0ede6]/70 md:flex">
-            <a
-              className="transition hover:text-[#c8a84b]"
-              href="/"
-            >
-              Inicio
-            </a>
-            <a
-              className="transition hover:text-[#c8a84b]"
-              href="/servicios"
-            >
-              Servicios
-            </a>
-            <a
-              className="transition hover:text-[#c8a84b]"
-              href="/recursos"
-            >
-              Recursos
-            </a>
-          </nav>
-        </div>
-      </header>
 
       <main className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 md:grid-cols-2">
         <div>

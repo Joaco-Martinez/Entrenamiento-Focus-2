@@ -96,7 +96,7 @@ export default function MiCuentaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0b0c] text-white">
+    <div className="mt-16 min-h-screen bg-[#0b0b0c] text-white">
       <header className="border-b border-white/10 bg-black/40 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
           <div>
