@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+
 const teamMembers = [
   {
     name: "Franco Cano",
@@ -46,13 +48,16 @@ export default function ServiciosPage() {
               className="overflow-hidden rounded-xl bg-[#1a1a18]"
             >
               <div className="relative aspect-[3/4] overflow-hidden bg-[#222]">
-                <img
+                <Image
                   src={member.image}
                   alt={member.alt}
+                  fill
+                  sizes="(max-width: 960px) 50vw, 480px"
+                  priority
                   onError={(event) => {
                     event.currentTarget.style.display = "none"
                   }}
-                  className="h-full w-full object-cover brightness-[0.8]"
+                  className="object-cover brightness-[0.8]"
                 />
 
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-3 pt-10 sm:px-4 sm:pb-4">

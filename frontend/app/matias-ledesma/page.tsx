@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+
 const gearItems = [
   {
     brand: "Empirical Labs",
@@ -131,10 +133,13 @@ export default function MatiasLedesmaPage() {
         </div>
 
         <div className="relative min-h-[420px] overflow-hidden bg-[#181816] md:min-h-full">
-          <img
+          <Image
             src="/Foto_sub_pagina_Mati.webp"
             alt="Matias Ledesma"
-            className="absolute inset-0 h-full w-full object-cover object-center opacity-80"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+            className="object-cover object-center opacity-80"
           />
 
           <div className="absolute inset-0 bg-[#111110]/35" />
@@ -167,14 +172,18 @@ export default function MatiasLedesmaPage() {
               className="group overflow-hidden border border-[#7a6429]/50"
             >
               <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#111110] p-1">
-                <img
-                  src={item.image}
-                  alt={item.alt}
-                  className="h-full w-full object-contain transition duration-300 group-hover:scale-[1.05]"
-                  onError={(event) => {
-                    event.currentTarget.style.display = "none"
-                  }}
-                />
+                <div className="relative h-full w-full">
+                  <Image
+                    src={item.image}
+                    alt={item.alt}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-contain transition duration-300 group-hover:scale-[1.05]"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none"
+                    }}
+                  />
+                </div>
               </div>
 
               <div className="flex flex-col gap-1 bg-[#c8a84b] px-3 py-2 md:px-4">
