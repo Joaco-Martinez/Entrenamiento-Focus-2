@@ -98,7 +98,7 @@ export function ForoPostDetail({ initialPost }: { initialPost: ForumPost }) {
   }
 
   return (
-    <main className="mt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
+    <main className="pt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
       <section className="border-t border-[#2a2620]/10 px-5 py-12 md:px-12 md:py-16">
         <div className="mx-auto max-w-[860px]">
           <Link href="/foro" className="text-[13px] text-[#a67c27] hover:underline">

@@ -4,7 +4,7 @@ import { SetNavTheme } from "@/components/SetNavTheme"
 
 function ForoProximamente() {
   return (
-    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
+    <main className="pt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
       <SetNavTheme theme="light" />
 
       <div className="text-center">
@@ -50,7 +50,7 @@ export default async function ForoPage({
   const initialPosts = await fetchInitialPosts(onlyArticles)
 
   return (
-    <main className="mt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
+    <main className="pt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
       <SetNavTheme theme="light" />
 
       <section className="border-t border-[#2a2620]/10 px-5 py-12 md:px-12 md:py-16">
