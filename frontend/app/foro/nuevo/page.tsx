@@ -9,7 +9,7 @@ import { useNavTheme } from "@/context/NavThemeContext"
 
 function ForoProximamente() {
   return (
-    <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
+    <main className="pt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] px-6 text-[#2a2620]">
       <div className="text-center">
         <h1 className="text-[32px] font-light tracking-[-0.03em] text-[#2a2620] sm:text-[40px]">
           Foro <span className="text-[#a67c27]">próximamente</span>
@@ -77,14 +77,14 @@ export default function NuevoPostPage() {
 
   if (authLoading || !isAuth) {
     return (
-      <main className="mt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] text-[#2a2620]">
+      <main className="pt-16 flex min-h-screen items-center justify-center bg-[#f4ecdf] text-[#2a2620]">
         <p className="text-[15px] text-[#6b6153]">Cargando...</p>
       </main>
     )
   }
 
   return (
-    <main className="mt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
+    <main className="pt-16 min-h-screen bg-[#f4ecdf] text-[#2a2620]">
       <section className="border-t border-[#2a2620]/10 px-5 py-12 md:px-12 md:py-16">
         <div className="mx-auto max-w-[720px]">
           <Link href="/foro" className="text-[13px] text-[#a67c27] hover:underline">
