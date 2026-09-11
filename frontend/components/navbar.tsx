@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -18,10 +18,15 @@ export function Navbar() {
   const [cartOpen, setCartOpen] = useState(false)
 
   const router = useRouter()
+  const pathname = usePathname()
   const theme = useNavThemeValue()
   const isLight = theme === "light"
   const { isAuth, isAdmin, logout, user, fullName } = useAuth()
   const { totalItems } = useCart()
+
+  // El panel de admin tiene su propia navegación (sidebar + header con
+  // "Volver al sitio"); la barra global solo compite con ella ahí.
+  if (pathname?.startsWith("/admin")) return null
 
   // Colores de la barra según el fondo de cada página (declarado con useNavTheme).
   const text = isLight ? "text-[#2a2620]" : "text-foreground"

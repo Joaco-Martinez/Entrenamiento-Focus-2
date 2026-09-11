@@ -60,7 +60,7 @@ function PaypalReturnContent() {
   }, [router, searchParams]);
 
   return (
-    <main className="min-h-screen bg-black px-6 py-12 text-white">
+    <main className="min-h-screen bg-black px-6 pb-12 pt-20 text-white">
       <section className="mx-auto max-w-2xl rounded-3xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#111111] to-[#050505] p-8 shadow-[0_0_40px_rgba(212,175,55,0.12)]">
         <div className="mb-6 flex justify-center">
           {loading ? (

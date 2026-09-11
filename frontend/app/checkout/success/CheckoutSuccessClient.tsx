@@ -158,7 +158,7 @@ export default function CheckoutSuccessClient() {
   }, [normalizedStatus, confirmed, confirming, confirmError]);
 
   return (
-    <main className="min-h-screen bg-[#070707] px-4 py-10 text-white md:px-6">
+    <main className="min-h-screen bg-[#070707] px-4 pb-10 pt-20 text-white md:px-6">
       <div className="mx-auto max-w-3xl">
         <div className="overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03] shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
           <div className="border-b border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent px-6 py-8 md:px-8">

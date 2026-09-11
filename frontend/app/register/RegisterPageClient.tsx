@@ -255,7 +255,7 @@ export default function RegisterPageClient() {
   }
 
   return  (
-  <div className="min-h-screen bg-[#0B0B0B] text-white">
+  <div className="mt-16 min-h-screen bg-[#0B0B0B] text-white">
     {/* BG glow */}
     <div className="pointer-events-none fixed inset-0">
       <div className="absolute left-1/2 top-[-128px] h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-yellow-400/10 blur-[120px]" />
