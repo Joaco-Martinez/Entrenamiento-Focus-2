@@ -411,16 +411,17 @@ export default function AdminProductsPage() {
         {/* desktop */}
         <section className="hidden xl:block">
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/35 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-            <table className="w-full table-fixed text-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1150px] table-fixed text-sm">
               <thead className="bg-white/[0.03] text-left text-white/50">
                 <tr>
-                  <th className="w-[32%] px-5 py-4 font-medium">Producto</th>
-                  <th className="w-[12%] px-5 py-4 font-medium">USD</th>
-                  <th className="w-[12%] px-5 py-4 font-medium">ARS</th>
-                  <th className="w-[12%] px-5 py-4 font-medium">Suscripción</th>
-                  <th className="w-[12%] px-5 py-4 font-medium">Premium</th>
-                  <th className="w-[10%] px-5 py-4 font-medium">Tipo</th>
-                  <th className="w-[10%] px-5 py-4 font-medium text-right">Acción</th>
+                  <th className="px-5 py-4 font-medium">Producto</th>
+                  <th className="w-[110px] px-5 py-4 font-medium">USD</th>
+                  <th className="w-[110px] px-5 py-4 font-medium">ARS</th>
+                  <th className="w-[130px] px-5 py-4 font-medium">Suscripción</th>
+                  <th className="w-[140px] px-5 py-4 font-medium">Premium</th>
+                  <th className="w-[110px] px-5 py-4 font-medium">Tipo</th>
+                  <th className="w-[230px] px-5 py-4 font-medium text-right">Acción</th>
                 </tr>
               </thead>
 
@@ -476,9 +477,9 @@ export default function AdminProductsPage() {
                           </div>
                         </td>
 
-                        <td className="px-5 py-4 text-white/80">{formatUsd(p.usdPrice)}</td>
+                        <td className="whitespace-nowrap px-5 py-4 text-white/80">{formatUsd(p.usdPrice)}</td>
 
-                        <td className="px-5 py-4 text-white/80">{formatArs(p.arPrice)}</td>
+                        <td className="whitespace-nowrap px-5 py-4 text-white/80">{formatArs(p.arPrice)}</td>
 
                         <td className="px-5 py-4">
                           {p.isSubscription ? (
@@ -514,7 +515,7 @@ export default function AdminProductsPage() {
                         <td className="px-5 py-4">
                           <div className="flex justify-end gap-2">
                             <button
-                              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/[0.06]"
+                              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/80 transition hover:bg-white/[0.06]"
                               onClick={() => {
                                 setEditing(p);
                                 setOpenEdit(true);
@@ -526,7 +527,7 @@ export default function AdminProductsPage() {
 
                             <button
                               disabled={isBusy}
-                              className="inline-flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/15 disabled:opacity-50"
+                              className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/15 disabled:opacity-50"
                               onClick={() => onDelete(p.id)}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -539,7 +540,8 @@ export default function AdminProductsPage() {
                   })
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         </section>
       </div>
