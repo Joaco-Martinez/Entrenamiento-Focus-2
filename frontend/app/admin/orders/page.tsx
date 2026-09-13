@@ -115,11 +115,18 @@ function getGrantableItems(order: Order) {
 }
 
 function getProductIdFromItem(item: any) {
-  return item?.productId || item?.product?.id || "";
+  return item?.productId || item?.product?.id || item?.classId || item?.videoClass?.id || "";
 }
 
 function getProductNameFromItem(item: any) {
-  return item?.product?.title || item?.product?.name || item?.productId || "Producto";
+  return (
+    item?.product?.title ||
+    item?.product?.name ||
+    item?.videoClass?.title ||
+    item?.productId ||
+    item?.classId ||
+    "Producto"
+  );
 }
 
 function StatCard({

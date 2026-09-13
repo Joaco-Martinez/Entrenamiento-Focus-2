@@ -123,15 +123,10 @@ export default function AdminClasesPage() {
       await refresh(true);
     } catch (err: any) {
       if (err?.data?.requiresConfirmation) {
-        const buyersCount = err.data.buyersCount ?? 0;
-        const buyersLine =
-          buyersCount === 1
-            ? "1 persona compró esta clase y va a perder el acceso."
-            : `${buyersCount} personas compraron esta clase y van a perder el acceso.`;
+        const backendMessage =
+          err.data.message || "Esta clase tiene una compra asociada.";
 
-        const confirmed = confirm(
-          `"${title}": ${buyersLine} El video también se va a borrar de Bunny y no se puede recuperar. ¿Borrar igual?`
-        );
+        const confirmed = confirm(`"${title}": ${backendMessage} ¿Continuar?`);
 
         if (confirmed) {
           try {

@@ -21,7 +21,7 @@ const publicSelect = {
 
 export async function listPublic() {
   return prisma.videoClass.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", deletedAt: null },
     orderBy: { createdAt: "desc" },
     select: publicSelect,
   });
@@ -29,7 +29,7 @@ export async function listPublic() {
 
 export async function getPublicBySlug(slug: string) {
   const item = await prisma.videoClass.findFirst({
-    where: { slug, status: "PUBLISHED" },
+    where: { slug, status: "PUBLISHED", deletedAt: null },
     select: publicSelect,
   });
 
@@ -39,6 +39,7 @@ export async function getPublicBySlug(slug: string) {
 
 export async function listAdmin() {
   return prisma.videoClass.findMany({
+    where: { deletedAt: null },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -105,32 +106,65 @@ export async function update(id: string, data: any) {
 }
 
 /**
- * AccessGrant es la fuente de verdad de quién tiene acceso hoy (ver
- * getAccess): cuenta compradores reales y también accesos otorgados a mano,
- * a diferencia de OrderItem que solo refleja órdenes.
+ * El gate de si se puede borrar la fila de verdad NO es AccessGrant, es
+ * OrderItem: OrderItem.classId y AccessGrant.classId apuntan a VideoClass con
+ * ON DELETE SET NULL, pero OrderItem_product_or_class_check /
+ * AccessGrant_product_or_class_check exigen que siempre haya exactamente uno
+ * de productId/classId no nulo. Si existe aunque sea un OrderItem para esta
+ * clase (comprada o no: una orden PENDING/CANCELLED que nunca llegó a pagarse
+ * también cuenta), borrar la fila VideoClass hace que Postgres intente poner
+ * ese classId en NULL y la fila queda con los dos campos en NULL: viola el
+ * constraint y aborta toda la transacción (así se manifestaba el bug con
+ * clases que tenían una compra de prueba pero ni un AccessGrant).
  *
- * Si hay compradores y todavía no vino la confirmación explícita, no se
- * borra nada: se corta acá y se le devuelve el conteo al caller para que
- * decida con el costo a la vista.
+ * Por eso hay dos caminos:
+ * - Sin ningún OrderItem: nunca hubo ni un intento de compra, se puede borrar
+ *   la fila de verdad (hard delete), como hacía este método originalmente.
+ * - Con OrderItem (aunque buyersCount de AccessGrant sea 0): no se puede
+ *   borrar la fila sin romper el constraint. Se archiva (deletedAt) en vez de
+ *   borrarse: desaparece del catálogo público y del panel de admin, pero
+ *   OrderItem/AccessGrant y el historial de ventas quedan intactos, apuntando
+ *   a una fila que sigue existiendo.
+ *
+ * buyersCount (AccessGrant) se usa solo para el mensaje de confirmación: es
+ * "cuánta gente tiene/tuvo acceso realmente", distinto de "hubo alguna vez una
+ * orden". Si hay OrderItem pero buyersCount es 0 (orden que nunca se pagó), se
+ * archiva igual — no hay forma de hacer hard delete sin arriesgarse a perder
+ * ese registro de orden, y el criterio acordado es no tocar órdenes nunca.
  *
  * El borrado en Bunny/Cloudinary va DESPUÉS de que la base confirmó el
- * delete, nunca antes: si se hiciera al revés y el delete de la base
- * fallara, el video ya estaría perdido con la clase todavía viva en el
- * catálogo. Con este orden, en el peor caso (falla Bunny) lo que queda
- * huérfano es un archivo en Bunny, nunca el estado de la base.
+ * cambio (delete o archivado), nunca antes: si se hiciera al revés y el
+ * cambio en la base fallara, el video ya estaría perdido con la clase
+ * todavía viva y jugable en el catálogo. Con este orden, en el peor caso
+ * (falla Bunny) lo que queda huérfano es un archivo en Bunny, nunca el
+ * estado de la base.
  */
 export async function remove(id: string, confirmed: boolean) {
   const item = await getAdminById(id);
 
-  const buyersCount = await prisma.accessGrant.count({ where: { classId: id } });
-  if (buyersCount > 0 && !confirmed) {
-    return { requiresConfirmation: true as const, buyersCount };
+  if (item.deletedAt) {
+    return { requiresConfirmation: false as const };
   }
 
-  await prisma.$transaction([
-    prisma.classWatchProgress.deleteMany({ where: { classId: id } }),
-    prisma.videoClass.delete({ where: { id } }),
-  ]);
+  const hasOrderHistory = (await prisma.orderItem.count({ where: { classId: id } })) > 0;
+
+  if (hasOrderHistory) {
+    const buyersCount = await prisma.accessGrant.count({ where: { classId: id } });
+
+    if (!confirmed) {
+      return { requiresConfirmation: true as const, buyersCount };
+    }
+
+    await prisma.$transaction([
+      prisma.classWatchProgress.deleteMany({ where: { classId: id } }),
+      prisma.videoClass.update({ where: { id }, data: { deletedAt: new Date() } }),
+    ]);
+  } else {
+    await prisma.$transaction([
+      prisma.classWatchProgress.deleteMany({ where: { classId: id } }),
+      prisma.videoClass.delete({ where: { id } }),
+    ]);
+  }
 
   try {
     if (item.bunnyVideoId) {
@@ -144,7 +178,7 @@ export async function remove(id: string, confirmed: boolean) {
     }
   } catch (err) {
     console.error(
-      "La clase se borró de la base pero falló el borrado en Bunny/Cloudinary:",
+      "La clase se borró/archivó en la base pero falló el borrado en Bunny/Cloudinary:",
       err
     );
     throw new ApiError(
@@ -226,10 +260,20 @@ export async function getVideoStatus(id: string) {
  *
  * Tampoco filtra por status, por la misma razón que getAccess: si la clase se
  * despublica, quien ya la compró tiene que poder seguir reproduciéndola.
+ *
+ * deletedAt sí corta acá, y a propósito antes de tocar Bunny: una clase
+ * archivada (ver remove) ya no tiene video en Bunny, así que sin este chequeo
+ * temprano el intento de reproducir terminaría pegándole a la API de Bunny y
+ * devolviendo un 404 genérico ("Video no encontrado en Bunny"), que es un
+ * mensaje pensado para un admin, no para el comprador.
  */
 export async function getPlaybackInfo(userId: string, slug: string) {
   const item = await prisma.videoClass.findUnique({ where: { slug } });
   if (!item) throw new ApiError(404, "Clase no encontrada");
+
+  if (item.deletedAt) {
+    throw new ApiError(410, "Esta clase ya no está disponible.");
+  }
 
   let grant = await prisma.accessGrant.findUnique({
     where: { userId_classId: { userId, classId: item.id } },
