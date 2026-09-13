@@ -395,6 +395,15 @@ model VideoClass {
 
   status VideoClassStatus @default(DRAFT)
 
+  // Soft-delete: se setea cuando la clase tuvo alguna vez un OrderItem
+  // asociado (comprada o no) y por eso no se puede borrar la fila sin violar
+  // OrderItem_product_or_class_check / AccessGrant_product_or_class_check
+  // (ver classes.service.remove). Con deletedAt seteado, el video ya se borró
+  // de Bunny, la clase desaparece del catálogo público y del panel de admin,
+  // pero la fila sigue viva para que OrderItem/AccessGrant y el historial de
+  // ventas no pierdan la referencia.
+  deletedAt DateTime?
+
   createdById String
   createdBy   User   @relation(fields: [createdById], references: [id])
 

@@ -60,14 +60,24 @@ export async function remove(req: Request, res: Response) {
 
   if (result.requiresConfirmation) {
     const { buyersCount } = result;
+
+    // La clase tiene al menos un OrderItem (por eso classesService.remove no
+    // puede borrarla de verdad, ver el comentario ahí), pero buyersCount
+    // (AccessGrant) puede ser 0 si esa orden nunca se pagó: en ese caso nadie
+    // pierde acceso, pero igual hay que avisar que se archiva en vez de
+    // borrarse, para no perder el registro de esa orden.
+    const message =
+      buyersCount > 0
+        ? `${buyersCount === 1 ? "1 persona compró" : `${buyersCount} personas compraron`} esta clase y ${
+            buyersCount === 1 ? "va" : "van"
+          } a perder el acceso. El video se borra de Bunny y no se puede recuperar. La clase desaparece del sitio y del panel de admin, pero el registro de la venta se conserva.`
+        : "Esta clase tiene una orden asociada, aunque nadie llegó a tener acceso. No se puede borrar sin perder ese registro, así que se va a archivar: el video se borra de Bunny y la clase desaparece del sitio y del panel de admin.";
+
     return res.status(409).json({
       ok: false,
       requiresConfirmation: true,
       buyersCount,
-      message:
-        buyersCount === 1
-          ? "1 persona compró esta clase y va a perder el acceso."
-          : `${buyersCount} personas compraron esta clase y van a perder el acceso.`,
+      message,
     });
   }
 
