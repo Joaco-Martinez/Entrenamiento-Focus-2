@@ -9,6 +9,7 @@ import { AuthProvider } from "@/context/AuthContext"
 import { CartProvider } from "@/context/CartContext"
 import MaintenanceGate from "@/components/MaintenanceGate"
 import Footer from "@/components/footer"
+import DevCredit from "@/components/DevCredit"
 import { NavThemeProvider } from "@/context/NavThemeContext"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -64,6 +65,7 @@ export default function RootLayout({
     <NavThemeProvider>
       <Navbar />
       {children}
+      <DevCredit />
       <Analytics />
       <WhatsAppButton />
     </NavThemeProvider>
