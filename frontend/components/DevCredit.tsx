@@ -13,12 +13,12 @@ export default function DevCredit() {
       <p className="text-[11px] tracking-[0.08em] text-white/40">
         Desarrollado por{" "}
         <a
-          href="https://www.byjoaco.com"
+          href="https://www.joacodev.com.ar"
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium text-[#c8a84b]/80 transition hover:text-[#c8a84b]"
         >
-          www.byjoaco.com
+          www.joacodev.com.ar
         </a>
       </p>
     </div>

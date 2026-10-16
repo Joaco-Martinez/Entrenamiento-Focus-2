@@ -74,8 +74,8 @@ export default function Footer() {
         <div className="mt-10 border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/50">
           <p>
             © {new Date().getFullYear()} Entrenamiento Focus. Todos los derechos reservados. Desarrollado por{" "}
-            <a href="https://www.byjoaco.com" target="_blank" rel="noopener noreferrer" className="text-[#D4AF37] hover:text-white transition">
-              www.byjoaco.com
+            <a href="https://www.joacodev.com.ar" target="_blank" rel="noopener noreferrer" className="text-[#D4AF37] hover:text-white transition">
+              www.joacodev.com.ar
             </a>
           </p>
 
