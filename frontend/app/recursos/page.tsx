@@ -10,6 +10,7 @@ import { productsService, Product } from "@/services/products.service"
 import { paymentsService } from "@/services/payments.service"
 import { useCart } from "@/context/CartContext"
 import { useAuth } from "@/context/AuthContext"
+import { useNavTheme } from "@/context/NavThemeContext"
 
 const HIDDEN_PRODUCT_ID = "mentoria-focus-product-id"
 const PREMIUM_DISCOUNT = 0.5
@@ -71,6 +72,8 @@ function removeDuplicatedProducts(products: Product[]) {
 }
 
 export default function RecursosPage() {
+  useNavTheme("light")
+
   const [items, setItems] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -127,7 +130,7 @@ export default function RecursosPage() {
   }, [isAdmin])
 
   return (
-    <section className="bg-muted/20 px-4 py-20 md:py-24">
+    <section className="min-h-screen bg-[#f4ecdf] px-4 py-20 text-[#2a2620] md:py-24">
       <div className="container mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
@@ -137,18 +140,18 @@ export default function RecursosPage() {
         >
           <div className="space-y-5 text-center">
             <h1 className="text-balance text-4xl font-bold md:text-6xl">
-              Productos <span className="text-primary">Focus</span>
+              Productos <span className="text-[#a67c27]">Focus</span>
             </h1>
 
-            <p className="mx-auto max-w-3xl text-lg text-muted-foreground md:text-xl">
+            <p className="mx-auto max-w-3xl text-lg text-[#6b6153] md:text-xl">
               Elegí un recurso, mirá el detalle y agregalo al carrito.
             </p>
 
-            <div className="mx-auto h-1 w-16 rounded-full bg-primary" />
+            <div className="mx-auto h-1 w-16 rounded-full bg-[#a67c27]" />
           </div>
 
           {error ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="rounded-xl border border-red-700/25 bg-red-700/10 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           ) : null}
@@ -162,7 +165,7 @@ export default function RecursosPage() {
                 />
               ))
             ) : items.length === 0 ? (
-              <p className="text-muted-foreground">
+              <p className="text-[#6b6153]">
                 Todavía no hay recursos cargados.
               </p>
             ) : (
