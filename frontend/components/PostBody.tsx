@@ -26,25 +26,103 @@ export function formatDateTime(value: string) {
   })
 }
 
-export function linkifyText(text: string) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g
-  const parts = text.split(urlRegex)
+function highlightInText(value: string, query?: string) {
+  const term = query?.trim()
+  if (!term) return value
 
-  return parts.map((part, i) =>
-    /^https?:\/\//.test(part) ? (
-      <a
-        key={i}
-        href={part}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-[#a67c27] underline-offset-2 hover:underline"
-      >
-        {part}
-      </a>
-    ) : (
-      part
-    )
+  const index = value.toLocaleLowerCase().indexOf(term.toLocaleLowerCase())
+  if (index === -1) return value
+
+  return (
+    <>
+      {value.slice(0, index)}
+      <mark className="rounded bg-[#a67c27]/25 px-0.5 text-[#2a2620]">
+        {value.slice(index, index + term.length)}
+      </mark>
+      {value.slice(index + term.length)}
+    </>
   )
+}
+
+// Quita signos de puntuación que suelen quedar pegados al final de una URL
+// en el texto de un post (por ejemplo, "https://ejemplo.com.").
+function splitUrlEnding(value: string) {
+  let end = value.length
+
+  while (end > 0) {
+    const last = value[end - 1]
+    if (".,;:!?".includes(last)) {
+      end--
+      continue
+    }
+
+    const current = value.slice(0, end)
+    const unbalanced = (open: string, close: string) =>
+      current.split(close).length > current.split(open).length
+
+    if (
+      (last === ")" && unbalanced("(", ")")) ||
+      (last === "]" && unbalanced("[", "]")) ||
+      (last === "}" && unbalanced("{", "}"))
+    ) {
+      end--
+      continue
+    }
+
+    break
+  }
+
+  return [value.slice(0, end), value.slice(end)] as const
+}
+
+/** Convierte URLs escritas en publicaciones y comentarios en enlaces seguros. */
+export function linkifyText(text: string, highlightQuery?: string) {
+  // El separador inicial evita detectar enlaces en medio de otra palabra.
+  const urlRegex = /(^|[\s([{"'«])((?:https?:\/\/|www\.)[^\s<>"']+)/gi
+  const nodes = []
+  let cursor = 0
+
+  for (const match of text.matchAll(urlRegex)) {
+    const start = (match.index ?? 0) + match[1].length
+    const rawUrl = match[2]
+    const [visibleUrl, ending] = splitUrlEnding(rawUrl)
+    const href = visibleUrl.toLowerCase().startsWith("www.")
+      ? "https://" + visibleUrl
+      : visibleUrl
+
+    let valid = false
+    try {
+      const parsed = new URL(href)
+      valid = (parsed.protocol === "https:" || parsed.protocol === "http:") && !!parsed.hostname
+    } catch {
+      // Dejar como texto cualquier URL que no sea válida.
+    }
+
+    nodes.push(highlightInText(text.slice(cursor, start), highlightQuery))
+
+    if (valid) {
+      nodes.push(
+        <a
+          key={start}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer nofollow ugc"
+          className="break-words font-medium text-[#a67c27] underline decoration-[#a67c27]/50 underline-offset-2 hover:decoration-[#a67c27]"
+          style={{ overflowWrap: "anywhere" }}
+        >
+          {highlightInText(visibleUrl, highlightQuery)}
+        </a>
+      )
+      if (ending) nodes.push(highlightInText(ending, highlightQuery))
+    } else {
+      nodes.push(highlightInText(rawUrl, highlightQuery))
+    }
+
+    cursor = start + rawUrl.length
+  }
+
+  nodes.push(highlightInText(text.slice(cursor), highlightQuery))
+  return nodes
 }
 
 /**
