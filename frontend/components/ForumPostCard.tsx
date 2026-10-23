@@ -296,7 +296,7 @@ export function ForumPostCard({
         <>
           {displayText && (
             <p className="mt-4 whitespace-pre-wrap text-[14px] leading-[1.6] text-[#6b6153]">
-              {highlightMatch(displayText, highlightQuery)}
+              {linkifyText(displayText, highlightQuery)}
               {!bodyExpanded && isLong && (
                 <>
                   {" "}
@@ -321,7 +321,7 @@ export function ForumPostCard({
               </p>
 
               <p className="mt-2 line-clamp-2 text-[13px] leading-[1.6] text-[#6b6153]">
-                {highlightMatch(postData.matchedComment.content, highlightQuery)}
+                {linkifyText(postData.matchedComment.content, highlightQuery)}
               </p>
             </div>
           )}
