@@ -487,7 +487,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
           <SectionHeading number="05" eyebrow="Servicios complementarios" title="Servicios extras" />
           <div className="grid gap-3 sm:grid-cols-2">
             {extras.map((extra, index) => (
-              <article key={index} className="rounded-[20px] border border-[#242019]/10 bg-white p-6">
+              <article key={index} className="rounded-[20px] border border-[#242019]/10 bg-white p-6 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-[#c9b184] hover:bg-[#f6f0e5] hover:shadow-[0_12px_28px_rgba(48,36,14,0.08)] motion-safe:hover:-translate-y-1 motion-reduce:transition-none">
                 <h3 className="text-[16px] font-bold text-[#20201d]">{extra.label}</h3>
                 <p className="mt-3 text-sm leading-6 text-[#6d675f]">{extra.description}</p>
               </article>
@@ -498,13 +498,13 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
         <section id="condiciones" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading number="06" eyebrow="Información importante" title="Condiciones y formas de pago" />
           <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-            <article className="rounded-[24px] border border-[#242019]/10 bg-white p-6 sm:p-8">
+            <article className="rounded-[24px] border border-[#242019]/10 bg-white p-6 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-[#c9b184] hover:bg-[#f6f0e5] hover:shadow-[0_12px_28px_rgba(48,36,14,0.08)] motion-safe:hover:-translate-y-1 motion-reduce:transition-none sm:p-8">
               <h3 className="text-lg font-bold">Términos y condiciones</h3>
               <p className="mt-4 whitespace-pre-wrap text-[14px] leading-7 text-[#666158]">
                 {data.terms}
               </p>
             </article>
-            <article className="rounded-[24px] border border-[#242019]/10 bg-white p-6 sm:p-8">
+            <article className="rounded-[24px] border border-[#242019]/10 bg-white p-6 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-[#c9b184] hover:bg-[#f6f0e5] hover:shadow-[0_12px_28px_rgba(48,36,14,0.08)] motion-safe:hover:-translate-y-1 motion-reduce:transition-none sm:p-8">
               <h3 className="text-lg font-bold">Métodos de pago</h3>
               <p className="mt-4 whitespace-pre-wrap text-[14px] leading-7 text-[#666158]">
                 {data.paymentMethods}
