@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { budgetsService, defaultBudget, type Budget, type BudgetContent } from "@/services/budgets.service";
 import dynamic from "next/dynamic";
+import BudgetImageEditor from "@/components/budgets/BudgetImageEditor";
+import type { BudgetImagePosition } from "@/services/budgets.service";
 
 // El editor solo carga la presentación completa cuando se solicita la vista previa.
 const BudgetPresentation = dynamic(
@@ -139,16 +141,27 @@ export default function AdminBudgetsPage() {
   );
 
   const imageInput = (name: "heroImage" | "portraitImage", description: string, index?: number) => {
+    const key = index === undefined ? name : "studioImage" + index;
     const value = index === undefined ? content[name] : content.studioImages[index] ?? "";
+    const aspectRatio = name === "heroImage" && index === undefined ? "16 / 7" : index === undefined ? "4 / 5" : "16 / 9";
+
+    const updatePosition = (position: BudgetImagePosition) =>
+      patch("imagePositions", { ...(content.imagePositions ?? {}), [key]: position });
+
     return (
-      <div className="space-y-2 rounded-xl border border-white/10 p-3">
-        <p className="text-sm text-white/70">{description}</p>
-        {value && <img src={value} alt="" className="h-32 w-full rounded-lg object-cover" />}
-        <input className={inputClass} value={value}
-          onChange={e => index === undefined ? patch(name, e.target.value) : patch("studioImages", content.studioImages.map((v, i) => i === index ? e.target.value : v))} />
-        <input type="file" accept="image/png,image/jpeg,image/webp" className="w-full text-xs"
-          onChange={e => { const file = e.target.files?.[0]; if (file) void upload(file, name, index); }} />
-      </div>
+      <BudgetImageEditor
+        key={key}
+        label={description}
+        url={value}
+        aspectRatio={aspectRatio}
+        disabled={busy}
+        position={content.imagePositions?.[key]}
+        onPositionChange={updatePosition}
+        onUrlChange={next => index === undefined
+          ? patch(name, next)
+          : patch("studioImages", content.studioImages.map((url, i) => i === index ? next : url))}
+        onUpload={file => {void upload(file, name, index)}}
+      />
     );
   };
 
@@ -177,7 +190,8 @@ export default function AdminBudgetsPage() {
           <div className="flex flex-wrap gap-2">
             <button className={btn} onClick={() => setPreview(v => !v)}>{preview ? "Editar" : "Ver vista previa"}</button>
             <button className={btn} disabled={busy} onClick={save}>{busy ? "Procesando..." : "Guardar"}</button>
-            {selected && <button className={btn} onClick={() => navigator.clipboard.writeText(window.location.origin + "/presupuesto/" + selected.shareToken)}>Copiar enlace</button>}
+            {selected?.shared && <button className={btn} onClick={() => navigator.clipboard.writeText(window.location.origin + "/presupuesto/" + selected.shareToken)}>Copiar enlace habilitado</button>}
+            {selected && !selected.shared && <span className="self-center text-xs text-yellow-200/70">Guardá con enlace habilitado para compartir</span>}
             {selected && <button className={btn} onClick={erase}>Eliminar</button>}
           </div>
 
