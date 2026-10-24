@@ -6,6 +6,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   AudioLines,
+  Check,
   Mail,
   MapPin,
   Phone,
@@ -20,6 +21,29 @@ type Props = {
 
 const money = (value: number) =>
   "$" + (Number(value) || 0).toLocaleString("es-AR", { maximumFractionDigits: 0 });
+
+// Separar únicamente enumeraciones de servicios sin alterar su contenido.
+function includedServices(description: string): string[] {
+  const text = description.trim().replace(/\.\s*$/, "");
+  if (!text) return [];
+  const parts: string[] = [];
+  let current = "";
+  let parentheses = 0;
+  for (const char of text) {
+    if (char === "(") parentheses++;
+    if (char === ")") parentheses = Math.max(0, parentheses - 1);
+    if (char === "," && parentheses === 0) {
+      if (current.trim()) parts.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  if (current.trim()) parts.push(current.trim());
+  return parts.flatMap(part =>
+    /^mezcla y mastering$/i.test(part) ? ["Mezcla", "Mastering"] : [part]
+  );
+}
 
 function safeWebLink(value: string) {
   try {
@@ -357,42 +381,66 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
           {!!data.highlights?.length && <AnimatedHighlights items={data.highlights} />}
         </section>
 
-        <section id="paquetes" className="scroll-mt-24 py-14 sm:py-20">
+        <section
+          id="paquetes"
+          className="relative isolate scroll-mt-24 overflow-hidden py-14 sm:py-20"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_7%_18%,rgba(204,170,88,0.095),transparent_48%),radial-gradient(ellipse_at_97%_83%,rgba(188,174,148,0.07),transparent_48%)]"
+          />
           <SectionHeading
             number="02"
             eyebrow="Opciones disponibles"
             title="Paquetes promocionales"
             description="Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto."
           />
-          <div className="grid gap-4 md:grid-cols-2">
+
+          <div className="grid gap-4 md:grid-cols-2 md:gap-5">
             {packages.map((pack, index) => (
               <article
                 key={index}
-                className="group flex h-full flex-col rounded-[24px] border border-[#242019]/10 bg-white p-6 shadow-[0_10px_32px_rgba(31,26,16,0.04)] transition duration-300 hover:-translate-y-0.5 hover:border-[#c5a058]/45 hover:shadow-[0_15px_40px_rgba(31,26,16,0.09)] sm:p-8"
+                className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-[#d5cfc3] bg-white/95 p-6 shadow-[0_10px_35px_rgba(39,31,15,0.035)] transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[#b79956] hover:shadow-[0_22px_46px_rgba(39,31,15,0.10)] motion-reduce:transform-none motion-reduce:transition-none sm:p-8"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#181816] text-xl font-black text-white">
-                    {pack.name}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-0 bg-[#d8ac43] transition-transform duration-300 group-hover:scale-x-100 motion-reduce:transition-none"
+                />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#1a1a18] text-lg font-black text-white sm:h-12 sm:w-12">
+                      {pack.name}
+                    </span>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#837969]">
+                      Paquete {pack.name}
+                    </span>
                   </div>
                   <div className="min-w-0 text-right">
-                    <p className="text-[27px] font-black tracking-[-0.04em] text-[#181816] sm:text-[33px]">
+                    <p className="text-[27px] font-black leading-none tracking-[-0.045em] text-[#191918] tabular-nums sm:text-[34px]">
                       {money(pack.price)}
                     </p>
                     {pack.installments > 1 && (
-                      <p className="mt-1 text-xs font-medium text-[#857c6d]">
+                      <p className="mt-2 text-[12px] font-medium text-[#776e61] tabular-nums">
                         {pack.installments} pagos de {money(pack.price / pack.installments)}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="mt-7 h-px bg-[#1b1b19]/10" />
-                <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.18em] text-[#978561]">
+
+                <div className="my-6 h-px bg-[#26221e]/10" />
+                <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-[#96783c]">
                   Servicios incluidos
                 </p>
-                <p className="mt-3 flex-1 text-[15px] leading-7 text-[#514e48]">
-                  {pack.description}
-                </p>
-                <div className="mt-7 h-[3px] w-14 rounded-full" style={{ backgroundColor: "var(--budget-accent)" }} />
+                <ul className="mt-4 grid flex-1 content-start gap-x-4 gap-y-3 sm:grid-cols-2">
+                  {includedServices(pack.description).map((service, serviceIndex) => (
+                    <li key={serviceIndex} className="flex items-start gap-2.5 text-[14px] leading-[1.55] text-[#514d46]">
+                      <span className="mt-[3px] flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-[#f4ecd8] text-[#9b772c]">
+                        <Check className="h-3 w-3" strokeWidth={2.5} />
+                      </span>
+                      <span>{service}</span>
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
