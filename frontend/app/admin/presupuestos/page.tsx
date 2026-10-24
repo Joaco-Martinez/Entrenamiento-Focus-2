@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { budgetsService, defaultBudget, type Budget, type BudgetContent } from "@/services/budgets.service";
-import { BudgetPresentation } from "@/components/BudgetPresentation";
+import dynamic from "next/dynamic";
+
+// El editor solo carga la presentación completa cuando se solicita la vista previa.
+const BudgetPresentation = dynamic(
+  () => import("@/components/BudgetPresentation").then(module => module.BudgetPresentation),
+  {
+    ssr: false,
+    loading: () => <div className="rounded-xl bg-[#f7f6f2] p-8 text-sm text-[#666]">Preparando vista previa...</div>,
+  }
+);
 
 const inputClass = "w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white";
 const btn = "rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20";
