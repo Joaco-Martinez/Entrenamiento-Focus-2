@@ -1,16 +1,46 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { BudgetPresentation } from "@/components/BudgetPresentation";
-import { budgetsService, Budget } from "@/services/budgets.service";
-import { useNavTheme } from "@/context/NavThemeContext";
-export default function SharedBudgetPage() {
-  useNavTheme("light");
-  const params = useParams();
-  const [budget, setBudget] = useState<Pick<Budget, "title"|"clientName"|"content"> | null>(null);
-  const [loading,setLoading] = useState(true);
-  useEffect(()=>{let active=true;budgetsService.getShared(String(params.token)).then(r=>{if(active)setBudget(r.budget)}).catch(()=>{if(active)setBudget(null)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[params.token]);
-  if(loading)return <main className="flex min-h-screen items-center justify-center bg-[#f7f6f2] text-[#222]">Cargando propuesta...</main>;
-  if(!budget)return <main className="flex min-h-screen items-center justify-center bg-[#f7f6f2] px-6 text-center text-[#222]"><div><h1 className="text-2xl font-bold">Presupuesto no disponible</h1><p className="mt-3 text-[#777]">Comprobá el enlace o contactá con quien te lo compartió.</p></div></main>;
-  return <BudgetPresentation title={budget.title} clientName={budget.clientName} data={budget.content}/>;
+import type { BudgetContent } from "@/services/budgets.service";
+
+// Los presupuestos son privados por enlace: renderizado SSR sin almacenamiento
+// intermedio y sin exponer los datos del cliente en componentes interactivos.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+type SharedBudget = {
+  title: string;
+  clientName: string;
+  content: BudgetContent;
+};
+
+export default async function SharedBudgetPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+  // Los enlaces se generan con crypto.randomBytes(24).toString("hex").
+  if (!/^[a-f\d]{48}$/i.test(token)) notFound();
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+  if (!apiUrl) throw new Error("La dirección de la API no está configurada");
+
+  const response = await fetch(`${apiUrl}/budgets/share/${encodeURIComponent(token)}`, {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+
+  if (response.status === 404) notFound();
+  if (!response.ok) throw new Error("No se pudo obtener el presupuesto");
+
+  const payload: { budget?: SharedBudget } = await response.json();
+  if (!payload.budget || !payload.budget.content) notFound();
+
+  return (
+    <BudgetPresentation
+      title={payload.budget.title}
+      clientName={payload.budget.clientName}
+      data={payload.budget.content}
+    />
+  );
 }
