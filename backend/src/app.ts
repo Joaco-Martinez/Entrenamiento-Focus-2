@@ -50,9 +50,11 @@ app.options(/.*/, cors(corsOptions));
 app.use(helmet());
 app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
-app.use(morgan("dev"));
+// No registrar enlaces secretos ni contenidos privados de presupuestos.
+app.use(morgan("dev", { skip: req => req.path.startsWith("/budgets") }));
 
 app.use((req, _res, next) => {
+  if (req.path.startsWith("/budgets")) return next();
   console.log("========== REQUEST ==========");
   console.log("Fecha:", new Date().toISOString());
   console.log("Método:", req.method);
