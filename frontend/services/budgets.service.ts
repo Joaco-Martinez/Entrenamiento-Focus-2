@@ -20,7 +20,7 @@ export type BudgetContent = {
 export type Budget = { id: string; shareToken: string; title: string; clientName: string; shared: boolean; producer: BudgetProducer; content: BudgetContent; createdAt: string; updatedAt: string };
 export const budgetsService = {
   list: (producer: BudgetProducer) => apiFetch("/budgets/admin?producer=" + producer) as Promise<{ budgets: Budget[] }>,
-  create: (payload: { producer: BudgetProducer; title: string; clientName: string; content: BudgetContent }) => apiFetch("/budgets/admin", { method: "POST", body: JSON.stringify(payload) }) as Promise<{ budget: Budget }>,
+  create: (payload: { producer: BudgetProducer; title: string; clientName: string; content: BudgetContent; shared: boolean }) => apiFetch("/budgets/admin", { method: "POST", body: JSON.stringify(payload) }) as Promise<{ budget: Budget }>,
   update: (id: string, producer: BudgetProducer, payload: { title: string; clientName: string; content: BudgetContent; shared: boolean }) => apiFetch("/budgets/admin/" + encodeURIComponent(id) + "?producer=" + producer, { method: "PUT", body: JSON.stringify(payload) }) as Promise<{ budget: Budget }>,
   remove: (id: string, producer: BudgetProducer) => apiFetch("/budgets/admin/" + encodeURIComponent(id) + "?producer=" + producer, { method: "DELETE" }),
   getShared: (token: string) => apiFetch("/budgets/share/" + encodeURIComponent(token)) as Promise<{ budget: Pick<Budget, "title" | "clientName" | "content" | "updatedAt"> }>,

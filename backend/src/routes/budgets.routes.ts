@@ -40,12 +40,12 @@ budgetsRoutes.get("/admin", ...admin, asyncHandler(async (req, res) => {
 }));
 
 budgetsRoutes.post("/admin", ...admin, asyncHandler(async (req, res) => {
-  const { clientName, title, content } = req.body;
+  const { clientName, title, content, shared } = req.body;
   const producer = parseProducer(req.body.producer);
   if (typeof clientName !== "string" || !clientName.trim() || typeof title !== "string" || !title.trim() || !content || typeof content !== "object" || Array.isArray(content)) {
     throw new ApiError(400, "Datos inválidos");
   }
-  const budget = await prisma.budgetProposal.create({ data: { clientName: clientName.slice(0,160), title: title.slice(0,200), content, producer, shareToken: randomBytes(24).toString("hex") } });
+  const budget = await prisma.budgetProposal.create({ data: { clientName: clientName.slice(0,160), title: title.slice(0,200), content, producer, shared: shared === true, shareToken: randomBytes(24).toString("hex") } });
   res.status(201).json({ budget });
 }));
 
