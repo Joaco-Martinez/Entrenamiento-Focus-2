@@ -37,7 +37,7 @@ export default function AdminLayout({
                   </h1>
 
                   <p className="mt-1 hidden text-sm text-white/55 sm:block">
-                    Gestión de productos, órdenes y suscripciones.
+                    Gestión de productos, presupuestos, órdenes y suscripciones.
                   </p>
                 </div>
 

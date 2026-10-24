@@ -447,3 +447,19 @@ model Article {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+
+// Presupuestos privados: no existe un listado público ni enlaces en el menú.
+// Cada URL compartida utiliza un token aleatorio, no un ID secuencial.
+model BudgetProposal {
+  id          String   @id @default(uuid())
+  shareToken  String   @unique
+  clientName  String
+  title       String
+  content     Json
+  shared      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([updatedAt])
+}
