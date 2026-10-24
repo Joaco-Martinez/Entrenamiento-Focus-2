@@ -2,19 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { budgetsService, budgetDefaultFor, type Budget, type BudgetContent, type BudgetProducer } from "@/services/budgets.service";
-import dynamic from "next/dynamic";
 import BudgetImageEditor from "@/components/budgets/BudgetImageEditor";
 import type { BudgetImagePosition } from "@/services/budgets.service";
 import { Copy, ExternalLink } from "lucide-react";
-
-// El editor solo carga la presentación completa cuando se solicita la vista previa.
-const BudgetPresentation = dynamic(
-  () => import("@/components/BudgetPresentation").then(module => module.BudgetPresentation),
-  {
-    ssr: false,
-    loading: () => <div className="rounded-xl bg-[#f7f6f2] p-8 text-sm text-[#666]">Preparando vista previa...</div>,
-  }
-);
 
 const inputClass = "w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white";
 const btn = "rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20";
@@ -28,8 +18,7 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
   const [content, setContent] = useState<BudgetContent>(() => structuredClone(defaultBudget));
   const [title, setTitle] = useState(defaultTitle);
   const [clientName, setClientName] = useState("Presentación general");
-  const [shared, setShared] = useState(false);
-  const [preview, setPreview] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -46,16 +35,16 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
 
   const patch = (key: keyof BudgetContent, value: any) => {
     setContent(previous => ({ ...previous, [key]: value }));
+    setHasUnsavedChanges(true);
   };
 
   const begin = (budget?: Budget) => {
     setSelected(budget ?? null);
     setTitle(budget?.title ?? defaultTitle);
     setClientName(budget?.clientName ?? "Presentación general");
-    setShared(budget?.shared ?? false);
     setContent(structuredClone(budget?.content ?? defaultBudget));
     setNotice("");
-    setPreview(false);
+    setHasUnsavedChanges(false);
   };
 
   const save = async () => {
@@ -66,15 +55,15 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
     setBusy(true);
     setNotice("");
     try {
+      // Guardar genera/activa automáticamente el enlace privado, sin casilla adicional.
       const result = selected
-        ? await budgetsService.update(selected.id, producer, { title, clientName, shared, content })
-        : await budgetsService.create({ producer, title, clientName, content });
-      const saved = !selected && shared
-        ? (await budgetsService.update(result.budget.id, producer, { title, clientName, content, shared: true })).budget
-        : result.budget;
-      setSelected(saved);
-      setShared(saved.shared);
-      setNotice("Presupuesto guardado");
+        ? await budgetsService.update(selected.id, producer, { title, clientName, content, shared: true })
+        : await budgetsService.create({ producer, title, clientName, content, shared: true });
+      setSelected(result.budget);
+      setHasUnsavedChanges(false);
+      setNotice(selected?.shared
+        ? "Cambios guardados. El enlace del artista ya está actualizado."
+        : "Presupuesto guardado. Ya podés copiar el enlace y abrir la vista previa.");
       await refresh();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Error al guardar");
@@ -181,30 +170,52 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
       setNotice("No se pudo copiar el enlace. Podés abrirlo y copiar la dirección desde el navegador.");
     }
   };
-  const renderArtistActions = () => artistPath ? (
+  const renderSaveButton = () => (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={() => { void save(); }}
+      className="inline-flex min-h-10 items-center justify-center rounded-xl bg-[#e5bd42] px-4 py-2 text-sm font-bold text-[#191919] transition-colors hover:bg-[#f0cc6b] disabled:cursor-wait disabled:opacity-60"
+    >
+      {busy ? "Guardando..." : selected?.shared ? "Guardar cambios" : "Guardar y generar enlace"}
+    </button>
+  );
+
+  const renderArtistActions = () => (
     <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
         onClick={() => { void copyArtistLink(); }}
-        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#e5bd42]/40 bg-[#e5bd42]/10 px-4 py-2 text-sm font-semibold text-[#f4d67d] transition-colors hover:bg-[#e5bd42]/20"
+        disabled={!artistPath || busy}
+        title={artistPath ? "Copiar el enlace de la versión guardada" : "Primero guardá para generar el enlace"}
+        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#e5bd42]/40 bg-[#e5bd42]/10 px-4 py-2 text-sm font-semibold text-[#f4d67d] transition-colors hover:bg-[#e5bd42]/20 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <Copy className="h-4 w-4" aria-hidden="true" />
         Copiar enlace
       </button>
-      <a
-        href={artistPath}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20"
-      >
-        <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        Ver como artista
-      </a>
+      {artistPath ? (
+        <a
+          href={artistPath}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Abrir la página del artista, con la última versión guardada"
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20"
+        >
+          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          Vista previa
+        </a>
+      ) : (
+        <button
+          type="button"
+          disabled
+          title="Primero guardá para generar el enlace"
+          className="inline-flex min-h-10 cursor-not-allowed items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white/40"
+        >
+          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          Vista previa
+        </button>
+      )}
     </div>
-  ) : (
-    <p className="self-center text-xs text-yellow-200/70">
-      Guardá el presupuesto con «Habilitar enlace» para poder copiarlo y verlo como artista.
-    </p>
   );
 
   return (
@@ -223,29 +234,29 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
           {list.map(b => (
             <button key={b.id} onClick={() => begin(b)} className={btn + " w-full text-left"}>
               <span className="block font-semibold">{b.clientName}</span>
-              <span className="mt-1 block text-xs text-white/50">{b.shared ? "Enlace habilitado" : "Borrador"}</span>
+              <span className="mt-1 block text-xs text-white/50">{b.shared ? "Enlace listo para compartir" : "Sin enlace: guardá para activarlo"}</span>
             </button>
           ))}
           {!list.length && <p className="text-sm text-white/50">Todavía no hay presupuestos de {ownerLabel}.</p>}
         </aside>
         <div className="min-w-0 space-y-6">
           <div className="flex flex-wrap gap-2">
-            <button className={btn} onClick={() => setPreview(v => !v)}>{preview ? "Editar" : "Ver vista previa"}</button>
-            <button className={btn} disabled={busy} onClick={save}>{busy ? "Procesando..." : "Guardar"}</button>
+            {renderSaveButton()}
             {renderArtistActions()}
             {selected && <button className={btn} onClick={erase}>Eliminar</button>}
           </div>
+          <p className="text-xs leading-5 text-white/60">
+            {hasUnsavedChanges && selected?.shared
+              ? "Tenés cambios sin guardar. La vista previa y el enlace muestran la última versión guardada."
+              : selected?.shared
+                ? "El enlace ya está listo. Copialo para enviarlo al artista o abrí Vista previa en otra pestaña."
+                : "Primero seleccioná Guardar y generar enlace. Después podrás copiarlo o abrir la vista previa."}
+          </p>
 
-          {preview ? (
-            <div className="overflow-hidden rounded-2xl">
-              <BudgetPresentation data={content} title={title} clientName={clientName} showFloatingWhatsApp={false} />
-            </div>
-          ) : (
-            <div className="space-y-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="space-y-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
               <section className="grid gap-4 sm:grid-cols-2">
-                <label className="space-y-2 text-sm">Destinatario<input className={inputClass} value={clientName} onChange={e => setClientName(e.target.value)} /></label>
-                <label className="space-y-2 text-sm">Título<input className={inputClass} value={title} onChange={e => setTitle(e.target.value)} /></label>
-                <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={shared} onChange={e => setShared(e.target.checked)} /> Habilitar enlace al guardar</label>
+                <label className="space-y-2 text-sm">Destinatario<input className={inputClass} value={clientName} onChange={e => { setClientName(e.target.value); setHasUnsavedChanges(true); }} /></label>
+                <label className="space-y-2 text-sm">Título<input className={inputClass} value={title} onChange={e => { setTitle(e.target.value); setHasUnsavedChanges(true); }} /></label>
                 <label className="space-y-2 text-sm">Color principal <input type="color" value={content.accent || "#e5bd42"} onChange={e => patch("accent", e.target.value)} /></label>
               </section>
               <section className="grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-2">
@@ -332,11 +343,12 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
                   <textarea rows={10} className={inputClass} value={content.equipment.join("\n")} onChange={e => patch("equipment", e.target.value.split("\n"))} />
                 </label>
               </section>
-            </div>
-          )}
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
-            <span className="text-xs text-white/45">Enlace del presupuesto guardado</span>
-            {renderArtistActions()}
+            <div className="flex flex-wrap items-center gap-2">
+              {renderSaveButton()}
+              {renderArtistActions()}
+            </div>
           </div>
         </div>
       </div>
