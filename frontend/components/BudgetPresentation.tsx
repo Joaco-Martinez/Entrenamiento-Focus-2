@@ -21,6 +21,17 @@ type Props = {
 const money = (value: number) =>
   "$" + (Number(value) || 0).toLocaleString("es-AR", { maximumFractionDigits: 0 });
 
+// Resalta únicamente el inicio de la descripción sin alterar el contenido editable.
+function splitDescriptionLead(description: string): [string, string] {
+  const value = description || "";
+  const firstStop = value.search(/[.!?](?=\s|$)/);
+  if (firstStop >= 0 && firstStop < 65) {
+    return [value.slice(0, firstStop + 1), value.slice(firstStop + 1)];
+  }
+  const match = value.match(/^(\S+(?:\s+\S+){0,6})([\s\S]*)$/);
+  return match ? [match[1], match[2]] : [value, ""];
+}
+
 // Separar únicamente enumeraciones de servicios sin alterar su contenido.
 function includedServices(description: string): string[] {
   const text = description.trim().replace(/\.\s*$/, "");
@@ -384,18 +395,19 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                     <span className="mt-0.5 text-[11px] font-bold tabular-nums text-[#a79c86]">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h3 className="text-[16px] font-bold leading-6 text-[#20201d]">
+                    <h3 className="text-[16px] font-bold leading-6 text-[#20201d] transition-colors duration-300 group-hover:text-[#986c22]">
                       {service.label}
                     </h3>
                   </div>
-                  <p className="shrink-0 font-bold tabular-nums text-[#20201d] md:hidden">
+                  <p className="shrink-0 font-bold tabular-nums text-[#916822] md:hidden">
                     {money(service.price)}
                   </p>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[#69645d] transition-colors duration-300 group-hover:text-[#35322e] md:mt-0">
-                  {service.description}
+                  <strong className="font-semibold text-[#39352e]">{splitDescriptionLead(service.description)[0]}</strong>
+                  {splitDescriptionLead(service.description)[1]}
                 </p>
-                <p className="hidden text-right text-[16px] font-bold tabular-nums text-[#20201d] md:block">
+                <p className="hidden text-right text-[16px] font-bold tabular-nums text-[#916822] md:block">
                   {money(service.price)}
                 </p>
               </div>
@@ -404,15 +416,25 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
           <div className="mt-5 flex flex-wrap items-end justify-between gap-5 rounded-[24px] bg-[#1a1a18] px-6 py-7 text-white sm:px-8">
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">
-                Resumen de servicios
+                {total < subtotal ? "Producción completa · precio promocional" : "Resumen de servicios"}
               </p>
-              <p className="text-sm text-white/65">Subtotal: {money(subtotal)}</p>
-              {discountPercent > 0 && (
+              {total < subtotal ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-sm text-white/60">Total por separado</span>
+                  <span className="text-lg font-semibold text-white/55 line-through decoration-[#d8ab55] decoration-2 tabular-nums">
+                    {money(subtotal)}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-sm text-white/65">Subtotal: {money(subtotal)}</p>
+              )}
+              {data.totalOverride == null && discountPercent > 0 && (
                 <p className="text-sm text-white/65">Descuento: {discountPercent}%</p>
               )}
+              {total < subtotal && <p className="text-xs text-white/55">Precio por contratación conjunta de los servicios</p>}
             </div>
             <div>
-              <p className="text-xs text-white/55">Total</p>
+              <p className="text-xs text-white/55">{total < subtotal ? "Precio promocional" : "Total"}</p>
               <p className="mt-1 text-[34px] font-black tracking-[-0.04em] sm:text-[42px]" style={{ color: "var(--budget-accent)" }}>
                 {money(total)}
               </p>
