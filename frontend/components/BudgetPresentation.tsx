@@ -139,7 +139,22 @@ function SectionHeading({
   );
 }
 
-function StudioImage({ url, index, featured = false }: { url: string; index: number; featured?: boolean }) {
+const safeNumber = (value: number | undefined, fallback: number, min: number, max: number) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+};
+
+// Esta transformación se resuelve en SSR; el navegador solo aplica estilos CSS.
+function positionStyle(data: BudgetContent, key: string): CSSProperties {
+  const crop = data.imagePositions?.[key];
+  if (!crop) return {};
+  const x = safeNumber(crop.x, 50, 0, 100);
+  const y = safeNumber(crop.y, 50, 0, 100);
+  const zoom = safeNumber(crop.zoom, 1, 1, 2.5);
+  return { objectPosition: x + "% " + y + "%", transformOrigin: x + "% " + y + "%", transform: "scale(" + zoom + ")" };
+}
+
+function StudioImage({ url, index, featured = false, style }: { url: string; index: number; featured?: boolean; style?: CSSProperties }) {
   return (
     <div
       className={
@@ -153,7 +168,8 @@ function StudioImage({ url, index, featured = false }: { url: string; index: num
           alt={"Fotografía del estudio " + index}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          className="absolute inset-0 h-full w-full object-cover"
+          style={style}
         />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_65%_30%,#484138,transparent_52%),linear-gradient(145deg,#292826,#151515)] px-5 text-center">
@@ -227,6 +243,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
           <img
             src={data.heroImage}
             alt=""
+            style={positionStyle(data, "heroImage")}
             decoding="async"
             className="absolute inset-0 -z-20 h-full w-full object-cover opacity-35"
           />
@@ -317,7 +334,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
           <div className="grid gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
             <div className="relative min-h-[265px] overflow-hidden rounded-[24px] bg-[#191917]">
               {data.portraitImage ? (
-                <img src={data.portraitImage} alt="Fotografía de presentación del productor" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
+                <img src={data.portraitImage} alt="Fotografía de presentación del productor" style={positionStyle(data, "portraitImage")} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
               ) : (
                 <div className="flex h-full min-h-[265px] flex-col justify-end bg-[radial-gradient(circle_at_75%_20%,#4f432b,transparent_55%),linear-gradient(145deg,#292825,#111110)] p-8">
                   <AudioLines className="mb-auto h-9 w-9 text-[#e5bd42]/70" strokeWidth={1}/>
@@ -547,6 +564,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
                   url={url}
                   index={index + 1}
                   featured={index === 0}
+                  style={positionStyle(data, "studioImage" + index)}
                 />
               ))}
             </div>
