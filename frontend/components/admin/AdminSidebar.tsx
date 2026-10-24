@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Newspaper,
   Clapperboard,
+  FileText,
 } from "lucide-react";
 
 const links = [
@@ -23,6 +24,7 @@ const links = [
   { label: "Productos", href: "/admin/products", icon: Package },
   { label: "Clases", href: "/admin/clases", icon: Clapperboard },
   { label: "Artículos", href: "/admin/articles", icon: Newspaper },
+  { label: "Presupuestos", href: "/admin/presupuestos", icon: FileText },
   { label: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
   { label: "Suscripciones", href: "/admin/subscriptions", icon: CreditCard },
 ];

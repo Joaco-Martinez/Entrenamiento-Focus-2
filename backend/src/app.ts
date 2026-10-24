@@ -13,6 +13,7 @@ import { notFound } from "./common/errors/notFound";
 import { errorHandler } from "./common/errors/errorHandler";
 import { MpRoutes } from "./payments/MPCheckout/mercadoPago.Routes";
 import { healthRoutes } from "./routes/health.routes";
+import { budgetsRoutes } from "./routes/budgets.routes";
 import mpLinkSubscriptionsRoutes from "./payments/MPLinkSubscriptions/routes";
 import { authRoutes } from "./routes/auth.routes";
 import { usersRoutes } from "./routes/users.routes";
@@ -49,9 +50,11 @@ app.options(/.*/, cors(corsOptions));
 app.use(helmet());
 app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
-app.use(morgan("dev"));
+// No registrar enlaces secretos ni contenidos privados de presupuestos.
+app.use(morgan("dev", { skip: req => req.path.startsWith("/budgets") }));
 
 app.use((req, _res, next) => {
+  if (req.path.startsWith("/budgets")) return next();
   console.log("========== REQUEST ==========");
   console.log("Fecha:", new Date().toISOString());
   console.log("Método:", req.method);
@@ -70,6 +73,7 @@ app.use("/paypal_checkout", paypalRoutes);
 app.use("/paypal_suscription", paypalSubscriptionsRoutes);
 app.use("/mercadopago_suscription", MPsuscription);
 app.use("/health", healthRoutes);
+app.use("/budgets", budgetsRoutes);
 app.use("/auth", authRoutes);
 app.use("/mp-link-subscriptions", mpLinkSubscriptionsRoutes);
 app.use("/users", usersRoutes);
