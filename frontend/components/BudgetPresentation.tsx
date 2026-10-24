@@ -1,0 +1,37 @@
+"use client";
+import { BudgetContent } from "@/services/budgets.service";
+const money = (n: number) => "$" + (Number(n) || 0).toLocaleString("es-AR", { maximumFractionDigits: 0 });
+export function BudgetPresentation({ data, title, clientName }: { data: BudgetContent; title: string; clientName: string }) {
+  const services = data.services ?? [];
+  const packages = data.packages ?? [];
+  const subtotal = services.reduce((n, s) => n + (Number(s.price) || 0), 0);
+  const total = data.totalOverride != null ? Number(data.totalOverride) : Math.max(0, Math.round(subtotal * (1 - (Number(data.discountPercent) || 0) / 100)));
+  return (
+    <main className="min-h-screen bg-[#f7f6f2] text-[#171717]" style={{ "--budget-accent": data.accent || "#e5bd42" } as React.CSSProperties}>
+      <header className="relative overflow-hidden bg-[#101010] text-white">
+        {data.heroImage && <img src={data.heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />}
+        <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6 px-6 py-12 md:py-20">
+          <div><p className="mb-3 text-xs font-semibold tracking-[0.35em] text-white/50">PROPUESTA PROFESIONAL</p><h1 className="text-5xl font-black tracking-tight md:text-7xl">{data.brand?.split(" ").slice(0,-1).join(" ") || "PROD BY"} <span style={{ color: "var(--budget-accent)" }}>{data.brand?.split(" ").slice(-1) || "KNNO"}</span></h1><p className="mt-4 tracking-[0.24em] text-white/55">{data.subtitle}</p></div>
+          {data.playlistUrl && <a className="rounded-full border border-white/30 px-6 py-3 text-sm font-semibold hover:bg-white/10" target="_blank" rel="noopener noreferrer" href={data.playlistUrl}>Escuchar playlist ↗</a>}
+        </div>
+      </header>
+      <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
+        <section className="grid gap-8 border-b border-black/15 pb-14 md:grid-cols-[1.4fr_0.6fr] md:gap-16">
+          <div><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a47e23]">01 / Presentación</p><h2 className="mt-4 text-3xl font-black md:text-4xl">{title || "Producción musical profesional"}</h2>{clientName && <p className="mt-2 text-sm font-medium text-black/50">Propuesta para {clientName}</p>}<p className="mt-7 whitespace-pre-wrap text-base leading-8 text-black/65">{data.bio}</p></div>
+          <div className="space-y-5"><div className="aspect-[4/3] overflow-hidden rounded-2xl bg-[#e8e4dc]">{data.portraitImage ? <img src={data.portraitImage} alt="Presentación profesional" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-black/35">Imagen de presentación</div>}</div><div className="space-y-1.5 text-sm text-black/60">{data.instagram && <p>{data.instagram}</p>}{data.email && <p>{data.email}</p>}{data.phone && <p>{data.phone}</p>}{data.location && <p>{data.location}</p>}</div></div>
+        </section>
+        <section className="py-14"><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a47e23]">02 / Servicios</p><h2 className="mt-3 text-3xl font-black">Servicios individuales</h2>
+          <div className="mt-8 overflow-hidden rounded-2xl border border-black/10 bg-white"><div className="hidden grid-cols-[1fr_2fr_0.65fr] gap-4 bg-[#101010] p-5 text-xs font-bold uppercase tracking-widest text-white md:grid"><span>Servicio</span><span>Descripción</span><span className="text-right">Precio</span></div>
+            {services.map((s,i)=><div key={i} className="grid gap-2 border-b border-black/10 px-5 py-5 last:border-b-0 even:bg-[#f0efec] md:grid-cols-[1fr_2fr_0.65fr] md:items-center md:gap-4"><div className="font-bold">{s.label}</div><p className="text-sm leading-6 text-black/60">{s.description}</p><p className="font-bold md:text-right">{money(s.price)}</p></div>)}
+          </div>
+          <div className="mt-5 grid gap-5 rounded-2xl bg-[#181818] p-6 text-white md:grid-cols-2 md:items-center"><div><p className="text-xs uppercase tracking-widest text-white/50">Paquete de servicios</p><p className="mt-1 text-sm text-white/60">Subtotal {money(subtotal)} · Descuento {data.discountPercent || 0}%</p></div><div className="md:text-right"><p className="text-xs text-white/50">Total</p><p className="text-4xl font-black" style={{color:"var(--budget-accent)"}}>{money(total)}</p></div></div>
+          {data.note && <p className="mt-4 text-sm text-black/50">{data.note}</p>}
+        </section>
+        <section className="border-t border-black/15 py-14"><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a47e23]">03 / Promociones</p><h2 className="mt-3 text-3xl font-black">Paquetes promocionales</h2><div className="mt-8 grid gap-4 md:grid-cols-2">{packages.map((p,i)=><article key={i} className="rounded-2xl border border-black/10 bg-white p-6"><div className="flex items-start justify-between gap-4"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#161616] text-xl font-black text-white">{p.name}</span><div className="text-right"><p className="text-2xl font-black">{money(p.price)}</p>{p.installments>1 && <p className="text-xs text-black/50">{p.installments} pagos de {money(p.price / p.installments)}</p>}</div></div><p className="mt-5 leading-6 text-black/65">{p.description}</p></article>)}</div></section>
+        <section className="grid gap-10 border-t border-black/15 py-14 md:grid-cols-2"><div><h3 className="text-xl font-black">Servicios extras</h3><div className="mt-5 space-y-4">{(data.extras??[]).map((e,i)=><div key={i} className="border-b border-black/10 pb-3"><p className="font-bold">{e.label}</p><p className="mt-1 text-sm leading-6 text-black/60">{e.description}</p></div>)}</div></div><div className="space-y-8"><div><h3 className="text-xl font-black">Términos y condiciones</h3><p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-black/60">{data.terms}</p></div><div><h3 className="text-xl font-black">Métodos de pago</h3><p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-black/60">{data.paymentMethods}</p></div></div></section>
+        <section className="border-t border-black/15 py-14"><p className="text-xs font-bold uppercase tracking-[0.25em] text-[#a47e23]">04 / Estudio</p><h2 className="mt-3 text-3xl font-black">{data.studioName || "Estudio"}</h2><p className="mt-4 text-black/60">{data.studioText}</p><div className="mt-8 grid gap-5 md:grid-cols-2"><div className="grid gap-3">{(data.studioImages??[]).slice(0,3).map((url,i)=><div key={i} className="aspect-[16/9] overflow-hidden rounded-xl bg-[#e8e4dc]">{url ? <img src={url} alt={"Fotografía del estudio "+(i+1)} className="h-full w-full object-cover"/> : <div className="flex h-full items-center justify-center text-sm text-black/35">Fotografía del estudio {i+1}</div>}</div>)}</div><div className="rounded-2xl bg-white p-6"><h3 className="mb-5 font-bold uppercase tracking-wide">Equipo disponible</h3><ul className="space-y-3">{(data.equipment??[]).map((e,i)=><li key={i} className="border-b border-black/10 pb-2 text-sm text-black/65">{e}</li>)}</ul></div></div></section>
+      </div>
+      <footer className="bg-[#111] px-5 py-8 text-center text-xs tracking-widest text-white/50">PROPUESTA PROFESIONAL · {data.brand}</footer>
+    </main>
+  );
+}
