@@ -24,6 +24,7 @@ type Props = {
   data: BudgetContent;
   title: string;
   clientName: string;
+  showFloatingWhatsApp?: boolean;
 };
 
 const money = (value: number) =>
@@ -169,7 +170,7 @@ function StudioImage({ url, index, featured = false }: { url: string; index: num
   );
 }
 
-export function BudgetPresentation({ data, title, clientName }: Props) {
+export function BudgetPresentation({ data, title, clientName, showFloatingWhatsApp = true }: Props) {
   // Solo la presentación divide el texto: los términos originales siguen editables
   // en el panel de administración, sin duplicarlos en otro campo.
   const termsText = data.terms ?? "";
@@ -631,7 +632,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
         </section>
       </div>
 
-      {generalWhatsappLink && (
+      {showFloatingWhatsApp && generalWhatsappLink && (
         <a
           href={generalWhatsappLink}
           target="_blank"
