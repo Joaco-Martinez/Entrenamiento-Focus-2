@@ -9,6 +9,12 @@ import { cloudinary } from "../config/cloudinary";
 import { ApiError } from "../common/errors/ApiError";
 
 export const budgetsRoutes = Router();
+// Presupuestos e información de clientes: sin indexación ni almacenamiento intermedio.
+budgetsRoutes.use((_req, res, next) => {
+  res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+  res.setHeader("Cache-Control", "private, no-store");
+  next();
+});
 const admin = [authRequired, adminOnly] as const;
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 }, fileFilter: (_req, file, cb) => cb(null, /^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) });
 
