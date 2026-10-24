@@ -458,8 +458,10 @@ model BudgetProposal {
   title       String
   content     Json
   shared      Boolean  @default(false)
+  producer    String   @default("fran")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([producer, updatedAt])
   @@index([updatedAt])
 }
