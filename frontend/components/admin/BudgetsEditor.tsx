@@ -5,6 +5,7 @@ import { budgetsService, budgetDefaultFor, type Budget, type BudgetContent, type
 import dynamic from "next/dynamic";
 import BudgetImageEditor from "@/components/budgets/BudgetImageEditor";
 import type { BudgetImagePosition } from "@/services/budgets.service";
+import { Copy, ExternalLink } from "lucide-react";
 
 // El editor solo carga la presentación completa cuando se solicita la vista previa.
 const BudgetPresentation = dynamic(
@@ -168,6 +169,44 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
     );
   };
 
+  // Siempre se abre la versión guardada, igual que la que recibe el artista.
+  // No se ofrecen enlaces de presupuestos que todavía son borradores.
+  const artistPath = selected?.shared ? "/presupuesto/" + selected.shareToken : null;
+  const copyArtistLink = async () => {
+    if (!artistPath) return;
+    try {
+      await navigator.clipboard.writeText(window.location.origin + artistPath);
+      setNotice("Enlace para el artista copiado.");
+    } catch {
+      setNotice("No se pudo copiar el enlace. Podés abrirlo y copiar la dirección desde el navegador.");
+    }
+  };
+  const renderArtistActions = () => artistPath ? (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={() => { void copyArtistLink(); }}
+        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#e5bd42]/40 bg-[#e5bd42]/10 px-4 py-2 text-sm font-semibold text-[#f4d67d] transition-colors hover:bg-[#e5bd42]/20"
+      >
+        <Copy className="h-4 w-4" aria-hidden="true" />
+        Copiar enlace
+      </button>
+      <a
+        href={artistPath}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20"
+      >
+        <ExternalLink className="h-4 w-4" aria-hidden="true" />
+        Ver como artista
+      </a>
+    </div>
+  ) : (
+    <p className="self-center text-xs text-yellow-200/70">
+      Guardá el presupuesto con «Habilitar enlace» para poder copiarlo y verlo como artista.
+    </p>
+  );
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -193,8 +232,7 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
           <div className="flex flex-wrap gap-2">
             <button className={btn} onClick={() => setPreview(v => !v)}>{preview ? "Editar" : "Ver vista previa"}</button>
             <button className={btn} disabled={busy} onClick={save}>{busy ? "Procesando..." : "Guardar"}</button>
-            {selected?.shared && <button className={btn} onClick={() => navigator.clipboard.writeText(window.location.origin + "/presupuesto/" + selected.shareToken)}>Copiar enlace habilitado</button>}
-            {selected && !selected.shared && <span className="self-center text-xs text-yellow-200/70">Guardá con enlace habilitado para compartir</span>}
+            {renderArtistActions()}
             {selected && <button className={btn} onClick={erase}>Eliminar</button>}
           </div>
 
@@ -296,6 +334,10 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
               </section>
             </div>
           )}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+            <span className="text-xs text-white/45">Enlace del presupuesto guardado</span>
+            {renderArtistActions()}
+          </div>
         </div>
       </div>
     </div>
