@@ -187,6 +187,18 @@ export default function AdminBudgetsPage() {
               <section className="grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-2">
                 <h2 className="col-span-full text-xl font-bold">Presentación</h2>
                 {textInput("brand", "Marca")}
+                <label className="block space-y-2 text-sm text-white/70 sm:col-span-2">Nombre del productor
+                  <input className={inputClass} value={content.producerName ?? ""} onChange={e => patch("producerName",e.target.value)}/>
+                </label>
+                <div className="space-y-3 sm:col-span-2">
+                  <p className="text-sm font-semibold text-white/80">Cifras destacadas de la presentación</p>
+                  {(content.highlights ?? []).map((item,i)=>(
+                    <div key={i} className="grid gap-3 sm:grid-cols-[130px_1fr]">
+                      <input aria-label={"Cifra "+(i+1)} className={inputClass} value={item.value} onChange={e=>patch("highlights",(content.highlights??[]).map((v,j)=>i===j?{...v,value:e.target.value}:v))}/>
+                      <input aria-label={"Descripción de cifra "+(i+1)} className={inputClass} value={item.label} onChange={e=>patch("highlights",(content.highlights??[]).map((v,j)=>i===j?{...v,label:e.target.value}:v))}/>
+                    </div>
+                  ))}
+                </div>
                 {textInput("subtitle", "Subtítulo")}
                 <div className="sm:col-span-2">{textInput("bio", "Biografía", true)}</div>
                 {textInput("instagram", "Instagram")}
