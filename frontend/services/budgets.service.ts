@@ -3,10 +3,13 @@ import { apiFetch } from "@/lib/api";
 export type BudgetRow = { label: string; description: string; price: number; note?: string };
 export type BudgetPackage = { name: string; description: string; price: number; installments: number };
 export type BudgetHighlight = { value: string; label: string };
+export type BudgetImagePosition = { x: number; y: number; zoom: number };
+export const defaultImagePosition: BudgetImagePosition = { x: 50, y: 50, zoom: 1 };
 export type BudgetContent = {
   brand: string; subtitle: string; accent: string; producerName?: string; highlights?: BudgetHighlight[];
   bio: string; instagram: string; email: string; phone: string; location: string;
   playlistUrl: string; heroImage: string; portraitImage: string;
+  imagePositions?: Record<string, BudgetImagePosition>;
   services: BudgetRow[]; packages: BudgetPackage[];
   extras: { label: string; description: string }[];
   terms: string; paymentMethods: string; discountPercent: number;
@@ -34,6 +37,7 @@ export const defaultBudget: BudgetContent = {
   bio: "Hola, soy Franco Cano y me dedico profesionalmente desde hace más de diez años a la creación, composición, grabación, mezcla y mastering de música latina y urbana. Trabajo con diversas salas de grabación en Córdoba, Argentina, y a la fecha llevo más de 1500 proyectos entregados en los últimos cinco años. Mi trabajo acumula más de 20 millones de reproducciones en plataformas digitales como Spotify y YouTube, colaborando junto a cientos de artistas de más de nueve países.",
   instagram: "@knnoknno", email: "Knnoofficial@gmail.com", phone: "+549 3513785963", location: "Argentina, Córdoba, Capital",
   playlistUrl: "", heroImage: "", portraitImage: "",
+  imagePositions: {},
   services: [
     { label: "Instrumental", description: "Partiendo de una maqueta. Selección y diseño de sonidos. Vos elegís cómo debería sonar tu pista.", price: 130000 },
     { label: "Grabación x 2hs", description: "Sesión de grabación de 2 horas en sala acústicamente tratada, con acceso a micrófonos, preamplificadores y conversores profesionales.", price: 80000 },
