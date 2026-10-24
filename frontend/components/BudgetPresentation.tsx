@@ -63,6 +63,18 @@ function includedServices(description: string): string[] {
   );
 }
 
+function WhatsAppLogo() {
+  return (
+    <svg
+            viewBox="0 0 24 24"
+            className="relative h-7 w-7 fill-white"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M20.52 3.48A11.78 11.78 0 0 0 12.05 0C5.5 0 .18 5.32.18 11.87c0 2.09.55 4.13 1.6 5.93L0 24l6.39-1.67a11.83 11.83 0 0 0 5.66 1.45h.01c6.55 0 11.87-5.32 11.87-11.87 0-3.17-1.23-6.14-3.41-8.43zM12.06 21.3h-.01a9.4 9.4 0 0 1-4.8-1.31l-.34-.2-3.79.99 1.01-3.69-.22-.38a9.4 9.4 0 0 1-1.45-5.02c0-5.21 4.24-9.45 9.45-9.45 2.52 0 4.88.98 6.66 2.76a9.36 9.36 0 0 1 2.77 6.67c0 5.21-4.24 9.45-9.44 9.45zm5.2-7.08c-.28-.14-1.65-.81-1.91-.9-.26-.1-.45-.14-.64.14-.19.28-.73.9-.89 1.09-.17.19-.33.21-.61.07-.28-.14-1.17-.43-2.23-1.37-.82-.73-1.37-1.63-1.53-1.91-.16-.28-.02-.43.12-.57.12-.12.28-.31.42-.47.14-.17.19-.28.28-.47.1-.19.05-.35-.02-.49-.07-.14-.64-1.54-.88-2.11-.23-.55-.47-.47-.64-.48h-.55c-.19 0-.5.07-.76.35-.26.28-1 1-1 2.43 0 1.43 1.03 2.81 1.17 3 .14.19 2.02 3.08 4.9 4.32.68.29 1.2.46 1.61.59.68.22 1.3.19 1.79.12.55-.08 1.65-.67 1.88-1.32.23-.66.23-1.22.16-1.33-.07-.12-.26-.19-.55-.33z"/>
+          </svg>
+  );
+}
+
 function safeWebLink(value: string) {
   try {
     const url = new URL(value);
@@ -193,8 +205,17 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
     : null;
   const bioText = (data.bio || "").replace(/^Hola,\s*soy\s+Franco\s+Cano\s+y\s+/i, "");
   const cleanBio = bioText ? bioText.charAt(0).toUpperCase() + bioText.slice(1) : "";
+  // El WhatsApp pertenece al productor indicado en este presupuesto, no a Focus.
   const phoneDigits = (data.phone || "").replace(/\D/g, "");
-  const whatsappHref = phoneDigits.length >= 10 ? "https://wa.me/" + phoneDigits : null;
+  const whatsappHref = phoneDigits.length >= 10 && phoneDigits.length <= 15
+    ? "https://wa.me/" + phoneDigits
+    : null;
+  const firstName = (data.producerName || "Franco").trim().split(/\s+/)[0] || "Franco";
+  const whatsappLink = (message: string) =>
+    whatsappHref ? whatsappHref + "?text=" + encodeURIComponent(message) : undefined;
+  const generalWhatsappLink = whatsappLink(
+    "Hola " + firstName + ", estuve viendo tu presupuesto y quisiera hacerte una consulta."
+  );
   const showClient = clientName.trim() && clientName.toLowerCase() !== "presentación general";
   const theme = { "--budget-accent": data.accent || "#e5bd42" } as CSSProperties;
 
@@ -390,6 +411,16 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                     </li>
                   ))}
                 </ul>
+                {whatsappHref && (
+                  <a
+                    href={whatsappLink("Hola " + firstName + ", quiero contratar el paquete " + pack.name + " de producción musical.")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#d5bb84] px-4 py-2 text-xs font-bold text-[#8e6b2a] transition-[color,background-color,border-color] duration-200 hover:border-[#b99a56] hover:bg-[#f5ecd8] hover:text-[#60430f]"
+                  >
+                    Consultar paquete {pack.name} <ArrowUpRight className="h-3.5 w-3.5" />
+                  </a>
+                )}
               </article>
             ))}
           </div>
@@ -419,7 +450,17 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <h3 className="text-[16px] font-bold leading-6 text-[#20201d] transition-colors duration-300 group-hover:text-[#986c22]">
-                      {service.label}
+                      {whatsappHref ? (
+                        <a
+                          href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + ".")}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#986c22]"
+                          aria-label={"Consultar por WhatsApp el servicio de " + service.label}
+                        >
+                          {service.label}
+                        </a>
+                      ) : service.label}
                     </h3>
                   </div>
                   <p className="shrink-0 font-bold tabular-nums text-[#916822] md:hidden">
@@ -430,9 +471,31 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                   <strong className="font-semibold text-[#39352e]">{splitDescriptionLead(service.description)[0]}</strong>
                   {splitDescriptionLead(service.description)[1]}
                 </p>
-                <p className="hidden text-right text-[16px] font-bold tabular-nums text-[#916822] md:block">
-                  {money(service.price)}
-                </p>
+                <div className="hidden text-right md:block">
+                  <p className="text-[16px] font-bold tabular-nums text-[#916822]">
+                    {money(service.price)}
+                  </p>
+                  {whatsappHref && (
+                    <a
+                      href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + ".")}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#8e6b2a] underline-offset-4 hover:text-[#684c1c] hover:underline"
+                    >
+                      Consultar <ArrowUpRight className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </div>
+                {whatsappHref && (
+                  <a
+                    href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + ".")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[#8e6b2a] underline-offset-4 hover:underline md:hidden"
+                  >
+                    Consultar este servicio <ArrowUpRight className="h-3.5 w-3.5" />
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -568,6 +631,20 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
         </section>
       </div>
 
+      {generalWhatsappLink && (
+        <a
+          href={generalWhatsappLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={"Consultar por WhatsApp a " + (data.producerName || "Franco")}
+          title={"Contactar por WhatsApp a " + (data.producerName || "Franco")}
+          className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-[transform,box-shadow] duration-300 hover:scale-110 hover:shadow-[0_0_28px_rgba(37,211,102,0.45)] motion-reduce:transform-none"
+        >
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366]/30 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
+          <WhatsAppLogo />
+        </a>
+      )}
+
       <footer className="bg-[#171715] px-5 py-12 text-[#f8f6f0] sm:px-8 md:py-16">
         <div className="mx-auto flex max-w-6xl flex-col gap-7 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl">
@@ -582,8 +659,8 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            {whatsappHref && (
-              <a href={whatsappHref} target="_blank" rel="noopener noreferrer"
+            {generalWhatsappLink && (
+              <a href={generalWhatsappLink} target="_blank" rel="noopener noreferrer"
                 className="inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-[#1a1711] transition hover:brightness-110"
                 style={{ backgroundColor: "var(--budget-accent)" }}>
                 <Phone className="h-4 w-4" /> WhatsApp <ArrowUpRight className="h-4 w-4" />
