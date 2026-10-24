@@ -2,8 +2,9 @@ import { apiFetch } from "@/lib/api";
 
 export type BudgetRow = { label: string; description: string; price: number; note?: string };
 export type BudgetPackage = { name: string; description: string; price: number; installments: number };
+export type BudgetHighlight = { value: string; label: string };
 export type BudgetContent = {
-  brand: string; subtitle: string; accent: string;
+  brand: string; subtitle: string; accent: string; producerName?: string; highlights?: BudgetHighlight[];
   bio: string; instagram: string; email: string; phone: string; location: string;
   playlistUrl: string; heroImage: string; portraitImage: string;
   services: BudgetRow[]; packages: BudgetPackage[];
@@ -23,6 +24,13 @@ export const budgetsService = {
 };
 export const defaultBudget: BudgetContent = {
   brand: "PROD BY KNNO", subtitle: "PRODUCCIÓN MUSICAL", accent: "#e5bd42",
+  producerName: "Franco Cano",
+  highlights: [
+    { value: "10+", label: "años de experiencia" },
+    { value: "1.500+", label: "proyectos entregados en 5 años" },
+    { value: "20 M+", label: "reproducciones en plataformas" },
+    { value: "9+", label: "países con artistas colaboradores" },
+  ],
   bio: "Hola, soy Franco Cano y me dedico profesionalmente desde hace más de diez años a la creación, composición, grabación, mezcla y mastering de música latina y urbana. Trabajo con diversas salas de grabación en Córdoba, Argentina, y a la fecha llevo más de 1500 proyectos entregados en los últimos cinco años. Mi trabajo acumula más de 20 millones de reproducciones en plataformas digitales como Spotify y YouTube, colaborando junto a cientos de artistas de más de nueve países.",
   instagram: "@knnoknno", email: "Knnoofficial@gmail.com", phone: "+549 3513785963", location: "Argentina, Córdoba, Capital",
   playlistUrl: "", heroImage: "", portraitImage: "",
