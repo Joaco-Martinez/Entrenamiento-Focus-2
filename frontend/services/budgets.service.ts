@@ -56,7 +56,7 @@ export const defaultBudget: BudgetContent = {
   ],
   terms: "Los servicios de producción completa, instrumental y mezcla pueden abonarse en dos pagos: el primero al solicitar el servicio y el segundo al finalizar el trabajo. Los servicios de grabación, afinación y mastering se abonan en un solo pago al momento de solicitar el servicio.",
   paymentMethods: "Efectivo, transferencia bancaria, billeteras virtuales.",
-  discountPercent: 0, totalOverride: null, note: "Los servicios adicionales se presupuestan por separado.",
+  discountPercent: 0, totalOverride: 250000, note: "Los servicios adicionales se presupuestan por separado.",
   studioName: "EL BRUJO ESTUDIO", studioText: "Sala de grabación y producción en Córdoba, Argentina.",
   studioImages: ["", "", ""],
   equipment: ["Micrófono Neumann U87", "Preamplificador ISA 828", "Preamplificador Avalon 737", "Conversor Avid HD", "Monitoreo Focal Solo6 + SUB", "Comp / Limitador Weiss DS1 MK3", "Comp / Limit / EQ Finalizer Express", "Comp / API 2500", "Auriculares Sennheiser HD 600 & 650", "Auriculares Beyerdynamic DT 770 Pro"]
