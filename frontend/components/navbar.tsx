@@ -26,7 +26,7 @@ export function Navbar() {
 
   // El panel de admin tiene su propia navegación (sidebar + header con
   // "Volver al sitio"); la barra global solo compite con ella ahí.
-  if (pathname?.startsWith("/admin")) return null
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/presupuesto/")) return null
 
   // Colores de la barra según el fondo de cada página (declarado con useNavTheme).
   const text = isLight ? "text-[#2a2620]" : "text-foreground"
