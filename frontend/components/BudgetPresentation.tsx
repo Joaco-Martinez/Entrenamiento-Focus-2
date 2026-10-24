@@ -124,7 +124,7 @@ function AnimatedHighlights({ items }: { items: NonNullable<BudgetContent["highl
     <div
       ref={containerRef}
       aria-label="Trayectoria profesional"
-      className="mt-8 grid grid-cols-2 overflow-hidden rounded-[24px] border border-[#302a22] bg-[#191918] shadow-[0_22px_46px_rgba(31,26,17,0.13)] md:grid-cols-4"
+      className="mt-8 grid grid-cols-2 overflow-hidden rounded-[24px] border border-white/20 bg-[#373630]/85 shadow-[0_18px_40px_rgba(31,26,17,0.10)] backdrop-blur-[8px] md:grid-cols-4"
     >
       {items.map((item, index) => (
         <div
@@ -383,12 +383,8 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
 
         <section
           id="paquetes"
-          className="relative isolate scroll-mt-24 overflow-hidden py-14 sm:py-20"
+          className="scroll-mt-24 py-14 sm:py-20"
         >
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_7%_18%,rgba(204,170,88,0.095),transparent_48%),radial-gradient(ellipse_at_97%_83%,rgba(188,174,148,0.07),transparent_48%)]"
-          />
           <SectionHeading
             number="02"
             eyebrow="Opciones disponibles"
@@ -453,8 +449,8 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
             title="Servicios individuales"
             description="Cada etapa del proceso, con su descripción y su valor por separado."
           />
-          <div className="overflow-hidden rounded-[24px] border border-[#242019]/10 bg-white">
-            <div className="hidden grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] gap-5 bg-[#191918] px-7 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/75 md:grid">
+          <div className="rounded-[24px] border border-[#242019]/10 bg-white">
+            <div className="hidden grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] gap-5 rounded-t-[23px] bg-[#191918] px-7 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/75 md:grid">
               <span>Servicio</span>
               <span>Descripción</span>
               <span className="text-right">Precio</span>
@@ -462,7 +458,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
             {services.map((service, index) => (
               <div
                 key={index}
-                className="border-b border-[#242019]/10 px-5 py-6 last:border-0 sm:px-7 md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] md:items-start md:gap-5"
+                className="group relative z-0 border-b border-[#242019]/10 bg-white px-5 py-6 transition-[transform,box-shadow,background-color] duration-300 ease-out last:rounded-b-[23px] last:border-0 hover:z-10 hover:bg-[#faf8f1] hover:shadow-[0_12px_28px_rgba(31,26,17,0.12)] motion-safe:md:hover:scale-[1.012] motion-reduce:transform-none sm:px-7 md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] md:items-start md:gap-5"
               >
                 <div className="flex items-start justify-between gap-4 md:block">
                   <div className="flex items-start gap-3">
@@ -477,7 +473,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                     {money(service.price)}
                   </p>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-[#69645d] md:mt-0">
+                <p className="mt-3 text-sm leading-6 text-[#69645d] transition-colors duration-300 group-hover:text-[#35322e] md:mt-0">
                   {service.description}
                 </p>
                 <p className="hidden text-right text-[16px] font-bold tabular-nums text-[#20201d] md:block">
