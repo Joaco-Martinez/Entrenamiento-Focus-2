@@ -451,7 +451,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
             title="Servicios individuales"
             description="Cada etapa del proceso, con su descripción y su valor por separado."
           />
-          <div className="rounded-[24px] border border-[#242019]/10 bg-white">
+          <div className="overflow-hidden rounded-[24px] border border-[#242019]/10 bg-white md:overflow-visible">
             <div className="hidden grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] gap-5 rounded-t-[23px] bg-[#191918] px-7 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/75 md:grid">
               <span>Servicio</span>
               <span>Descripción</span>
@@ -460,7 +460,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
             {services.map((service, index) => (
               <div
                 key={index}
-                className="group relative z-0 border-b border-[#242019]/10 bg-white px-5 py-6 transition-[transform,box-shadow,background-color] duration-300 ease-out last:rounded-b-[23px] last:border-0 hover:z-10 hover:bg-[#faf8f1] hover:shadow-[0_12px_28px_rgba(31,26,17,0.12)] motion-safe:md:hover:scale-[1.012] motion-reduce:transform-none sm:px-7 md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] md:items-start md:gap-5"
+                className="group relative z-0 border-b border-[#242019]/10 bg-white px-5 py-6 transition-[transform,box-shadow,background-color] duration-300 ease-out first:rounded-t-[23px] last:rounded-b-[23px] last:border-0 md:first:rounded-t-none hover:z-10 hover:bg-[#faf8f1] hover:shadow-[0_12px_28px_rgba(31,26,17,0.12)] motion-safe:md:hover:scale-[1.012] motion-reduce:transform-none sm:px-7 md:grid md:grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] md:items-start md:gap-5"
               >
                 <div className="flex items-start justify-between gap-4 md:block">
                   <div className="flex items-start gap-3">
