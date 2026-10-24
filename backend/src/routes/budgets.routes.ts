@@ -16,6 +16,13 @@ budgetsRoutes.use((_req, res, next) => {
   next();
 });
 const admin = [authRequired, adminOnly] as const;
+type Producer = "fran" | "mati";
+// Los administradores acceden a ambas categorías; cada consulta conserva su sección.
+function parseProducer(value: unknown): Producer {
+  if (value === undefined) return "fran"; // compatibilidad con enlaces antiguos del panel
+  if (value === "fran" || value === "mati") return value;
+  throw new ApiError(400, "Sección de presupuestos inválida");
+}
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 }, fileFilter: (_req, file, cb) => cb(null, /^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) });
 
 // La ruta cliente expone solamente presupuestos habilitados, mediante un token aleatorio.
@@ -26,29 +33,33 @@ budgetsRoutes.get("/share/:token", asyncHandler(async (req, res) => {
   res.json({ budget: { title: data.title, clientName: data.clientName, content: data.content, updatedAt: data.updatedAt } });
 }));
 
-budgetsRoutes.get("/admin", ...admin, asyncHandler(async (_req, res) => {
-  const budgets = await prisma.budgetProposal.findMany({ orderBy: { updatedAt: "desc" } });
+budgetsRoutes.get("/admin", ...admin, asyncHandler(async (req, res) => {
+  const producer = parseProducer(req.query.producer);
+  const budgets = await prisma.budgetProposal.findMany({ where: { producer }, orderBy: { updatedAt: "desc" } });
   res.json({ budgets });
 }));
 
 budgetsRoutes.post("/admin", ...admin, asyncHandler(async (req, res) => {
   const { clientName, title, content } = req.body;
+  const producer = parseProducer(req.body.producer);
   if (typeof clientName !== "string" || !clientName.trim() || typeof title !== "string" || !title.trim() || !content || typeof content !== "object" || Array.isArray(content)) {
     throw new ApiError(400, "Datos inválidos");
   }
-  const budget = await prisma.budgetProposal.create({ data: { clientName: clientName.slice(0,160), title: title.slice(0,200), content, shareToken: randomBytes(24).toString("hex") } });
+  const budget = await prisma.budgetProposal.create({ data: { clientName: clientName.slice(0,160), title: title.slice(0,200), content, producer, shareToken: randomBytes(24).toString("hex") } });
   res.status(201).json({ budget });
 }));
 
 budgetsRoutes.put("/admin/:id", ...admin, asyncHandler(async (req, res) => {
   const { clientName, title, content, shared } = req.body;
+  const producer = parseProducer(req.query.producer);
   if (typeof clientName !== "string" || !clientName.trim() || typeof title !== "string" || !title.trim() || !content || typeof content !== "object" || Array.isArray(content) || typeof shared !== "boolean") throw new ApiError(400, "Datos inválidos");
-  const budget = await prisma.budgetProposal.update({ where: { id: req.params.id }, data: { clientName: clientName.slice(0,160), title: title.slice(0,200), content, shared } });
+  const budget = await prisma.budgetProposal.update({ where: { id: req.params.id, producer }, data: { clientName: clientName.slice(0,160), title: title.slice(0,200), content, shared } });
   res.json({ budget });
 }));
 
 budgetsRoutes.delete("/admin/:id", ...admin, asyncHandler(async (req, res) => {
-  await prisma.budgetProposal.delete({ where: { id: req.params.id } });
+  const producer = parseProducer(req.query.producer);
+  await prisma.budgetProposal.delete({ where: { id: req.params.id, producer } });
   res.json({ ok: true });
 }));
 
