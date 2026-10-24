@@ -334,19 +334,20 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                 />
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#1a1a18] text-lg font-black text-white sm:h-12 sm:w-12">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#1a1a18] text-lg font-black text-[#e4bd5c] transition-colors duration-300 group-hover:text-[#f5d582] sm:h-12 sm:w-12">
                       {pack.name}
                     </span>
-                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#837969]">
+                    <span className="text-[11px] font-extrabold uppercase tracking-[0.17em] text-[#665943] transition-colors duration-300 group-hover:text-[#8c6721]">
                       Paquete {pack.name}
                     </span>
                   </div>
                   <div className="min-w-0 text-right">
-                    <p className="text-[27px] font-black leading-none tracking-[-0.045em] text-[#191918] tabular-nums sm:text-[34px]">
+                    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8d7953] sm:text-[10px]">Precio promocional</p>
+                    <p className="text-[27px] font-black leading-none tracking-[-0.045em] text-[#98701f] tabular-nums transition-colors duration-300 group-hover:text-[#795518] sm:text-[34px]">
                       {money(pack.price)}
                     </p>
                     {pack.installments > 1 && (
-                      <p className="mt-2 text-[12px] font-medium text-[#776e61] tabular-nums">
+                      <p className="mt-2 text-[12px] font-medium text-[#6d685e] tabular-nums">
                         {pack.installments} pagos de {money(pack.price / pack.installments)}
                       </p>
                     )}
@@ -359,8 +360,8 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                 </p>
                 <ul className="mt-4 grid flex-1 content-start gap-x-4 gap-y-3 sm:grid-cols-2">
                   {includedServices(pack.description).map((service, serviceIndex) => (
-                    <li key={serviceIndex} className="flex items-start gap-2.5 text-[14px] leading-[1.55] text-[#514d46]">
-                      <span className="mt-[3px] flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full bg-[#f4ecd8] text-[#9b772c]">
+                    <li key={serviceIndex} className="flex items-start gap-2.5 text-[14px] font-medium leading-[1.55] text-[#34312b]">
+                      <span className="mt-[3px] flex h-[19px] w-[19px] shrink-0 items-center justify-center rounded-full border border-[#e5d2a7] bg-[#f4e7c9] text-[#91691d] transition-[background-color,border-color] duration-300 group-hover:border-[#d8b56c] group-hover:bg-[#f0dfb3]">
                         <Check className="h-3 w-3" strokeWidth={2.5} />
                       </span>
                       <span>{service}</span>
