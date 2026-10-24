@@ -119,6 +119,8 @@ function StudioImage({ url, index, featured = false }: { url: string; index: num
         <img
           src={url}
           alt={"Fotografía del estudio " + index}
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
         />
       ) : (
@@ -170,6 +172,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
           <img
             src={data.heroImage}
             alt=""
+            decoding="async"
             className="absolute inset-0 -z-20 h-full w-full object-cover opacity-35"
           />
         )}
@@ -259,7 +262,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
           <div className="grid gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
             <div className="relative min-h-[265px] overflow-hidden rounded-[24px] bg-[#191917]">
               {data.portraitImage ? (
-                <img src={data.portraitImage} alt="Fotografía de presentación del productor" className="absolute inset-0 h-full w-full object-cover"/>
+                <img src={data.portraitImage} alt="Fotografía de presentación del productor" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
               ) : (
                 <div className="flex h-full min-h-[265px] flex-col justify-end bg-[radial-gradient(circle_at_75%_20%,#4f432b,transparent_55%),linear-gradient(145deg,#292825,#111110)] p-8">
                   <AudioLines className="mb-auto h-9 w-9 text-[#e5bd42]/70" strokeWidth={1}/>
