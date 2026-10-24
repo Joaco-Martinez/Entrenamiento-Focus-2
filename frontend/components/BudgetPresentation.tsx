@@ -5,10 +5,18 @@ import {
   ArrowRight,
   ArrowUpRight,
   AudioLines,
+  Banknote,
+  CalendarDays,
   Check,
+  CircleCheck,
+  CreditCard,
+  FileText,
+  Landmark,
   Mail,
   MapPin,
   Phone,
+  Wallet,
+  WalletCards,
 } from "lucide-react";
 import type { BudgetContent } from "@/services/budgets.service";
 
@@ -150,6 +158,20 @@ function StudioImage({ url, index, featured = false }: { url: string; index: num
 }
 
 export function BudgetPresentation({ data, title, clientName }: Props) {
+  // Solo la presentación divide el texto: los términos originales siguen editables
+  // en el panel de administración, sin duplicarlos en otro campo.
+  const termsText = data.terms ?? "";
+  const secondTermStart = termsText.search(/Los servicios de grabaci[oó]n\b/i);
+  const paymentTerms = secondTermStart > 0
+    ? [
+        { kind: "two", title: "En dos pagos", description: termsText.slice(0, secondTermStart).trim() },
+        { kind: "one", title: "En un solo pago", description: termsText.slice(secondTermStart).trim() },
+      ]
+    : [{ kind: "general", title: "Condiciones de contratación", description: termsText.trim() }];
+  const paymentMethods = (data.paymentMethods ?? "")
+    .split(/[,;\n]+/)
+    .map(method => method.trim().replace(/\.$/, ""))
+    .filter(Boolean);
   const services = data.services ?? [];
   const packages = data.packages ?? [];
   const extras = data.extras ?? [];
@@ -498,19 +520,50 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
 
         <section id="condiciones" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading number="06" eyebrow="Información importante" title="Condiciones y formas de pago" />
-          <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-            <article className="rounded-[24px] border border-[#242019]/10 bg-white p-6 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-[#c9b184] hover:bg-[#f6f0e5] hover:shadow-[0_12px_28px_rgba(48,36,14,0.08)] motion-safe:hover:-translate-y-1 motion-reduce:transition-none sm:p-8">
-              <h3 className="text-lg font-bold">Términos y condiciones</h3>
-              <p className="mt-4 whitespace-pre-wrap text-[14px] leading-7 text-[#666158]">
-                {data.terms}
-              </p>
-            </article>
-            <article className="rounded-[24px] border border-[#242019]/10 bg-white p-6 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-[#c9b184] hover:bg-[#f6f0e5] hover:shadow-[0_12px_28px_rgba(48,36,14,0.08)] motion-safe:hover:-translate-y-1 motion-reduce:transition-none sm:p-8">
-              <h3 className="text-lg font-bold">Métodos de pago</h3>
-              <p className="mt-4 whitespace-pre-wrap text-[14px] leading-7 text-[#666158]">
-                {data.paymentMethods}
-              </p>
-            </article>
+          <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:gap-12">
+            <div>
+              <div className="flex items-center gap-3">
+                <FileText aria-hidden="true" className="h-6 w-6 text-[#a67c27]" strokeWidth={1.8}/>
+                <h3 className="text-xl font-bold tracking-[-0.02em] text-[#24211d]">Términos y condiciones</h3>
+              </div>
+              <div className="mt-4 h-[3px] w-11 rounded-full bg-[#a67c27]"/>
+              <div className="mt-6 space-y-4">
+                {paymentTerms.map((item, index) => (
+                  <div
+                    key={index}
+                    className="group -mx-3 flex gap-3 rounded-2xl px-3 py-3 transition-[background-color,transform] duration-300 ease-out hover:bg-[#f0e8d9]/60 motion-safe:hover:-translate-y-0.5 motion-reduce:transition-none"
+                  >
+                    <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f0e5cc] text-[#956d20] transition-[background-color,transform] duration-300 group-hover:bg-[#e9d6ac] motion-safe:group-hover:scale-105 motion-reduce:transform-none">
+                      {item.kind === "two" ? <CalendarDays aria-hidden="true" className="h-5 w-5" strokeWidth={1.8}/> : item.kind === "one" ? <CircleCheck aria-hidden="true" className="h-5 w-5" strokeWidth={1.8}/> : <FileText aria-hidden="true" className="h-5 w-5" strokeWidth={1.8}/>}
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="text-[15px] font-bold text-[#28241e]">{item.title}</h4>
+                      <p className="mt-1 whitespace-pre-wrap text-[14px] leading-7 text-[#6a645b]">{item.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="md:border-l md:border-[#29241c]/10 md:pl-10">
+              <div className="flex items-center gap-3">
+                <Wallet aria-hidden="true" className="h-6 w-6 text-[#a67c27]" strokeWidth={1.8}/>
+                <h3 className="text-xl font-bold tracking-[-0.02em] text-[#24211d]">Métodos de pago</h3>
+              </div>
+              <div className="mt-4 h-[3px] w-11 rounded-full bg-[#a67c27]"/>
+              <ul className="mt-6">
+                {paymentMethods.map((method, index) => (
+                  <li key={index} className="border-b border-[#29241c]/10 last:border-b-0">
+                    <div className="group -mx-3 flex items-center gap-3 rounded-xl px-3 py-3.5 transition-[background-color,transform] duration-300 ease-out hover:bg-[#f0e8d9]/60 motion-safe:hover:-translate-y-0.5 motion-reduce:transition-none">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0e5cc] text-[#956d20] transition-[background-color,transform] duration-300 group-hover:bg-[#e9d6ac] motion-safe:group-hover:scale-105 motion-reduce:transform-none">
+                        {/efectivo/i.test(method) ? <Banknote aria-hidden="true" className="h-5 w-5" strokeWidth={1.8}/> : /transferencia|bancaria/i.test(method) ? <Landmark aria-hidden="true" className="h-5 w-5" strokeWidth={1.8}/> : /billetera|virtual/i.test(method) ? <WalletCards aria-hidden="true" className="h-5 w-5" strokeWidth={1.8}/> : <CreditCard aria-hidden="true" className="h-5 w-5" strokeWidth={1.8}/>}
+                      </span>
+                      <span className="text-[15px] font-medium text-[#39342e]">{method}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
       </div>
