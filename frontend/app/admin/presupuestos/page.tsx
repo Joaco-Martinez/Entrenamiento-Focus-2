@@ -183,7 +183,7 @@ export default function AdminBudgetsPage() {
 
           {preview ? (
             <div className="overflow-hidden rounded-2xl">
-              <BudgetPresentation data={content} title={title} clientName={clientName} />
+              <BudgetPresentation data={content} title={title} clientName={clientName} showFloatingWhatsApp={false} />
             </div>
           ) : (
             <div className="space-y-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
