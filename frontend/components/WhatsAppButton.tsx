@@ -1,6 +1,12 @@
 "use client"
 
+import { usePathname } from "next/navigation"
+
 export default function WhatsAppButton() {
+  const pathname = usePathname()
+  // Las propuestas tienen su propio WhatsApp ligado al productor del presupuesto.
+  if (pathname?.startsWith("/presupuesto/")) return null
+
   const url = "https://wa.link/z356e3"
 
   return (
