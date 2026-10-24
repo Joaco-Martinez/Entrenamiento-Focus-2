@@ -54,8 +54,11 @@ export default function AdminBudgetsPage() {
       const result = selected
         ? await budgetsService.update(selected.id, { title, clientName, shared, content })
         : await budgetsService.create({ title, clientName, content });
-      setSelected(result.budget);
-      setShared(result.budget.shared);
+      const saved = !selected && shared
+        ? (await budgetsService.update(result.budget.id, { title, clientName, content, shared: true })).budget
+        : result.budget;
+      setSelected(saved);
+      setShared(saved.shared);
       setNotice("Presupuesto guardado");
       await refresh();
     } catch (error) {
