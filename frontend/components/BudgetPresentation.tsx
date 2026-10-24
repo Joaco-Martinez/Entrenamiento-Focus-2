@@ -186,18 +186,67 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
 
       <nav aria-label="Secciones del presupuesto" className="sticky top-0 z-30 border-b border-[#25231f]/10 bg-[#f7f6f2]/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-6xl gap-7 overflow-x-auto px-5 py-4 text-[12px] font-semibold text-[#666159] sm:px-8 sm:text-sm">
+          <a className="whitespace-nowrap transition hover:text-[#151515]" href="#trayectoria">Presentación</a>
           <a className="whitespace-nowrap transition hover:text-[#151515]" href="#paquetes">Promociones</a>
           <a className="whitespace-nowrap transition hover:text-[#151515]" href="#servicios">Servicios</a>
           <a className="whitespace-nowrap transition hover:text-[#151515]" href="#estudio">Estudio</a>
-          <a className="whitespace-nowrap transition hover:text-[#151515]" href="#trayectoria">Trayectoria</a>
           <a className="whitespace-nowrap transition hover:text-[#151515]" href="#condiciones">Condiciones</a>
         </div>
       </nav>
 
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <section id="trayectoria" className="scroll-mt-24 py-14 sm:py-20">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#98752c]">01 / Quién está detrás</p>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#181816] sm:text-[42px]">Hola, soy {data.producerName || "Franco Cano"}.</h2>
+              <p className="mt-2 text-[16px] font-medium text-[#777168]">Producción, composición, grabación, mezcla y mastering.</p>
+            </div>
+            {playlistHref && <a href={playlistHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#242019]/15 px-5 py-3 text-sm font-semibold text-[#26231e] hover:bg-white">Escuchar trabajos <ArrowUpRight className="h-4 w-4"/></a>}
+          </div>
+          <div className="grid gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
+            <div className="relative min-h-[265px] overflow-hidden rounded-[24px] bg-[#191917]">
+              {data.portraitImage ? (
+                <img src={data.portraitImage} alt="Fotografía de presentación del productor" className="absolute inset-0 h-full w-full object-cover"/>
+              ) : (
+                <div className="flex h-full min-h-[265px] flex-col justify-end bg-[radial-gradient(circle_at_75%_20%,#4f432b,transparent_55%),linear-gradient(145deg,#292825,#111110)] p-8">
+                  <AudioLines className="mb-auto h-9 w-9 text-[#e5bd42]/70" strokeWidth={1}/>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/45">PROD BY</p>
+                  <p className="mt-3 text-5xl font-black tracking-[-0.04em]" style={{color:"var(--budget-accent)"}}>{brandLast}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col justify-center">
+              <div className="space-y-4">
+                {data.bio.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚ])/).reduce<string[]>((acc, sentence, index) => {
+                  const group = Math.floor(index / 2);
+                  acc[group] = acc[group] ? acc[group] + " " + sentence : sentence;
+                  return acc;
+                }, []).map((paragraph,index)=>(
+                  <p key={index} className={"text-[15px] leading-[1.85] text-[#5d5851] sm:text-[17px] " + (index===0 ? "font-medium text-[#34312d]" : "")}>{paragraph}</p>
+                ))}
+              </div>
+              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-[#242019]/10 pt-5 text-[13px] text-[#736d63]">
+                {data.instagram && <span>{data.instagram}</span>}
+                {data.location && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4"/>{data.location}</span>}
+              </div>
+            </div>
+          </div>
+          {!!data.highlights?.length && (
+            <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {data.highlights.map((item,index)=>(
+                <div key={index} className="rounded-2xl border border-[#242019]/10 bg-white px-4 py-5 sm:px-5">
+                  <p className="text-[29px] font-black tracking-[-0.04em] text-[#1d1b17] sm:text-4xl">{item.value}</p>
+                  <p className="mt-2 text-[12px] leading-5 text-[#746d62]">{item.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <section id="paquetes" className="scroll-mt-24 py-14 sm:py-20">
           <SectionHeading
-            number="01"
+            number="02"
             eyebrow="Opciones disponibles"
             title="Paquetes promocionales"
             description="Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto."
@@ -238,7 +287,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
 
         <section id="servicios" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading
-            number="02"
+            number="03"
             eyebrow="Precios detallados"
             title="Servicios individuales"
             description="Cada etapa del proceso, con su descripción y su valor por separado."
@@ -300,7 +349,7 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
 
         <section id="estudio" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading
-            number="03"
+            number="04"
             eyebrow="Espacio de trabajo"
             title={data.studioName || "Estudio"}
             description={data.studioText}
@@ -333,46 +382,6 @@ export function BudgetPresentation({ data, title, clientName }: Props) {
                 </ul>
               </div>
             )}
-          </div>
-        </section>
-
-        <section id="trayectoria" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
-          <SectionHeading
-            number="04"
-            eyebrow="Quién está detrás"
-            title="Conocé al productor"
-          />
-          <div className="grid items-stretch gap-7 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] md:gap-12">
-            <div className="relative min-h-[250px] overflow-hidden rounded-[24px] bg-[#191917] sm:min-h-[340px]">
-              {data.portraitImage ? (
-                <img
-                  src={data.portraitImage}
-                  alt="Fotografía de presentación del productor"
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full min-h-[250px] flex-col justify-end bg-[radial-gradient(circle_at_75%_20%,#4f432b,transparent_55%),linear-gradient(145deg,#292825,#111110)] p-8">
-                  <AudioLines className="mb-auto h-9 w-9 text-[#e5bd42]/70" strokeWidth={1} />
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/45">PROD BY</p>
-                  <p className="mt-3 text-5xl font-black tracking-[-0.04em]" style={{ color: "var(--budget-accent)" }}>
-                    {brandLast}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col justify-center">
-              <p className="whitespace-pre-wrap text-[16px] leading-[1.9] text-[#5d5851] sm:text-[17px]">
-                {data.bio}
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4 border-t border-[#242019]/10 pt-6 text-sm text-[#646058]">
-                {data.instagram && <span>{data.instagram}</span>}
-                {data.location && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4" /> {data.location}
-                  </span>
-                )}
-              </div>
-            </div>
           </div>
         </section>
 
