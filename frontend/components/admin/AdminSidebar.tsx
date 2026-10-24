@@ -24,7 +24,8 @@ const links = [
   { label: "Productos", href: "/admin/products", icon: Package },
   { label: "Clases", href: "/admin/clases", icon: Clapperboard },
   { label: "Artículos", href: "/admin/articles", icon: Newspaper },
-  { label: "Presupuestos", href: "/admin/presupuestos", icon: FileText },
+  { label: "Presupuestos Fran", href: "/admin/presupuestos/fran", icon: FileText },
+  { label: "Presupuestos Mati", href: "/admin/presupuestos/mati", icon: FileText },
   { label: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
   { label: "Suscripciones", href: "/admin/subscriptions", icon: CreditCard },
 ];
