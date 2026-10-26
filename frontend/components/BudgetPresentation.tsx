@@ -744,7 +744,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
           <ArrowUp className="h-5 w-5" aria-hidden="true" />
         </a>
       ) : (
-        {showFloatingWhatsApp && generalWhatsappLink && (
+        showFloatingWhatsApp && generalWhatsappLink && (
           <a
             href={generalWhatsappLink}
             target="_blank"
@@ -756,8 +756,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366]/30 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
             <WhatsAppLogo />
           </a>
-        )}
-  
+        )
       )}
 
       <footer className="bg-[#171715] px-5 py-12 text-[#f8f6f0] sm:px-8 md:py-16">
