@@ -278,7 +278,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             <p className="text-[11px] font-semibold uppercase tracking-[0.29em] text-white/55">
               Propuesta de producción musical
             </p>
-            {playlistHref && (
+            {!isFran && playlistHref && (
               <a
                 href={playlistHref}
                 target="_blank"
@@ -374,7 +374,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
               <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#181816] sm:text-[42px]">Hola, soy {data.producerName || "Franco Cano"}.</h2>
               <p className="mt-2 text-[16px] font-medium text-[#777168]">Producción, composición, grabación, mezcla y mastering.</p>
             </div>
-            {playlistHref && <a href={playlistHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#242019]/15 px-5 py-3 text-sm font-semibold text-[#26231e] hover:bg-white">Escuchar trabajos <ArrowUpRight className="h-4 w-4"/></a>}
+            {!isFran && playlistHref && <a href={playlistHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#242019]/15 px-5 py-3 text-sm font-semibold text-[#26231e] hover:bg-white">Escuchar trabajos <ArrowUpRight className="h-4 w-4"/></a>}
           </div>
           <div className="grid gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
             <div className="relative min-h-[265px] overflow-hidden rounded-[24px] bg-[#191917]">
