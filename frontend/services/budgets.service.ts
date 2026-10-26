@@ -37,7 +37,7 @@ export const defaultBudget: BudgetContent = {
   ],
   bio: "Hola, soy Franco Cano y me dedico profesionalmente desde hace más de diez años a la creación, composición, grabación, mezcla y mastering de música latina y urbana. Trabajo con diversas salas de grabación en Córdoba, Argentina, y a la fecha llevo más de 1500 proyectos entregados en los últimos cinco años. Mi trabajo acumula más de 20 millones de reproducciones en plataformas digitales como Spotify y YouTube, colaborando junto a cientos de artistas de más de nueve países.",
   instagram: "@knnoknno", email: "Knnoofficial@gmail.com", phone: "+549 3513785963", location: "Argentina, Córdoba, Capital",
-  playlistUrl: "", heroImage: "", portraitImage: "",
+  playlistUrl: "https://open.spotify.com/playlist/21Nlj9vZjmj9t2rwkQ8qmH", heroImage: "", portraitImage: "",
   imagePositions: {},
   services: [
     { label: "Instrumental", description: "Partiendo de una maqueta. Selección y diseño de sonidos. Vos elegís cómo debería sonar tu pista.", price: 130000 },
