@@ -42,7 +42,12 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
     setSelected(budget ?? null);
     setTitle(budget?.title ?? defaultTitle);
     setClientName(budget?.clientName ?? "Presentación general");
-    setContent(structuredClone(budget?.content ?? defaultBudget));
+    const initialContent = structuredClone(budget?.content ?? defaultBudget);
+    // Presupuestos de Fran anteriores: mostrar en el editor su playlist oficial.
+    if (producer === "fran" && !initialContent.playlistUrl?.trim()) {
+      initialContent.playlistUrl = defaultBudget.playlistUrl;
+    }
+    setContent(initialContent);
     setNotice("");
     setHasUnsavedChanges(false);
   };
@@ -280,7 +285,7 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
                 {textInput("email", "Email")}
                 {textInput("phone", "Teléfono")}
                 {textInput("location", "Ubicación")}
-                {textInput("playlistUrl", "Enlace a playlist")}
+                {textInput("playlistUrl", producer === "fran" ? "Playlist de Spotify (se actualiza desde Spotify)" : "Enlace a playlist")}
                 {imageInput("heroImage", "Portada")}
                 {imageInput("portraitImage", "Foto de presentación")}
               </section>

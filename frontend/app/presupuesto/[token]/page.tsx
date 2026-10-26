@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { BudgetPresentation } from "@/components/BudgetPresentation";
-import type { BudgetContent } from "@/services/budgets.service";
+import type { BudgetContent, BudgetProducer } from "@/services/budgets.service";
 
 // Los presupuestos son privados por enlace: renderizado SSR sin almacenamiento
 // intermedio y sin exponer los datos del cliente en componentes interactivos.
@@ -10,6 +10,7 @@ export const revalidate = 0;
 type SharedBudget = {
   title: string;
   clientName: string;
+  producer?: BudgetProducer;
   content: BudgetContent;
 };
 
@@ -40,6 +41,7 @@ export default async function SharedBudgetPage({
     <BudgetPresentation
       title={payload.budget.title}
       clientName={payload.budget.clientName}
+      producer={payload.budget.producer === "mati" ? "mati" : "fran"}
       data={payload.budget.content}
     />
   );

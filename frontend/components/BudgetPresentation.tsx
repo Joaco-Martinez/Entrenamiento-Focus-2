@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
+  ArrowUp,
   AudioLines,
   Banknote,
   CalendarDays,
@@ -18,12 +19,13 @@ import {
   Wallet,
   WalletCards,
 } from "lucide-react";
-import type { BudgetContent } from "@/services/budgets.service";
+import type { BudgetContent, BudgetProducer } from "@/services/budgets.service";
 
 type Props = {
   data: BudgetContent;
   title: string;
   clientName: string;
+  producer?: BudgetProducer;
   showFloatingWhatsApp?: boolean;
 };
 
@@ -74,6 +76,19 @@ function WhatsAppLogo() {
             <path d="M20.52 3.48A11.78 11.78 0 0 0 12.05 0C5.5 0 .18 5.32.18 11.87c0 2.09.55 4.13 1.6 5.93L0 24l6.39-1.67a11.83 11.83 0 0 0 5.66 1.45h.01c6.55 0 11.87-5.32 11.87-11.87 0-3.17-1.23-6.14-3.41-8.43zM12.06 21.3h-.01a9.4 9.4 0 0 1-4.8-1.31l-.34-.2-3.79.99 1.01-3.69-.22-.38a9.4 9.4 0 0 1-1.45-5.02c0-5.21 4.24-9.45 9.45-9.45 2.52 0 4.88.98 6.66 2.76a9.36 9.36 0 0 1 2.77 6.67c0 5.21-4.24 9.45-9.44 9.45zm5.2-7.08c-.28-.14-1.65-.81-1.91-.9-.26-.1-.45-.14-.64.14-.19.28-.73.9-.89 1.09-.17.19-.33.21-.61.07-.28-.14-1.17-.43-2.23-1.37-.82-.73-1.37-1.63-1.53-1.91-.16-.28-.02-.43.12-.57.12-.12.28-.31.42-.47.14-.17.19-.28.28-.47.1-.19.05-.35-.02-.49-.07-.14-.64-1.54-.88-2.11-.23-.55-.47-.47-.64-.48h-.55c-.19 0-.5.07-.76.35-.26.28-1 1-1 2.43 0 1.43 1.03 2.81 1.17 3 .14.19 2.02 3.08 4.9 4.32.68.29 1.2.46 1.61.59.68.22 1.3.19 1.79.12.55-.08 1.65-.67 1.88-1.32.23-.66.23-1.22.16-1.33-.07-.12-.26-.19-.55-.33z"/>
           </svg>
   );
+}
+
+// El iframe oficial usa directamente el ID de la playlist editable en el panel.
+function spotifyPlaylistEmbed(href: string | null): string | null {
+  if (!href) return null;
+  try {
+    const url = new URL(href);
+    if (url.hostname !== "open.spotify.com") return null;
+    const match = url.pathname.match(/^\/(?:intl-[a-z]{2}\/)?(?:embed\/)?playlist\/([A-Za-z0-9]{22})\/?$/);
+    return match ? "https://open.spotify.com/embed/playlist/" + match[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 function safeWebLink(value: string) {
@@ -186,7 +201,8 @@ function StudioImage({ url, index, featured = false, style }: { url: string; ind
   );
 }
 
-export function BudgetPresentation({ data, title, clientName, showFloatingWhatsApp = true }: Props) {
+export function BudgetPresentation({ data, title, clientName, producer = "fran", showFloatingWhatsApp = true }: Props) {
+  const isFran = producer === "fran";
   // Solo la presentación divide el texto: los términos originales siguen editables
   // en el panel de administración, sin duplicarlos en otro campo.
   const termsText = data.terms ?? "";
@@ -215,7 +231,8 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
   const brandParts = (data.brand || "PROD BY KNNO").trim().split(/\s+/);
   const brandLast = brandParts.pop() || "KNNO";
   const brandFirst = brandParts.join(" ");
-  const playlistHref = safeWebLink(data.playlistUrl || "");
+  const playlistHref = safeWebLink(data.playlistUrl?.trim() || (isFran ? "https://open.spotify.com/playlist/21Nlj9vZjmj9t2rwkQ8qmH" : ""));
+  const playlistEmbed = isFran ? spotifyPlaylistEmbed(playlistHref) : null;
   const instagramHref = instagramProfileUrl(data.instagram || "");
   const mapsHref = data.location?.trim()
     ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(data.location.trim())
@@ -237,7 +254,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
   const theme = { "--budget-accent": data.accent || "#e5bd42" } as CSSProperties;
 
   return (
-    <main className="min-h-screen bg-[#f7f6f2] font-sans text-[#171717]" style={theme}>
+    <main id="inicio" className="min-h-screen bg-[#f7f6f2] font-sans text-[#171717]" style={theme}>
       <header className="relative isolate overflow-hidden bg-[#131311] text-[#f8f6f0]">
         {data.heroImage && (
           <img
@@ -261,7 +278,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
             <p className="text-[11px] font-semibold uppercase tracking-[0.29em] text-white/55">
               Propuesta de producción musical
             </p>
-            {playlistHref && (
+            {!isFran && playlistHref && (
               <a
                 href={playlistHref}
                 target="_blank"
@@ -292,34 +309,62 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
                 Preparado para <span className="text-white">{clientName}</span>
               </p>
             )}
-            <div className="mt-9 flex flex-wrap gap-3">
-              <a
-                href="#paquetes"
-                className="inline-flex min-h-12 items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-[#1a1711] transition hover:brightness-110"
-                style={{ backgroundColor: "var(--budget-accent)" }}
-              >
-                Ver promociones <ArrowDown className="h-4 w-4" />
-              </a>
-              <a
-                href="#servicios"
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Servicios individuales <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
+            {isFran ? (
+              <nav aria-label="Accesos a las secciones de Fran" className="mt-9 max-w-3xl">
+                <a
+                  href="#paquetes"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-[#1a1711] transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e5bd42]"
+                  style={{ backgroundColor: "var(--budget-accent)" }}
+                >
+                  Ver promociones <ArrowDown className="h-4 w-4" aria-hidden="true" />
+                </a>
+                <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5" aria-label="Otras secciones">
+                  {[
+                    { title: "Sobre mí", href: "#trayectoria" },
+                    { title: "Servicios", href: "#servicios" },
+                    { title: "El estudio", href: "#estudio" },
+                    { title: "Playlist", href: "#playlist" },
+                    { title: "Condiciones", href: "#condiciones" }
+                  ].map(link => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 bg-white/[0.06] px-3 py-2.5 text-center text-[12px] font-semibold text-white/90 transition-[background-color,border-color,color,transform] duration-200 hover:border-[#d6b45d] hover:bg-white/[0.13] hover:text-white motion-safe:hover:-translate-y-0.5 motion-reduce:transform-none sm:text-[13px]"
+                    >
+                      {link.title}
+                    </a>
+                  ))}
+                </div>
+              </nav>
+            ) : (
+              <div className="mt-9 flex flex-wrap gap-3">
+                <a href="#paquetes"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-[#1a1711] transition hover:brightness-110"
+                  style={{ backgroundColor: "var(--budget-accent)" }}>
+                  Ver promociones <ArrowDown className="h-4 w-4" />
+                </a>
+                <a href="#servicios"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                  Servicios individuales <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      <nav aria-label="Secciones del presupuesto" className="sticky top-0 z-30 border-b border-[#25231f]/10 bg-[#f7f6f2]/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-6xl gap-7 overflow-x-auto px-5 py-4 text-[12px] font-semibold text-[#666159] sm:px-8 sm:text-sm">
-          <a className="whitespace-nowrap transition hover:text-[#151515]" href="#trayectoria">Presentación</a>
-          <a className="whitespace-nowrap transition hover:text-[#151515]" href="#paquetes">Promociones</a>
-          <a className="whitespace-nowrap transition hover:text-[#151515]" href="#servicios">Servicios</a>
-          <a className="whitespace-nowrap transition hover:text-[#151515]" href="#estudio">Estudio</a>
-          <a className="whitespace-nowrap transition hover:text-[#151515]" href="#condiciones">Condiciones</a>
-        </div>
-      </nav>
+      {!isFran && (
+        <nav aria-label="Secciones del presupuesto" className="sticky top-0 z-30 border-b border-[#25231f]/10 bg-[#f7f6f2]/95 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-6xl gap-7 overflow-x-auto px-5 py-4 text-[12px] font-semibold text-[#666159] sm:px-8 sm:text-sm">
+            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#trayectoria">Presentación</a>
+            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#paquetes">Promociones</a>
+            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#servicios">Servicios</a>
+            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#estudio">Estudio</a>
+            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#condiciones">Condiciones</a>
+          </div>
+        </nav>
+  
+      )}
 
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <section id="trayectoria" className="scroll-mt-24 py-14 sm:py-20">
@@ -329,7 +374,7 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
               <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#181816] sm:text-[42px]">Hola, soy {data.producerName || "Franco Cano"}.</h2>
               <p className="mt-2 text-[16px] font-medium text-[#777168]">Producción, composición, grabación, mezcla y mastering.</p>
             </div>
-            {playlistHref && <a href={playlistHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#242019]/15 px-5 py-3 text-sm font-semibold text-[#26231e] hover:bg-white">Escuchar trabajos <ArrowUpRight className="h-4 w-4"/></a>}
+            {!isFran && playlistHref && <a href={playlistHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#242019]/15 px-5 py-3 text-sm font-semibold text-[#26231e] hover:bg-white">Escuchar trabajos <ArrowUpRight className="h-4 w-4"/></a>}
           </div>
           <div className="grid gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
             <div className="relative min-h-[265px] overflow-hidden rounded-[24px] bg-[#191917]">
@@ -588,6 +633,45 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
           </div>
         </section>
 
+        {isFran && playlistHref && (
+          <section id="playlist" className="scroll-mt-12 border-t border-[#242019]/10 py-14 sm:py-20">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.23em] text-[#98752c]">
+                  Trabajos realizados
+                </p>
+                <h2 className="mt-3 text-[30px] font-bold leading-[1.1] tracking-[-0.035em] text-[#171717] sm:text-4xl">
+                  Playlist
+                </h2>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-[#736f67]">
+                  Escuchá algunas de mis producciones. La selección se actualiza desde Spotify.
+                </p>
+              </div>
+              <a href={playlistHref} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-[#242019]/15 px-5 py-3 text-sm font-semibold text-[#26231e] transition-colors hover:bg-white">
+                Abrir en Spotify <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+            {playlistEmbed ? (
+              <div className="mx-auto max-w-4xl overflow-hidden rounded-[22px] border border-[#242019]/10 bg-[#171717] p-2 shadow-[0_14px_40px_rgba(24,23,20,0.08)] sm:p-3">
+                <iframe
+                  title="Playlist de producciones de Fran en Spotify"
+                  src={playlistEmbed}
+                  loading="lazy"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  className="block h-[470px] w-full rounded-[14px] border-0 sm:h-[520px]"
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-[#736f67]">
+                Podés escuchar la playlist desde el enlace de Spotify.
+              </p>
+            )}
+          </section>
+        )}
+
         <section id="extras" className="border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading number="05" eyebrow="Servicios complementarios" title="Servicios extras" />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -650,18 +734,29 @@ export function BudgetPresentation({ data, title, clientName, showFloatingWhatsA
         </section>
       </div>
 
-      {showFloatingWhatsApp && generalWhatsappLink && (
+      {isFran ? (
         <a
-          href={generalWhatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={"Consultar por WhatsApp a " + (data.producerName || "Franco")}
-          title={"Contactar por WhatsApp a " + (data.producerName || "Franco")}
-          className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-[transform,box-shadow] duration-300 hover:scale-110 hover:shadow-[0_0_28px_rgba(37,211,102,0.45)] motion-reduce:transform-none"
+          href="#inicio"
+          aria-label="Volver al inicio del presupuesto"
+          title="Volver arriba"
+          className="group fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full border border-[#bda777]/65 bg-[#211f1b]/95 text-[#e7c779] shadow-[0_8px_24px_rgba(26,22,15,0.22)] transition-[transform,background-color] duration-200 hover:bg-[#343027] motion-safe:hover:-translate-y-1 motion-reduce:transform-none"
         >
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366]/30 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
-          <WhatsAppLogo />
+          <ArrowUp className="h-5 w-5" aria-hidden="true" />
         </a>
+      ) : (
+        showFloatingWhatsApp && generalWhatsappLink && (
+          <a
+            href={generalWhatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={"Consultar por WhatsApp a " + (data.producerName || "Franco")}
+            title={"Contactar por WhatsApp a " + (data.producerName || "Franco")}
+            className="group fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-[transform,box-shadow] duration-300 hover:scale-110 hover:shadow-[0_0_28px_rgba(37,211,102,0.45)] motion-reduce:transform-none"
+          >
+            <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full bg-[#25D366]/30 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
+            <WhatsAppLogo />
+          </a>
+        )
       )}
 
       <footer className="bg-[#171715] px-5 py-12 text-[#f8f6f0] sm:px-8 md:py-16">

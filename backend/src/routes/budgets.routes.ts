@@ -30,7 +30,7 @@ budgetsRoutes.get("/share/:token", asyncHandler(async (req, res) => {
   const data = await prisma.budgetProposal.findUnique({ where: { shareToken: req.params.token } });
   if (!data?.shared) throw new ApiError(404, "Presupuesto no disponible");
   res.setHeader("Cache-Control", "private, no-store");
-  res.json({ budget: { title: data.title, clientName: data.clientName, content: data.content, updatedAt: data.updatedAt } });
+  res.json({ budget: { title: data.title, clientName: data.clientName, producer: data.producer, content: data.content, updatedAt: data.updatedAt } });
 }));
 
 budgetsRoutes.get("/admin", ...admin, asyncHandler(async (req, res) => {
