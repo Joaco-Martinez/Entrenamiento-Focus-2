@@ -320,8 +320,8 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 </a>
                 <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5" aria-label="Otras secciones">
                   {[
-                    { title: "Presentación", href: "#trayectoria" },
-                    { title: "Servicios individuales", href: "#servicios" },
+                    { title: "Sobre mí", href: "#trayectoria" },
+                    { title: "Servicios", href: "#servicios" },
                     { title: "El estudio", href: "#estudio" },
                     { title: "Playlist", href: "#playlist" },
                     { title: "Condiciones", href: "#condiciones" }
