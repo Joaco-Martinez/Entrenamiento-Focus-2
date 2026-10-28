@@ -17,6 +17,7 @@ import {
   Newspaper,
   Clapperboard,
   FileText,
+  Globe,
 } from "lucide-react";
 
 const links = [
@@ -28,6 +29,7 @@ const links = [
   { label: "Presupuestos Mati", href: "/admin/presupuestos/mati", icon: FileText },
   { label: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
   { label: "Suscripciones", href: "/admin/subscriptions", icon: CreditCard },
+  { label: "Servicio web", href: "/admin/servicio-web", icon: Globe },
 ];
 
 function SidebarInner({

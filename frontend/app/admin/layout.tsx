@@ -2,6 +2,7 @@ import AdminGuard from "@/components/admin/AdminGuard";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { ServicioWebBanner } from "@/components/admin/ServicioWeb";
 
 export default function AdminLayout({
   children,
@@ -52,6 +53,7 @@ export default function AdminLayout({
             </header>
 
             <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+              <ServicioWebBanner />
               {children}
             </main>
           </div>

@@ -11,6 +11,7 @@ import MaintenanceGate from "@/components/MaintenanceGate"
 import Footer from "@/components/footer"
 import DevCredit from "@/components/DevCredit"
 import { NavThemeProvider } from "@/context/NavThemeContext"
+import { getServiceStatus } from "@/lib/servicio-web"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -56,11 +57,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // También entra en mantenimiento solo si el sitio está suspendido por falta de pago del servicio web
+  const service = await getServiceStatus()
+  const suspended = Boolean(service?.suspended)
+
   const appContent = (
     <NavThemeProvider>
       <Navbar />
@@ -76,8 +81,8 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <AuthProvider>
           <CartProvider>
-            {isMaintenanceMode ? (
-              <MaintenanceGate>{appContent}</MaintenanceGate>
+            {isMaintenanceMode || suspended ? (
+              <MaintenanceGate suspended={suspended}>{appContent}</MaintenanceGate>
             ) : (
               appContent
             )}
