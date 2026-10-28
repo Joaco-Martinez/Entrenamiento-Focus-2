@@ -1,12 +1,14 @@
 import { apiFetch } from "@/lib/api";
 
 export type BudgetProducer = "fran" | "mati";
-export type BudgetRow = { label: string; description: string; price: number; note?: string };
-export type BudgetPackage = { name: string; description: string; price: number; installments: number };
+export type BudgetCurrency = "ARS" | "USD";
+export type BudgetRow = { label: string; description: string; price: number; usdPrice?: number; note?: string };
+export type BudgetPackage = { name: string; description: string; price: number; usdPrice?: number; installments: number };
 export type BudgetHighlight = { value: string; label: string };
 export type BudgetImagePosition = { x: number; y: number; zoom: number };
 export const defaultImagePosition: BudgetImagePosition = { x: 50, y: 50, zoom: 1 };
 export type BudgetContent = {
+  currency?: BudgetCurrency;
   brand: string; subtitle: string; accent: string; producerName?: string; highlights?: BudgetHighlight[];
   bio: string; instagram: string; email: string; phone: string; location: string;
   playlistUrl: string; heroImage: string; portraitImage: string;
@@ -69,19 +71,66 @@ export const defaultBudget: BudgetContent = {
 
 // Plantilla independiente para preparar la propuesta de Mati en otro momento.
 // No hereda precios, fotografías ni datos de contacto de Fran.
+// Borrador inicial de Mati. No se publican precios históricos ni datos de contacto
+// no confirmados; el administrador puede completarlos antes de compartir un enlace.
 export const defaultBudgetMati: BudgetContent = {
+  currency: "ARS",
   brand: "MATIAS LEDESMA",
-  subtitle: "MEZCLA & MASTERING",
-  accent: "#a78bfa",
+  subtitle: "INGENIERO DE MEZCLA Y MASTERING",
+  accent: "#e5bd42",
   producerName: "Matias Ledesma",
-  highlights: [],
-  bio: "", instagram: "", email: "", phone: "", location: "Córdoba, Argentina",
-  playlistUrl: "", heroImage: "", portraitImage: "", imagePositions: {},
-  services: [], packages: [], extras: [],
-  terms: "", paymentMethods: "", discountPercent: 0, totalOverride: null, note: "",
-  studioName: "", studioText: "", studioImages: ["", "", ""], equipment: [],
+  highlights: [
+    { value: "10+", label: "años de experiencia en audio" },
+  ],
+  bio: "Soy Matias Ledesma, ingeniero de mezcla y mastering en Córdoba, Argentina. Me dedico a trabajar el sonido de cada canción para que conserve su identidad, tenga claridad, impacto y se traduzca bien en distintos sistemas de escucha. Mi enfoque combina criterio musical, técnica y atención al detalle, siempre al servicio de la canción.",
+  instagram: "",
+  email: "",
+  phone: "",
+  location: "Córdoba, Argentina",
+  playlistUrl: "",
+  heroImage: "",
+  portraitImage: "",
+  imagePositions: {},
+  services: [
+    {
+      label: "Mezcla",
+      description: "Balance y definición de las pistas. Ecualización, dinámica, efectos, profundidad y automatizaciones para que la canción transmita lo que buscás.",
+      price: 120000, usdPrice: 120,
+    },
+    {
+      label: "Mastering",
+      description: "Optimización final del balance tonal, la dinámica y el nivel. Preparación del máster para una escucha consistente en diferentes equipos y plataformas.",
+      price: 60000, usdPrice: 60,
+    },
+    {
+      label: "Mezcla + Mastering",
+      description: "Un proceso completo, desde la mezcla de tus pistas hasta la finalización del máster. Ambas etapas trabajadas con el mismo criterio musical y sonoro.",
+      price: 150000, usdPrice: 150,
+    },
+  ],
+  packages: [
+    { name: "Mezcla", description: "Tarifa por canción para proyectos de 4 canciones o más.", price: 105000, usdPrice: 105, installments: 1 },
+    { name: "Mastering", description: "Tarifa por canción para proyectos de 4 canciones o más.", price: 50000, usdPrice: 50, installments: 1 },
+    { name: "Mezcla + Mastering", description: "Tarifa por canción para proyectos de 4 canciones o más.", price: 130000, usdPrice: 130, installments: 1 },
+  ],
+  extras: [],
+  terms: "Antes de confirmar cada proyecto, necesito escuchar el material y evaluar si puedo realizar el trabajo. El servicio incluye revisiones hasta alcanzar la conformidad del artista y los archivos de exportación que sean necesarios. El plazo de entrega, la forma de pago y la vigencia de las tarifas se confirman al presupuestar.",
+  paymentMethods: "",
+  discountPercent: 0,
+  totalOverride: null,
+  note: "Valores de referencia registrados en noviembre de 2025. Confirmar vigencia y alcance antes de contratar. Tarifas expresadas por canción; desde 4 canciones se aplica la escala por cantidad.",
+  studioName: "Mi estudio",
+  studioText: "",
+  studioImages: ["", "", ""],
+  equipment: [],
 };
 
-export function budgetDefaultFor(producer: BudgetProducer): BudgetContent {
-  return producer === "mati" ? defaultBudgetMati : defaultBudget;
+export const defaultBudgetMatiUSD: BudgetContent = {
+  ...defaultBudgetMati,
+  currency: "USD",
+  note: "Tarifas en dólares estadounidenses por canción. Valores de referencia registrados en noviembre de 2025; confirmar vigencia antes de contratar. Desde 4 canciones se aplica la tarifa por cantidad.",
+};
+
+export function budgetDefaultFor(producer: BudgetProducer, currency: BudgetCurrency = "ARS"): BudgetContent {
+  return producer === "fran" ? defaultBudget : currency === "USD" ? defaultBudgetMatiUSD : defaultBudgetMati;
 }
