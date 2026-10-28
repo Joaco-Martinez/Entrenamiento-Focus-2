@@ -315,6 +315,7 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
 
               <section className="space-y-4 border-t border-white/10 pt-6">
                 <h2 className="text-xl font-bold">Servicios y precios {isMati ? "· " + currency : ""}</h2>
+                {isMati && <p className="text-sm text-white/60">Cada servicio puede abonarse en 2 pagos de igual importe; el cliente verá ambos valores automáticamente.</p>}
                 {content.services.map((row,i) => (
                   <div key={i} className="grid gap-3 rounded-xl border border-white/10 p-4 sm:grid-cols-[1fr_120px]">
                     <input className={inputClass} value={row.label} onChange={e => updateRow("services", i, "label", e.target.value)} />
@@ -336,7 +337,12 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
               </section>
 
               <section className="space-y-4 border-t border-white/10 pt-6">
-                <h2 className="text-xl font-bold">{producer === "fran" ? "Paquetes promocionales" : "Precios por cantidad · desde 4 canciones · " + currency}</h2>
+                <h2 className="text-xl font-bold">Paquetes promocionales{isMati ? " · 4 canciones · " + currency : ""}</h2>
+                {isMati && (
+                  <p className="text-sm leading-6 text-white/60">
+                    Ingresá la tarifa <strong className="text-white/80">por canción</strong>. La página calcula automáticamente el precio total del pack de 4 canciones, el ahorro frente a los precios individuales y los 2 pagos iguales.
+                  </p>
+                )}
                 {content.packages.map((row,i) => (
                   <div key={i} className="grid gap-3 rounded-xl border border-white/10 p-4 sm:grid-cols-3">
                     <input className={inputClass} value={row.name} onChange={e => updateRow("packages", i, "name", e.target.value)} />
@@ -345,12 +351,14 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
                     ) : (
                       <label className="text-xs text-white/60">Precio por canción USD<input aria-label={"Precio USD por cantidad de " + row.name} type="number" min={0} className={inputClass} value={row.usdPrice ?? ""} onChange={e => updateRow("packages", i, "usdPrice", e.target.value === "" ? 0 : Number(e.target.value))} /></label>
                     )}
-                    <input type="number" min={1} className={inputClass} value={row.installments} onChange={e => updateRow("packages", i, "installments", Math.max(1, Number(e.target.value)))} />
+                    {producer === "fran" && (
+                      <input type="number" min={1} className={inputClass} value={row.installments} onChange={e => updateRow("packages", i, "installments", Math.max(1, Number(e.target.value)))} />
+                    )}
                     <textarea className={inputClass + " sm:col-span-2"} value={row.description} onChange={e => updateRow("packages", i, "description", e.target.value)} />
                     <button className={btn} onClick={() => removeRow("packages", i)}>Quitar</button>
                   </div>
                 ))}
-                <button className={btn} onClick={() => addRow("packages")}>{producer === "fran" ? "+ Paquete" : "+ Precio por cantidad"}</button>
+                <button className={btn} onClick={() => addRow("packages")}>+ Paquete promocional</button>
               </section>
               <section className="space-y-4 border-t border-white/10 pt-6">
                 <h2 className="text-xl font-bold">Servicios extras</h2>
