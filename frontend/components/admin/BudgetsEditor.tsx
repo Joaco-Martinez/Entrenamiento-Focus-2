@@ -120,7 +120,7 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
 
   const addRow = (name: "services" | "packages" | "extras") => {
     const item = name === "services" ? { label: "Nuevo servicio", description: "", price: 0 }
-      : name === "packages" ? { name: "Nuevo paquete", description: "", price: 0, installments: 2 }
+      : name === "packages" ? { name: producer === "fran" ? "Nuevo paquete" : "Nuevo servicio", description: "", price: 0, installments: producer === "fran" ? 2 : 1 }
       : { label: "Nuevo extra", description: "" };
     patch(name, [...(content[name] as any[]), item]);
   };
@@ -229,7 +229,7 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
         <div>
           <p className="text-xs uppercase tracking-widest text-yellow-300">Enlaces privados</p>
           <h1 className="mt-2 text-3xl font-black">Presupuestos {ownerLabel}</h1>
-          <p className="mt-2 text-sm text-white/60">{producer === "fran" ? "Gestioná los presupuestos de Fran sin mezclarlos con los de Mati." : "Espacio independiente para preparar tus presupuestos de mezcla y mastering. La presentación personalizada se diseñará después."}</p>
+          <p className="mt-2 text-sm text-white/60">{producer === "fran" ? "Gestioná los presupuestos de Fran sin mezclarlos con los de Mati." : "Tu presentación de mezcla y mastering, con la misma estética de Fran y tarifas de Notion editables."}</p>
         </div>
         <button className={btn} onClick={() => begin()}>+ Nuevo presupuesto</button>
       </header>
@@ -267,7 +267,7 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
               <section className="grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-2">
                 <h2 className="col-span-full text-xl font-bold">Presentación</h2>
                 {textInput("brand", "Marca")}
-                <label className="block space-y-2 text-sm text-white/70 sm:col-span-2">Nombre del productor
+                <label className="block space-y-2 text-sm text-white/70 sm:col-span-2">Nombre profesional
                   <input className={inputClass} value={content.producerName ?? ""} onChange={e => patch("producerName",e.target.value)}/>
                 </label>
                 <div className="space-y-3 sm:col-span-2">
@@ -295,31 +295,37 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
                 {content.services.map((row,i) => (
                   <div key={i} className="grid gap-3 rounded-xl border border-white/10 p-4 sm:grid-cols-[1fr_120px]">
                     <input className={inputClass} value={row.label} onChange={e => updateRow("services", i, "label", e.target.value)} />
-                    <input type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("services", i, "price", Number(e.target.value))} />
+                    <label className="text-xs text-white/60">Precio ARS<input aria-label={"Precio ARS de " + row.label} type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("services", i, "price", Number(e.target.value))} /></label>
+                    {producer === "mati" && (
+                      <label className="text-xs text-white/60">Precio USD<input aria-label={"Precio USD de " + row.label} type="number" min={0} className={inputClass} value={row.usdPrice ?? ""} onChange={e => updateRow("services", i, "usdPrice", e.target.value === "" ? 0 : Number(e.target.value))} /></label>
+                    )}
                     <textarea rows={2} className={inputClass} value={row.description} onChange={e => updateRow("services", i, "description", e.target.value)} />
                     <button className={btn} onClick={() => removeRow("services", i)}>Quitar</button>
                   </div>
                 ))}
                 <button className={btn} onClick={() => addRow("services")}>+ Servicio</button>
-                <div className="grid gap-3 sm:grid-cols-2">
+                {producer === "fran" && <div className="grid gap-3 sm:grid-cols-2">
                   <label className="text-sm">Descuento %<input type="number" min={0} max={100} className={inputClass} value={content.discountPercent} onChange={e => patch("discountPercent", Math.min(100, Number(e.target.value)))} /></label>
                   <label className="text-sm">Total manual (opcional)<input type="number" className={inputClass} placeholder="Total automático" value={content.totalOverride ?? ""} onChange={e => patch("totalOverride", e.target.value ? Number(e.target.value) : null)} /></label>
-                </div>
+                </div>}
                 {textInput("note", "Nota")}
               </section>
 
               <section className="space-y-4 border-t border-white/10 pt-6">
-                <h2 className="text-xl font-bold">Paquetes promocionales</h2>
+                <h2 className="text-xl font-bold">{producer === "fran" ? "Paquetes promocionales" : "Precios por cantidad · desde 4 canciones"}</h2>
                 {content.packages.map((row,i) => (
                   <div key={i} className="grid gap-3 rounded-xl border border-white/10 p-4 sm:grid-cols-3">
                     <input className={inputClass} value={row.name} onChange={e => updateRow("packages", i, "name", e.target.value)} />
-                    <input type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("packages", i, "price", Number(e.target.value))} />
+                    <label className="text-xs text-white/60">Precio por canción ARS<input aria-label={"Precio ARS por cantidad de " + row.name} type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("packages", i, "price", Number(e.target.value))} /></label>
+                    {producer === "mati" && (
+                      <label className="text-xs text-white/60">Precio por canción USD<input aria-label={"Precio USD por cantidad de " + row.name} type="number" min={0} className={inputClass} value={row.usdPrice ?? ""} onChange={e => updateRow("packages", i, "usdPrice", e.target.value === "" ? 0 : Number(e.target.value))} /></label>
+                    )}
                     <input type="number" min={1} className={inputClass} value={row.installments} onChange={e => updateRow("packages", i, "installments", Math.max(1, Number(e.target.value)))} />
                     <textarea className={inputClass + " sm:col-span-2"} value={row.description} onChange={e => updateRow("packages", i, "description", e.target.value)} />
                     <button className={btn} onClick={() => removeRow("packages", i)}>Quitar</button>
                   </div>
                 ))}
-                <button className={btn} onClick={() => addRow("packages")}>+ Paquete</button>
+                <button className={btn} onClick={() => addRow("packages")}>{producer === "fran" ? "+ Paquete" : "+ Precio por cantidad"}</button>
               </section>
               <section className="space-y-4 border-t border-white/10 pt-6">
                 <h2 className="text-xl font-bold">Servicios extras</h2>
