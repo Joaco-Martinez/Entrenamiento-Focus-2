@@ -18,6 +18,10 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 const isMaintenanceMode = process.env.MAINTENANCE_MODE === "true"
 
+// Las páginas se regeneran cada 5 min para que entren y salgan solas del mantenimiento por falta de pago
+// (ver lib/servicio-web.ts). Tiene que ir explícito: la caché de getServiceStatus hace que Next no lo detecte.
+export const revalidate = 300
+
 export const metadata: Metadata = {
   title: "ENTRENAMIENTO FOCUS - Mentoría de Producción Musical Profesional",
   description:
