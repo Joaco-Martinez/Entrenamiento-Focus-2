@@ -1,12 +1,14 @@
 import { apiFetch } from "@/lib/api";
 
 export type BudgetProducer = "fran" | "mati";
+export type BudgetCurrency = "ARS" | "USD";
 export type BudgetRow = { label: string; description: string; price: number; usdPrice?: number; note?: string };
 export type BudgetPackage = { name: string; description: string; price: number; usdPrice?: number; installments: number };
 export type BudgetHighlight = { value: string; label: string };
 export type BudgetImagePosition = { x: number; y: number; zoom: number };
 export const defaultImagePosition: BudgetImagePosition = { x: 50, y: 50, zoom: 1 };
 export type BudgetContent = {
+  currency?: BudgetCurrency;
   brand: string; subtitle: string; accent: string; producerName?: string; highlights?: BudgetHighlight[];
   bio: string; instagram: string; email: string; phone: string; location: string;
   playlistUrl: string; heroImage: string; portraitImage: string;
@@ -72,6 +74,7 @@ export const defaultBudget: BudgetContent = {
 // Borrador inicial de Mati. No se publican precios históricos ni datos de contacto
 // no confirmados; el administrador puede completarlos antes de compartir un enlace.
 export const defaultBudgetMati: BudgetContent = {
+  currency: "ARS",
   brand: "MATIAS LEDESMA",
   subtitle: "INGENIERO DE MEZCLA Y MASTERING",
   accent: "#e5bd42",
@@ -122,6 +125,12 @@ export const defaultBudgetMati: BudgetContent = {
   equipment: [],
 };
 
-export function budgetDefaultFor(producer: BudgetProducer): BudgetContent {
-  return producer === "mati" ? defaultBudgetMati : defaultBudget;
+export const defaultBudgetMatiUSD: BudgetContent = {
+  ...defaultBudgetMati,
+  currency: "USD",
+  note: "Tarifas en dólares estadounidenses por canción. Valores de referencia registrados en noviembre de 2025; confirmar vigencia antes de contratar. Desde 4 canciones se aplica la tarifa por cantidad.",
+};
+
+export function budgetDefaultFor(producer: BudgetProducer, currency: BudgetCurrency = "ARS"): BudgetContent {
+  return producer === "fran" ? defaultBudget : currency === "USD" ? defaultBudgetMatiUSD : defaultBudgetMati;
 }
