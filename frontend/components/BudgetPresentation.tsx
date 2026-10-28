@@ -252,6 +252,16 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
   );
   const showClient = clientName.trim() && clientName.toLowerCase() !== "presentación general";
   const theme = { "--budget-accent": data.accent || "#e5bd42" } as CSSProperties;
+  const showPackages = isFran || packages.length > 0;
+  const showStudio = isFran || photos.some(Boolean) || equipment.length > 0 || Boolean(data.studioText?.trim());
+  const showExtras = isFran || extras.length > 0;
+  const showConditions = isFran || Boolean(termsText.trim()) || paymentMethods.length > 0;
+  const servicesNumber = showPackages ? 3 : 2;
+  const studioNumber = servicesNumber + 1;
+  const extrasNumber = studioNumber + (showStudio ? 1 : 0);
+  const conditionsNumber = extrasNumber + (showExtras ? 1 : 0);
+  const sectionNumber = (n: number) => String(n).padStart(2, "0");
+  const displayServicePrice = (price: number) => !isFran && Number(price) <= 0 ? "A cotizar" : money(price);
 
   return (
     <main id="inicio" className="min-h-screen bg-[#f7f6f2] font-sans text-[#171717]" style={theme}>
@@ -276,7 +286,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
         <div className="mx-auto max-w-6xl px-5 pb-12 pt-10 sm:px-8 md:pb-16 md:pt-14">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/15 pb-7">
             <p className="text-[11px] font-semibold uppercase tracking-[0.29em] text-white/55">
-              Propuesta de producción musical
+              {isFran ? "Propuesta de producción musical" : "Propuesta de mezcla y mastering"}
             </p>
             {!isFran && playlistHref && (
               <a
@@ -302,7 +312,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
               {data.subtitle}
             </p>
             <h1 className="mt-8 max-w-2xl text-[24px] font-medium leading-[1.2] tracking-[-0.03em] text-white/95 sm:text-[31px]">
-              {title || "Producción musical profesional"}
+              {title || (isFran ? "Producción musical profesional" : "Mezcla y mastering profesional")}
             </h1>
             {showClient && (
               <p className="mt-4 text-sm font-medium text-white/65">
@@ -337,53 +347,49 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 </div>
               </nav>
             ) : (
-              <div className="mt-9 flex flex-wrap gap-3">
-                <a href="#paquetes"
+              <nav aria-label="Accesos a las secciones de Mati" className="mt-9 max-w-3xl">
+                <a href="#servicios"
                   className="inline-flex min-h-12 items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-[#1a1711] transition hover:brightness-110"
                   style={{ backgroundColor: "var(--budget-accent)" }}>
-                  Ver promociones <ArrowDown className="h-4 w-4" />
+                  Ver servicios <ArrowDown className="h-4 w-4" />
                 </a>
-                <a href="#servicios"
-                  className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                  Servicios individuales <ArrowRight className="h-4 w-4" />
-                </a>
-              </div>
-            )}
+                <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+                  {[
+                    { title: "Sobre mí", href: "#trayectoria" },
+                    { title: "Servicios", href: "#servicios" },
+                    ...(showStudio ? [{ title: "Mi estudio", href: "#estudio" }] : []),
+                    ...(showConditions ? [{ title: "Condiciones", href: "#condiciones" }] : [])
+                  ].map(link => (
+                    <a key={link.href} href={link.href}
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 bg-white/[0.06] px-3 py-2.5 text-center text-[12px] font-semibold text-white/90 transition-[background-color,border-color,color,transform] duration-200 hover:border-[#d6b45d] hover:bg-white/[0.13] hover:text-white motion-safe:hover:-translate-y-0.5 motion-reduce:transform-none sm:text-[13px]">
+                      {link.title}
+                    </a>
+                  ))}
+                </div>
+              </nav>}
           </div>
         </div>
       </header>
 
-      {!isFran && (
-        <nav aria-label="Secciones del presupuesto" className="sticky top-0 z-30 border-b border-[#25231f]/10 bg-[#f7f6f2]/95 backdrop-blur-lg">
-          <div className="mx-auto flex max-w-6xl gap-7 overflow-x-auto px-5 py-4 text-[12px] font-semibold text-[#666159] sm:px-8 sm:text-sm">
-            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#trayectoria">Presentación</a>
-            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#paquetes">Promociones</a>
-            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#servicios">Servicios</a>
-            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#estudio">Estudio</a>
-            <a className="whitespace-nowrap transition hover:text-[#151515]" href="#condiciones">Condiciones</a>
-          </div>
-        </nav>
-  
-      )}
 
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <section id="trayectoria" className="scroll-mt-24 py-14 sm:py-20">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#98752c]">01 / Quién está detrás</p>
-              <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#181816] sm:text-[42px]">Hola, soy {data.producerName || "Franco Cano"}.</h2>
-              <p className="mt-2 text-[16px] font-medium text-[#777168]">Producción, composición, grabación, mezcla y mastering.</p>
+              <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#181816] sm:text-[42px]">Hola, soy {data.producerName || (isFran ? "Franco Cano" : "Matias Ledesma")}.</h2>
+              <p className="mt-2 text-[16px] font-medium text-[#777168]">{isFran ? "Producción, composición, grabación, mezcla y mastering." : "Ingeniería de mezcla y mastering al servicio de cada canción."}</p>
             </div>
             {!isFran && playlistHref && <a href={playlistHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#242019]/15 px-5 py-3 text-sm font-semibold text-[#26231e] hover:bg-white">Escuchar trabajos <ArrowUpRight className="h-4 w-4"/></a>}
           </div>
           <div className="grid gap-7 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
             <div className="relative min-h-[265px] overflow-hidden rounded-[24px] bg-[#191917]">
               {data.portraitImage ? (
-                <img src={data.portraitImage} alt="Fotografía de presentación del productor" style={positionStyle(data, "portraitImage")} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
+                <img src={data.portraitImage} alt={isFran ? "Fotografía de presentación del productor" : "Fotografía de Matias Ledesma"} style={positionStyle(data, "portraitImage")} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover"/>
               ) : (
                 <div className="flex h-full min-h-[265px] flex-col justify-end bg-[radial-gradient(circle_at_75%_20%,#4f432b,transparent_55%),linear-gradient(145deg,#292825,#111110)] p-8">
                   <AudioLines className="mb-auto h-9 w-9 text-[#e5bd42]/70" strokeWidth={1}/>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/45">PROD BY</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/45">{isFran ? "PROD BY" : "MEZCLA & MASTERING"}</p>
                   <p className="mt-3 text-5xl font-black tracking-[-0.04em]" style={{color:"var(--budget-accent)"}}>{brandLast}</p>
                 </div>
               )}
