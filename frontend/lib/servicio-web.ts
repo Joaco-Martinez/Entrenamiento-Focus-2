@@ -56,3 +56,24 @@ export function chargePeriod(c: ServiceCharge): string {
 export function formatDay(iso: string): string {
   return new Date(iso).toLocaleDateString("es-AR", { day: "numeric", month: "long", timeZone: "America/Argentina/Buenos_Aires" });
 }
+
+/** Por qué no se pudo consultar el estado: se muestra en la página de pago para revisar las variables. */
+export async function diagnoseService(): Promise<string> {
+  if (!API || !TOKEN) {
+    return "Faltan NEXT_PUBLIC_MENSUALIDADES_API_URL y NEXT_PUBLIC_MENSUALIDADES_SITE_TOKEN en el frontend del sitio (se copian desde cobranza → Proyectos → Sitio). Después de cargarlas hay que redeployar.";
+  }
+  try {
+    const res = await fetch(`${API}/site/${TOKEN}/status`, { cache: "no-store", signal: AbortSignal.timeout(8000) });
+    if (res.ok) return "La conexión con cobranza funciona. Recargá la página.";
+    const body = await res.json().catch(() => null);
+    if (res.status === 404 && body?.message === "Proyecto no encontrado") {
+      return "El token no corresponde a ningún proyecto de cobranza. Copialo de nuevo desde Proyectos → Sitio y redeployá.";
+    }
+    if (res.status === 404) {
+      return `${API} no parece ser la API de cobranza (tiene que terminar en /api). Revisá NEXT_PUBLIC_MENSUALIDADES_API_URL y redeployá.`;
+    }
+    return `Cobranza respondió con un error (${res.status}). Probá de nuevo en un rato.`;
+  } catch {
+    return `No se pudo conectar con ${API}. Revisá NEXT_PUBLIC_MENSUALIDADES_API_URL o probá de nuevo en un rato.`;
+  }
+}

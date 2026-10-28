@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AlertTriangle, ExternalLink } from "lucide-react";
-import { chargePeriod, formatDay, getServiceStatus, owedCharges, type ServiceStatus } from "@/lib/servicio-web";
+import { chargePeriod, diagnoseService, formatDay, getServiceStatus, owedCharges, type ServiceStatus } from "@/lib/servicio-web";
 
 const PAGE = "/admin/servicio-web";
 
@@ -44,12 +44,17 @@ export function ServicioWebBanner() {
 // Pago del mantenimiento web: la página de cobranza embebida
 export function ServicioWebPayment() {
   const status = useServiceStatus();
+  const [problem, setProblem] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status === null) diagnoseService().then(setProblem);
+  }, [status]);
 
   if (status === undefined) return <p className="text-sm text-white/55">Cargando...</p>;
   if (!status) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-white/60">
-        No se pudo consultar el estado del servicio web. Probá de nuevo en un rato.
+        {problem ?? "Revisando la conexión con cobranza..."}
       </div>
     );
   }
