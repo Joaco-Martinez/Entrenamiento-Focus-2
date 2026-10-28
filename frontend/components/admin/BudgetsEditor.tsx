@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { budgetsService, budgetDefaultFor, type Budget, type BudgetContent, type BudgetProducer } from "@/services/budgets.service";
+import { budgetsService, budgetDefaultFor, type Budget, type BudgetContent, type BudgetProducer, type BudgetCurrency } from "@/services/budgets.service";
 import BudgetImageEditor from "@/components/budgets/BudgetImageEditor";
 import type { BudgetImagePosition } from "@/services/budgets.service";
 import { Copy, ExternalLink } from "lucide-react";
@@ -9,10 +9,12 @@ import { Copy, ExternalLink } from "lucide-react";
 const inputClass = "w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-sm text-white";
 const btn = "rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20";
 
-export default function BudgetsEditor({ producer }: { producer: BudgetProducer }) {
-  const defaultBudget = budgetDefaultFor(producer);
+export default function BudgetsEditor({ producer, currency = "ARS" }: { producer: BudgetProducer; currency?: BudgetCurrency }) {
+  const defaultBudget = budgetDefaultFor(producer, currency);
+  const isMati = producer === "mati";
+  const currencyName = currency === "USD" ? "dólares" : "pesos";
   const ownerLabel = producer === "fran" ? "Fran" : "Mati";
-  const defaultTitle = producer === "fran" ? "Servicio profesional de producción musical" : "Servicio profesional de mezcla y mastering";
+  const defaultTitle = producer === "fran" ? "Servicio profesional de producción musical" : "Mezcla y mastering profesional · " + currency;
   const [list, setList] = useState<Budget[]>([]);
   const [selected, setSelected] = useState<Budget | null>(null);
   const [content, setContent] = useState<BudgetContent>(() => structuredClone(defaultBudget));
@@ -25,7 +27,9 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
   const refresh = async () => {
     try {
       const result = await budgetsService.list(producer);
-      setList(result.budgets);
+      setList(producer === "mati"
+        ? result.budgets.filter(b => (b.content?.currency === "USD" ? "USD" : "ARS") === currency)
+        : result.budgets);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "No se pudieron cargar los presupuestos");
     }
@@ -47,6 +51,7 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
     if (producer === "fran" && !initialContent.playlistUrl?.trim()) {
       initialContent.playlistUrl = defaultBudget.playlistUrl;
     }
+    if (isMati) initialContent.currency = currency;
     setContent(initialContent);
     setNotice("");
     setHasUnsavedChanges(false);
@@ -61,9 +66,10 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
     setNotice("");
     try {
       // Guardar genera/activa automáticamente el enlace privado, sin casilla adicional.
+      const currencyContent = isMati ? { ...content, currency } : content;
       const result = selected
-        ? await budgetsService.update(selected.id, producer, { title, clientName, content, shared: true })
-        : await budgetsService.create({ producer, title, clientName, content, shared: true });
+        ? await budgetsService.update(selected.id, producer, { title, clientName, content: currencyContent, shared: true })
+        : await budgetsService.create({ producer, title, clientName, content: currencyContent, shared: true });
       setSelected(result.budget);
       setHasUnsavedChanges(false);
       setNotice(selected?.shared
@@ -229,10 +235,24 @@ export default function BudgetsEditor({ producer }: { producer: BudgetProducer }
         <div>
           <p className="text-xs uppercase tracking-widest text-yellow-300">Enlaces privados</p>
           <h1 className="mt-2 text-3xl font-black">Presupuestos {ownerLabel}</h1>
-          <p className="mt-2 text-sm text-white/60">{producer === "fran" ? "Gestioná los presupuestos de Fran sin mezclarlos con los de Mati." : "Tu presentación de mezcla y mastering, con la misma estética de Fran y tarifas de Notion editables."}</p>
+          <p className="mt-2 text-sm text-white/60">{producer === "fran" ? "Gestioná los presupuestos de Fran sin mezclarlos con los de Mati." : "Presupuestos de mezcla y mastering en " + currencyName + ", con sus propios enlaces y tarifas editables."}</p>
         </div>
         <button className={btn} onClick={() => begin()}>+ Nuevo presupuesto</button>
       </header>
+      {isMati && (
+        <nav aria-label="Elegir moneda del presupuesto" className="flex flex-wrap gap-2">
+          <a href="/admin/presupuestos/mati/pesos"
+            aria-current={currency === "ARS" ? "page" : undefined}
+            className={"rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors " + (currency === "ARS" ? "border-[#e5bd42] bg-[#e5bd42] text-[#171717]" : "border-white/20 bg-white/5 text-white hover:bg-white/15")}>
+            <span aria-hidden="true">🇦🇷</span> Presupuestos en pesos
+          </a>
+          <a href="/admin/presupuestos/mati/dolares"
+            aria-current={currency === "USD" ? "page" : undefined}
+            className={"rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors " + (currency === "USD" ? "border-[#e5bd42] bg-[#e5bd42] text-[#171717]" : "border-white/20 bg-white/5 text-white hover:bg-white/15")}>
+            <span aria-hidden="true">🌎</span> Presupuestos en dólares
+          </a>
+        </nav>
+      )}
       {notice && <p className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">{notice}</p>}
       <div className="grid gap-6 lg:grid-cols-[270px_minmax(0,1fr)]">
         <aside className="space-y-2">
