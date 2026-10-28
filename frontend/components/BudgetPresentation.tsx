@@ -432,8 +432,8 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
           <SectionHeading
             number="02"
             eyebrow="Opciones disponibles"
-            title="Paquetes promocionales"
-            description="Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto."
+            title={isFran ? "Paquetes promocionales" : "Tarifas por cantidad"}
+            description={isFran ? "Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto." : "Valores por canción para proyectos de 4 canciones o más."}
           />
 
           <div className="grid gap-4 md:grid-cols-2 md:gap-5">
@@ -449,17 +449,20 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#1a1a18] text-lg font-black text-[#e4bd5c] transition-colors duration-300 group-hover:text-[#f5d582] sm:h-12 sm:w-12">
-                      {pack.name}
+                      {isFran ? pack.name : "4+"}
                     </span>
                     <span className="text-[11px] font-extrabold uppercase tracking-[0.17em] text-[#665943] transition-colors duration-300 group-hover:text-[#8c6721]">
-                      Paquete {pack.name}
+                      {isFran ? "Paquete " + pack.name : pack.name}
                     </span>
                   </div>
                   <div className="min-w-0 text-right">
-                    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8d7953] sm:text-[10px]">Precio promocional</p>
+                    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8d7953] sm:text-[10px]">{isFran ? "Precio promocional" : "ARS · por canción"}</p>
                     <p className="text-[27px] font-black leading-none tracking-[-0.045em] text-[#98701f] tabular-nums transition-colors duration-300 group-hover:text-[#795518] sm:text-[34px]">
                       {money(pack.price)}
                     </p>
+                    {!isFran && pack.usdPrice != null && (
+                      <p className="mt-1 text-[12px] font-semibold text-[#74664d]">USD {pack.usdPrice}</p>
+                    )}
                     {pack.installments > 1 && (
                       <p className="mt-2 text-[12px] font-medium text-[#6d685e] tabular-nums">
                         {pack.installments} pagos de {money(pack.price / pack.installments)}
@@ -470,7 +473,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
 
                 <div className="my-6 h-px bg-[#26221e]/10" />
                 <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-[#96783c]">
-                  Servicios incluidos
+                  {isFran ? "Servicios incluidos" : "Condición de esta tarifa"}
                 </p>
                 <ul className="mt-4 grid flex-1 content-start gap-x-4 gap-y-3 sm:grid-cols-2">
                   {includedServices(pack.description).map((service, serviceIndex) => (
@@ -484,12 +487,12 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 </ul>
                 {whatsappHref && (
                   <a
-                    href={whatsappLink("Hola " + firstName + ", quiero contratar el paquete " + pack.name + " de producción musical.")}
+                    href={whatsappLink(isFran ? "Hola " + firstName + ", quiero contratar el paquete " + pack.name + " de producción musical." : "Hola " + firstName + ", quiero consultar por el servicio de " + pack.name + " para un proyecto de 4 canciones o más.")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-6 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#d5bb84] px-4 py-2 text-xs font-bold text-[#8e6b2a] transition-[color,background-color,border-color] duration-200 hover:border-[#b99a56] hover:bg-[#f5ecd8] hover:text-[#60430f]"
                   >
-                    Consultar paquete {pack.name} <ArrowUpRight className="h-3.5 w-3.5" />
+                    {isFran ? "Consultar paquete " + pack.name : "Consultar esta tarifa"} <ArrowUpRight className="h-3.5 w-3.5" />
                   </a>
                 )}
               </article>
@@ -500,10 +503,10 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
 
         <section id="servicios" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading
-            number="03"
-            eyebrow="Precios detallados"
+            number={sectionNumber(servicesNumber)}
+            eyebrow={isFran ? "Precios detallados" : "Servicios de audio"}
             title="Servicios individuales"
-            description="Cada etapa del proceso, con su descripción y su valor por separado."
+            description={isFran ? "Cada etapa del proceso, con su descripción y su valor por separado." : "Cada canción necesita decisiones propias. Elegí cómo querés trabajar tu proyecto."}
           />
           <div className="overflow-hidden rounded-[24px] border border-[#242019]/10 bg-white md:overflow-visible">
             <div className="hidden grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] gap-5 rounded-t-[23px] bg-[#191918] px-7 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/75 md:grid">
@@ -535,9 +538,10 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                       ) : service.label}
                     </h3>
                   </div>
-                  <p className="shrink-0 font-bold tabular-nums text-[#916822] md:hidden">
-                    {money(service.price)}
-                  </p>
+                  <div className="shrink-0 text-right md:hidden">
+                    <p className="font-bold tabular-nums text-[#916822]">{displayServicePrice(service.price)}</p>
+                    {!isFran && service.usdPrice != null && <p className="text-xs font-medium text-[#75654a]">USD {service.usdPrice}</p>}
+                  </div>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[#69645d] transition-colors duration-300 group-hover:text-[#35322e] md:mt-0">
                   <strong className="font-semibold text-[#39352e]">{splitDescriptionLead(service.description)[0]}</strong>
@@ -545,8 +549,11 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 </p>
                 <div className="hidden text-right md:block">
                   <p className="text-[16px] font-bold tabular-nums text-[#916822]">
-                    {money(service.price)}
+                    {displayServicePrice(service.price)}
                   </p>
+                  {!isFran && service.usdPrice != null && (
+                    <p className="mt-1 text-[12px] font-medium text-[#75654a]">USD {service.usdPrice}</p>
+                  )}
                   {whatsappHref && (
                     <a
                       href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + ".")}
@@ -571,6 +578,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
               </div>
             ))}
           </div>
+          {isFran && (
           <div className="mt-5 flex flex-wrap items-end justify-between gap-5 rounded-[24px] bg-[#1a1a18] px-6 py-7 text-white sm:px-8">
             <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">
@@ -598,6 +606,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
               </p>
             </div>
           </div>
+          )}
           {data.note && (
             <p className="mt-4 text-sm leading-6 text-[#78746c]">{data.note}</p>
           )}
@@ -606,7 +615,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
         {showStudio && (
         <section id="estudio" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading
-            number="04"
+            number={sectionNumber(studioNumber)}
             eyebrow="Espacio de trabajo"
             title={data.studioName || "Estudio"}
             description={data.studioText}
@@ -685,7 +694,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
 
         {showExtras && (
         <section id="extras" className="border-t border-[#242019]/10 py-14 sm:py-20">
-          <SectionHeading number="05" eyebrow="Servicios complementarios" title="Servicios extras" />
+          <SectionHeading number={sectionNumber(extrasNumber)} eyebrow="Servicios complementarios" title="Servicios extras" />
           <div className="grid gap-3 sm:grid-cols-2">
             {extras.map((extra, index) => (
               <article key={index} className="rounded-[20px] border border-[#242019]/10 bg-white p-6 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-out hover:border-[#c9b184] hover:bg-[#f6f0e5] hover:shadow-[0_12px_28px_rgba(48,36,14,0.08)] motion-safe:hover:-translate-y-1 motion-reduce:transition-none">
@@ -699,8 +708,8 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
 
         {showConditions && (
         <section id="condiciones" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
-          <SectionHeading number="06" eyebrow="Información importante" title="Condiciones y formas de pago" />
-          <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:gap-12">
+          <SectionHeading number={sectionNumber(conditionsNumber)} eyebrow="Información importante" title="Condiciones y formas de pago" />
+          <div className={"grid gap-10 md:gap-12 " + (paymentMethods.length ? "md:grid-cols-[1.15fr_0.85fr]" : "")}>
             <div>
               <div className="flex items-center gap-3">
                 <FileText aria-hidden="true" className="h-6 w-6 text-[#a67c27]" strokeWidth={1.8}/>
@@ -725,7 +734,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
               </div>
             </div>
 
-            <div className="md:border-l md:border-[#29241c]/10 md:pl-10">
+            {paymentMethods.length > 0 && <div className="md:border-l md:border-[#29241c]/10 md:pl-10">
               <div className="flex items-center gap-3">
                 <Wallet aria-hidden="true" className="h-6 w-6 text-[#a67c27]" strokeWidth={1.8}/>
                 <h3 className="text-xl font-bold tracking-[-0.02em] text-[#24211d]">Métodos de pago</h3>
@@ -743,14 +752,14 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                   </li>
                 ))}
               </ul>
-            </div>
+            </div>}
           </div>
         </section>
         )}
 
       </div>
 
-      {isFran ? (
+      {isFran || !showFloatingWhatsApp ? (
         <a
           href="#inicio"
           aria-label="Volver al inicio del presupuesto"
