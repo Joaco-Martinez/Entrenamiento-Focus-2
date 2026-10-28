@@ -1,8 +1,8 @@
 import { apiFetch } from "@/lib/api";
 
 export type BudgetProducer = "fran" | "mati";
-export type BudgetRow = { label: string; description: string; price: number; note?: string };
-export type BudgetPackage = { name: string; description: string; price: number; installments: number };
+export type BudgetRow = { label: string; description: string; price: number; usdPrice?: number; note?: string };
+export type BudgetPackage = { name: string; description: string; price: number; usdPrice?: number; installments: number };
 export type BudgetHighlight = { value: string; label: string };
 export type BudgetImagePosition = { x: number; y: number; zoom: number };
 export const defaultImagePosition: BudgetImagePosition = { x: 50, y: 50, zoom: 1 };
@@ -92,26 +92,30 @@ export const defaultBudgetMati: BudgetContent = {
     {
       label: "Mezcla",
       description: "Balance y definición de las pistas. Ecualización, dinámica, efectos, profundidad y automatizaciones para que la canción transmita lo que buscás.",
-      price: 0,
+      price: 120000, usdPrice: 120,
     },
     {
       label: "Mastering",
       description: "Optimización final del balance tonal, la dinámica y el nivel. Preparación del máster para una escucha consistente en diferentes equipos y plataformas.",
-      price: 0,
+      price: 60000, usdPrice: 60,
     },
     {
       label: "Mezcla + Mastering",
       description: "Un proceso completo, desde la mezcla de tus pistas hasta la finalización del máster. Ambas etapas trabajadas con el mismo criterio musical y sonoro.",
-      price: 0,
+      price: 150000, usdPrice: 150,
     },
   ],
-  packages: [],
+  packages: [
+    { name: "Mezcla", description: "Tarifa por canción para proyectos de 4 canciones o más.", price: 105000, usdPrice: 105, installments: 1 },
+    { name: "Mastering", description: "Tarifa por canción para proyectos de 4 canciones o más.", price: 50000, usdPrice: 50, installments: 1 },
+    { name: "Mezcla + Mastering", description: "Tarifa por canción para proyectos de 4 canciones o más.", price: 130000, usdPrice: 130, installments: 1 },
+  ],
   extras: [],
-  terms: "Cada proyecto se evalúa según el material recibido. El precio final, los plazos, los formatos de entrega y las condiciones de pago se confirman antes de comenzar.",
+  terms: "Antes de confirmar cada proyecto, necesito escuchar el material y evaluar si puedo realizar el trabajo. El servicio incluye revisiones hasta alcanzar la conformidad del artista y los archivos de exportación que sean necesarios. El plazo de entrega, la forma de pago y la vigencia de las tarifas se confirman al presupuestar.",
   paymentMethods: "",
   discountPercent: 0,
   totalOverride: null,
-  note: "Los valores se presupuestan de forma personalizada según las características del proyecto.",
+  note: "Valores de referencia registrados en noviembre de 2025. Confirmar vigencia y alcance antes de contratar. Tarifas expresadas por canción; desde 4 canciones se aplica la escala por cantidad.",
   studioName: "Mi estudio",
   studioText: "",
   studioImages: ["", "", ""],
