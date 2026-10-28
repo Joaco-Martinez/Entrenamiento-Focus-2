@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { budgetsService, budgetDefaultFor, type Budget, type BudgetContent, type BudgetProducer, type BudgetCurrency } from "@/services/budgets.service";
+import { budgetsService, budgetDefaultFor, cleanMatiTerms, type Budget, type BudgetContent, type BudgetProducer, type BudgetCurrency } from "@/services/budgets.service";
 import BudgetImageEditor from "@/components/budgets/BudgetImageEditor";
 import type { BudgetImagePosition } from "@/services/budgets.service";
 import { Copy, ExternalLink } from "lucide-react";
@@ -51,7 +51,10 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
     if (producer === "fran" && !initialContent.playlistUrl?.trim()) {
       initialContent.playlistUrl = defaultBudget.playlistUrl;
     }
-    if (isMati) initialContent.currency = currency;
+    if (isMati) {
+      initialContent.currency = currency;
+      initialContent.terms = cleanMatiTerms(initialContent.terms ?? "");
+    }
     setContent(initialContent);
     setNotice("");
     setHasUnsavedChanges(false);
@@ -66,7 +69,7 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
     setNotice("");
     try {
       // Guardar genera/activa automáticamente el enlace privado, sin casilla adicional.
-      const currencyContent = isMati ? { ...content, currency } : content;
+      const currencyContent = isMati ? { ...content, currency, terms: cleanMatiTerms(content.terms ?? "") } : content;
       const result = selected
         ? await budgetsService.update(selected.id, producer, { title, clientName, content: currencyContent, shared: true })
         : await budgetsService.create({ producer, title, clientName, content: currencyContent, shared: true });
