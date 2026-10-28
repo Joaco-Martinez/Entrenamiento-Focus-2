@@ -342,7 +342,7 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
                   <p className="text-sm leading-6 text-white/60">
                     Ingresá la tarifa <strong className="text-white/80">por canción</strong>. La página calcula automáticamente el precio total del pack de 4 canciones, el ahorro frente a los precios individuales y los 2 pagos iguales.
                   </p>
-                )
+                )}
                 {content.packages.map((row,i) => (
                   <div key={i} className="grid gap-3 rounded-xl border border-white/10 p-4 sm:grid-cols-3">
                     <input className={inputClass} value={row.name} onChange={e => updateRow("packages", i, "name", e.target.value)} />
