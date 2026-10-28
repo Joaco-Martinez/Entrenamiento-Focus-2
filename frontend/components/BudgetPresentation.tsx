@@ -20,7 +20,7 @@ import {
   Wallet,
   WalletCards,
 } from "lucide-react";
-import { cleanMatiTerms, type BudgetContent, type BudgetProducer } from "@/services/budgets.service";
+import { cleanMatiNote, cleanMatiTerms, type BudgetContent, type BudgetProducer } from "@/services/budgets.service";
 
 type Props = {
   data: BudgetContent;
@@ -208,6 +208,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
   // Solo la presentación divide el texto: los términos originales siguen editables
   // en el panel de administración, sin duplicarlos en otro campo.
   const termsText = isFran ? (data.terms ?? "") : cleanMatiTerms(data.terms ?? "");
+  const noteText = isFran ? (data.note ?? "") : cleanMatiNote(data.note ?? "");
   const secondTermStart = termsText.search(/Los servicios de grabaci[oó]n\b/i);
   const paymentTerms = secondTermStart > 0
     ? [
@@ -443,7 +444,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             number="02"
             eyebrow="Opciones disponibles"
             title="Paquetes promocionales"
-            description={isFran ? "Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto." : "Cuatro canciones, un precio especial. Mirá cuánto ahorrás y elegí pagar en dos veces, en " + (isUsd ? "USD." : "pesos argentinos.")}
+            description={isFran ? "Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto." : undefined}
           />
 
           <div className={"grid gap-4 md:gap-5 " + (isFran ? "md:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3")}>
@@ -522,7 +523,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             number={sectionNumber(servicesNumber)}
             eyebrow={isFran ? "Precios detallados" : "Servicios de audio"}
             title="Servicios individuales"
-            description={isFran ? "Cada etapa del proceso, con su descripción y su valor por separado." : "Valores por canción en " + (isUsd ? "dólares (USD)." : "pesos argentinos (ARS).") + " Cada canción necesita decisiones propias."}
+            description={isFran ? "Cada etapa del proceso, con su descripción y su valor por separado." : undefined}
           />
           <div className="overflow-hidden rounded-[24px] border border-[#242019]/10 bg-white md:overflow-visible">
             <div className="hidden grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] gap-5 rounded-t-[23px] bg-[#191918] px-7 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/75 md:grid">
@@ -629,8 +630,8 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             </div>
           </div>
           )}
-          {data.note && (
-            <p className="mt-4 text-sm leading-6 text-[#78746c]">{data.note}</p>
+          {noteText && (
+            <p className="mt-4 text-sm leading-6 text-[#78746c]">{noteText}</p>
           )}
         </section>
 
