@@ -19,7 +19,7 @@ import {
   Wallet,
   WalletCards,
 } from "lucide-react";
-import type { BudgetContent, BudgetProducer } from "@/services/budgets.service";
+import { cleanMatiTerms, type BudgetContent, type BudgetProducer } from "@/services/budgets.service";
 
 type Props = {
   data: BudgetContent;
@@ -206,7 +206,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
   const isUsd = !isFran && data.currency === "USD";
   // Solo la presentación divide el texto: los términos originales siguen editables
   // en el panel de administración, sin duplicarlos en otro campo.
-  const termsText = data.terms ?? "";
+  const termsText = isFran ? (data.terms ?? "") : cleanMatiTerms(data.terms ?? "");
   const secondTermStart = termsText.search(/Los servicios de grabaci[oó]n\b/i);
   const paymentTerms = secondTermStart > 0
     ? [
