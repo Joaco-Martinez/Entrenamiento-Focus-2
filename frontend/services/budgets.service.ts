@@ -87,6 +87,20 @@ export function cleanMatiTerms(value: string): string {
   return terms.replace(/ {2,}/g, " ").trim();
 }
 
+// Retira exclusivamente los avisos anteriores que Mati pidió eliminar.
+// Las notas personalizadas de cada presupuesto permanecen disponibles.
+const removedMatiNotes = [
+  "Valores de referencia registrados en noviembre de 2025. Confirmar vigencia y alcance antes de contratar. Tarifas expresadas por canción; desde 4 canciones se aplica la escala por cantidad.",
+  "Tarifas en dólares estadounidenses por canción. Valores de referencia registrados en noviembre de 2025; confirmar vigencia antes de contratar. Desde 4 canciones se aplica la tarifa por cantidad.",
+];
+export function cleanMatiNote(value: string): string {
+  let note = value;
+  for (const oldText of removedMatiNotes) {
+    note = note.replace(oldText, "");
+  }
+  return note.replace(/ {2,}/g, " ").trim();
+}
+
 export const defaultBudgetMati: BudgetContent = {
   currency: "ARS",
   brand: "MATIAS LEDESMA",
@@ -132,7 +146,7 @@ export const defaultBudgetMati: BudgetContent = {
   paymentMethods: "",
   discountPercent: 0,
   totalOverride: null,
-  note: "Valores de referencia registrados en noviembre de 2025. Confirmar vigencia y alcance antes de contratar. Tarifas expresadas por canción; desde 4 canciones se aplica la escala por cantidad.",
+  note: "",
   studioName: "Mi estudio",
   studioText: "",
   studioImages: ["", "", ""],
@@ -142,7 +156,7 @@ export const defaultBudgetMati: BudgetContent = {
 export const defaultBudgetMatiUSD: BudgetContent = {
   ...defaultBudgetMati,
   currency: "USD",
-  note: "Tarifas en dólares estadounidenses por canción. Valores de referencia registrados en noviembre de 2025; confirmar vigencia antes de contratar. Desde 4 canciones se aplica la tarifa por cantidad.",
+  note: "",
 };
 
 export function budgetDefaultFor(producer: BudgetProducer, currency: BudgetCurrency = "ARS"): BudgetContent {
