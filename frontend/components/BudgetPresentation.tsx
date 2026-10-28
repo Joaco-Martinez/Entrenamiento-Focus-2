@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { AnimatedHighlights } from "@/components/budgets/AnimatedHighlights";
+import { MatiPromotionalPack } from "@/components/budgets/MatiPromotionalPack";
 import {
   ArrowDown,
   ArrowRight,
@@ -229,6 +230,9 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
     data.totalOverride != null
       ? Number(data.totalOverride)
       : Math.max(0, Math.round(subtotal * (1 - discountPercent / 100)));
+  const regularForPack = (name: string) => services.find(
+    service => service.label.trim().toLocaleLowerCase("es-AR") === name.trim().toLocaleLowerCase("es-AR")
+  );
   const brandParts = (data.brand || "PROD BY KNNO").trim().split(/\s+/);
   const brandLast = brandParts.pop() || "KNNO";
   const brandFirst = brandParts.join(" ");
@@ -266,7 +270,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
     if (isFran) return money(ars);
     const amount = isUsd ? usd : ars;
     if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) return "A cotizar";
-    return isUsd ? "USD " + amount.toLocaleString("es-AR") : money(amount);
+    return (isUsd ? "USD " : "$") + amount.toLocaleString("es-AR", { maximumFractionDigits: 2 });
   };
 
   return (
@@ -438,12 +442,12 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
           <SectionHeading
             number="02"
             eyebrow="Opciones disponibles"
-            title={isFran ? "Paquetes promocionales" : "Tarifas por cantidad"}
-            description={isFran ? "Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto." : "Tarifas por canción para proyectos de 4 canciones o más, expresadas en " + (isUsd ? "dólares (USD)." : "pesos argentinos (ARS).")}
+            title="Paquetes promocionales"
+            description={isFran ? "Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto." : "Cuatro canciones, un precio especial. Mirá cuánto ahorrás y elegí pagar en dos veces, en " + (isUsd ? "USD." : "pesos argentinos.")}
           />
 
-          <div className="grid gap-4 md:grid-cols-2 md:gap-5">
-            {packages.map((pack, index) => (
+          <div className={"grid gap-4 md:gap-5 " + (isFran ? "md:grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3")}>
+            {packages.map((pack, index) => isFran ? (
               <article
                 key={index}
                 className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-[#d5cfc3] bg-white/95 p-6 shadow-[0_10px_35px_rgba(39,31,15,0.035)] transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:border-[#b79956] hover:shadow-[0_22px_46px_rgba(39,31,15,0.10)] motion-reduce:transform-none motion-reduce:transition-none sm:p-8"
@@ -499,6 +503,15 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                   </a>
                 )}
               </article>
+            ) : (
+              <MatiPromotionalPack
+                key={index}
+                pack={pack}
+                regular={regularForPack(pack.name)}
+                currency={isUsd ? "USD" : "ARS"}
+                priceText={priceText}
+                whatsappUrl={whatsappLink("Hola " + firstName + ", quiero consultar por el pack de 4 canciones de " + pack.name + " en " + (isUsd ? "USD" : "pesos argentinos") + ".")}
+              />
             ))}
           </div>
         </section>
@@ -543,6 +556,11 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                   </div>
                   <div className="shrink-0 text-right md:hidden">
                     <p className="font-bold tabular-nums text-[#916822]">{priceText(service.price, service.usdPrice)}</p>
+                    {!isFran && (isUsd ? (service.usdPrice ?? 0) > 0 : service.price > 0) && (
+                      <p className="mt-1 max-w-[140px] text-[11px] font-medium leading-4 text-[#81765f]">
+                        2 pagos de {priceText(service.price / 2, service.usdPrice == null ? undefined : service.usdPrice / 2)}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[#69645d] transition-colors duration-300 group-hover:text-[#35322e] md:mt-0">
@@ -553,6 +571,11 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                   <p className="text-[16px] font-bold tabular-nums text-[#916822]">
                     {priceText(service.price, service.usdPrice)}
                   </p>
+                  {!isFran && (isUsd ? (service.usdPrice ?? 0) > 0 : service.price > 0) && (
+                    <p className="mt-1 text-[11px] font-semibold leading-4 text-[#81765f]">
+                      2 pagos de {priceText(service.price / 2, service.usdPrice == null ? undefined : service.usdPrice / 2)}
+                    </p>
+                  )}
                   {whatsappHref && (
                     <a
                       href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + (isFran ? "." : ", con precio en " + (isUsd ? "USD" : "pesos argentinos") + "."))}
@@ -708,6 +731,15 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
         {showConditions && (
         <section id="condiciones" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading number={sectionNumber(conditionsNumber)} eyebrow="Información importante" title="Condiciones y formas de pago" />
+          {!isFran && (
+            <div className="mb-8 flex items-start gap-3 rounded-2xl border border-[#d3bd91] bg-[#f5ebd3] px-5 py-4 sm:px-6">
+              <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-[#956d20]" aria-hidden="true" />
+              <div>
+                <h3 className="text-sm font-bold text-[#373024]">Todos los servicios y packs se pueden pagar en 2 veces</h3>
+                <p className="mt-1 text-[13px] leading-6 text-[#706651]">Dos pagos iguales, tanto en presupuestos individuales como en paquetes promocionales.</p>
+              </div>
+            </div>
+          )}
           <div className={"grid gap-10 md:gap-12 " + (paymentMethods.length ? "md:grid-cols-[1.15fr_0.85fr]" : "")}>
             <div>
               <div className="flex items-center gap-3">
