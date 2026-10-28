@@ -73,6 +73,20 @@ export const defaultBudget: BudgetContent = {
 // No hereda precios, fotografías ni datos de contacto de Fran.
 // Borrador inicial de Mati. No se publican precios históricos ni datos de contacto
 // no confirmados; el administrador puede completarlos antes de compartir un enlace.
+// Limpieza puntual de la redacción anterior de Mati: respeta cualquier condición
+// personalizada que se haya agregado y no modifica las propuestas de Fran.
+const retiredMatiTerms = [
+  "El servicio incluye revisiones hasta alcanzar la conformidad del artista y los archivos de exportación que sean necesarios.",
+  "El plazo de entrega, la forma de pago y la vigencia de las tarifas se confirman al presupuestar.",
+];
+export function cleanMatiTerms(value: string): string {
+  let terms = value;
+  for (const phrase of retiredMatiTerms) {
+    terms = terms.replace(phrase, "");
+  }
+  return terms.replace(/\s+/g, " ").trim();
+}
+
 export const defaultBudgetMati: BudgetContent = {
   currency: "ARS",
   brand: "MATIAS LEDESMA",
@@ -114,7 +128,7 @@ export const defaultBudgetMati: BudgetContent = {
     { name: "Mezcla + Mastering", description: "Tarifa por canción para proyectos de 4 canciones o más.", price: 130000, usdPrice: 130, installments: 1 },
   ],
   extras: [],
-  terms: "Antes de confirmar cada proyecto, necesito escuchar el material y evaluar si puedo realizar el trabajo. El servicio incluye revisiones hasta alcanzar la conformidad del artista y los archivos de exportación que sean necesarios. El plazo de entrega, la forma de pago y la vigencia de las tarifas se confirman al presupuestar.",
+  terms: "Antes de confirmar cada proyecto, necesito escuchar el material y evaluar si puedo realizar el trabajo.",
   paymentMethods: "",
   discountPercent: 0,
   totalOverride: null,
