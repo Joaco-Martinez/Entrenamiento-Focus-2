@@ -69,17 +69,53 @@ export const defaultBudget: BudgetContent = {
 
 // Plantilla independiente para preparar la propuesta de Mati en otro momento.
 // No hereda precios, fotografías ni datos de contacto de Fran.
+// Borrador inicial de Mati. No se publican precios históricos ni datos de contacto
+// no confirmados; el administrador puede completarlos antes de compartir un enlace.
 export const defaultBudgetMati: BudgetContent = {
   brand: "MATIAS LEDESMA",
-  subtitle: "MEZCLA & MASTERING",
-  accent: "#a78bfa",
+  subtitle: "INGENIERO DE MEZCLA Y MASTERING",
+  accent: "#e5bd42",
   producerName: "Matias Ledesma",
-  highlights: [],
-  bio: "", instagram: "", email: "", phone: "", location: "Córdoba, Argentina",
-  playlistUrl: "", heroImage: "", portraitImage: "", imagePositions: {},
-  services: [], packages: [], extras: [],
-  terms: "", paymentMethods: "", discountPercent: 0, totalOverride: null, note: "",
-  studioName: "", studioText: "", studioImages: ["", "", ""], equipment: [],
+  highlights: [
+    { value: "10+", label: "años de experiencia en audio" },
+  ],
+  bio: "Soy Matias Ledesma, ingeniero de mezcla y mastering en Córdoba, Argentina. Me dedico a trabajar el sonido de cada canción para que conserve su identidad, tenga claridad, impacto y se traduzca bien en distintos sistemas de escucha. Mi enfoque combina criterio musical, técnica y atención al detalle, siempre al servicio de la canción.",
+  instagram: "",
+  email: "",
+  phone: "",
+  location: "Córdoba, Argentina",
+  playlistUrl: "",
+  heroImage: "",
+  portraitImage: "",
+  imagePositions: {},
+  services: [
+    {
+      label: "Mezcla",
+      description: "Balance y definición de las pistas. Ecualización, dinámica, efectos, profundidad y automatizaciones para que la canción transmita lo que buscás.",
+      price: 0,
+    },
+    {
+      label: "Mastering",
+      description: "Optimización final del balance tonal, la dinámica y el nivel. Preparación del máster para una escucha consistente en diferentes equipos y plataformas.",
+      price: 0,
+    },
+    {
+      label: "Mezcla + Mastering",
+      description: "Un proceso completo, desde la mezcla de tus pistas hasta la finalización del máster. Ambas etapas trabajadas con el mismo criterio musical y sonoro.",
+      price: 0,
+    },
+  ],
+  packages: [],
+  extras: [],
+  terms: "Cada proyecto se evalúa según el material recibido. El precio final, los plazos, los formatos de entrega y las condiciones de pago se confirman antes de comenzar.",
+  paymentMethods: "",
+  discountPercent: 0,
+  totalOverride: null,
+  note: "Los valores se presupuestan de forma personalizada según las características del proyecto.",
+  studioName: "Mi estudio",
+  studioText: "",
+  studioImages: ["", "", ""],
+  equipment: [],
 };
 
 export function budgetDefaultFor(producer: BudgetProducer): BudgetContent {
