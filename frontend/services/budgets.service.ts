@@ -84,7 +84,7 @@ export function cleanMatiTerms(value: string): string {
   for (const phrase of retiredMatiTerms) {
     terms = terms.replace(phrase, "");
   }
-  return terms.replace(/\s+/g, " ").trim();
+  return terms.replace(/ {2,}/g, " ").trim();
 }
 
 export const defaultBudgetMati: BudgetContent = {
