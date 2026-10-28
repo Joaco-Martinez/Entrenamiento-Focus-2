@@ -366,7 +366,8 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                     </a>
                   ))}
                 </div>
-              </nav>}
+              </nav>
+            )}
           </div>
         </div>
       </header>
