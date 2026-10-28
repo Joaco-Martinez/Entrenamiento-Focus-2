@@ -424,6 +424,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
           {!!data.highlights?.length && <AnimatedHighlights items={data.highlights} />}
         </section>
 
+        {showPackages && (
         <section
           id="paquetes"
           className="scroll-mt-24 py-14 sm:py-20"
@@ -495,6 +496,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             ))}
           </div>
         </section>
+        )}
 
         <section id="servicios" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading
@@ -601,6 +603,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
           )}
         </section>
 
+        {showStudio && (
         <section id="estudio" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading
             number="04"
@@ -639,6 +642,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             )}
           </div>
         </section>
+        )}
 
         {isFran && playlistHref && (
           <section id="playlist" className="scroll-mt-12 border-t border-[#242019]/10 py-14 sm:py-20">
@@ -679,6 +683,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
           </section>
         )}
 
+        {showExtras && (
         <section id="extras" className="border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading number="05" eyebrow="Servicios complementarios" title="Servicios extras" />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -690,7 +695,9 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             ))}
           </div>
         </section>
+        )}
 
+        {showConditions && (
         <section id="condiciones" className="scroll-mt-24 border-t border-[#242019]/10 py-14 sm:py-20">
           <SectionHeading number="06" eyebrow="Información importante" title="Condiciones y formas de pago" />
           <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:gap-12">
@@ -739,6 +746,8 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             </div>
           </div>
         </section>
+        )}
+
       </div>
 
       {isFran ? (
