@@ -311,12 +311,13 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
               </section>
 
               <section className="space-y-4 border-t border-white/10 pt-6">
-                <h2 className="text-xl font-bold">Servicios y precios</h2>
+                <h2 className="text-xl font-bold">Servicios y precios {isMati ? "· " + currency : ""}</h2>
                 {content.services.map((row,i) => (
                   <div key={i} className="grid gap-3 rounded-xl border border-white/10 p-4 sm:grid-cols-[1fr_120px]">
                     <input className={inputClass} value={row.label} onChange={e => updateRow("services", i, "label", e.target.value)} />
-                    <label className="text-xs text-white/60">Precio ARS<input aria-label={"Precio ARS de " + row.label} type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("services", i, "price", Number(e.target.value))} /></label>
-                    {producer === "mati" && (
+                    {(producer === "fran" || currency === "ARS") ? (
+                      <label className="text-xs text-white/60">Precio ARS<input aria-label={"Precio ARS de " + row.label} type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("services", i, "price", Number(e.target.value))} /></label>
+                    ) : (
                       <label className="text-xs text-white/60">Precio USD<input aria-label={"Precio USD de " + row.label} type="number" min={0} className={inputClass} value={row.usdPrice ?? ""} onChange={e => updateRow("services", i, "usdPrice", e.target.value === "" ? 0 : Number(e.target.value))} /></label>
                     )}
                     <textarea rows={2} className={inputClass} value={row.description} onChange={e => updateRow("services", i, "description", e.target.value)} />
@@ -332,12 +333,13 @@ export default function BudgetsEditor({ producer, currency = "ARS" }: { producer
               </section>
 
               <section className="space-y-4 border-t border-white/10 pt-6">
-                <h2 className="text-xl font-bold">{producer === "fran" ? "Paquetes promocionales" : "Precios por cantidad · desde 4 canciones"}</h2>
+                <h2 className="text-xl font-bold">{producer === "fran" ? "Paquetes promocionales" : "Precios por cantidad · desde 4 canciones · " + currency}</h2>
                 {content.packages.map((row,i) => (
                   <div key={i} className="grid gap-3 rounded-xl border border-white/10 p-4 sm:grid-cols-3">
                     <input className={inputClass} value={row.name} onChange={e => updateRow("packages", i, "name", e.target.value)} />
-                    <label className="text-xs text-white/60">Precio por canción ARS<input aria-label={"Precio ARS por cantidad de " + row.name} type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("packages", i, "price", Number(e.target.value))} /></label>
-                    {producer === "mati" && (
+                    {(producer === "fran" || currency === "ARS") ? (
+                      <label className="text-xs text-white/60">Precio por canción ARS<input aria-label={"Precio ARS por cantidad de " + row.name} type="number" min={0} className={inputClass} value={row.price} onChange={e => updateRow("packages", i, "price", Number(e.target.value))} /></label>
+                    ) : (
                       <label className="text-xs text-white/60">Precio por canción USD<input aria-label={"Precio USD por cantidad de " + row.name} type="number" min={0} className={inputClass} value={row.usdPrice ?? ""} onChange={e => updateRow("packages", i, "usdPrice", e.target.value === "" ? 0 : Number(e.target.value))} /></label>
                     )}
                     <input type="number" min={1} className={inputClass} value={row.installments} onChange={e => updateRow("packages", i, "installments", Math.max(1, Number(e.target.value)))} />
