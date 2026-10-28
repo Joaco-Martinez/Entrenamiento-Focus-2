@@ -203,6 +203,7 @@ function StudioImage({ url, index, featured = false, style }: { url: string; ind
 
 export function BudgetPresentation({ data, title, clientName, producer = "fran", showFloatingWhatsApp = true }: Props) {
   const isFran = producer === "fran";
+  const isUsd = !isFran && data.currency === "USD";
   // Solo la presentación divide el texto: los términos originales siguen editables
   // en el panel de administración, sin duplicarlos en otro campo.
   const termsText = data.terms ?? "";
@@ -261,7 +262,12 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
   const extrasNumber = studioNumber + (showStudio ? 1 : 0);
   const conditionsNumber = extrasNumber + (showExtras ? 1 : 0);
   const sectionNumber = (n: number) => String(n).padStart(2, "0");
-  const displayServicePrice = (price: number) => !isFran && Number(price) <= 0 ? "A cotizar" : money(price);
+  const priceText = (ars: number, usd?: number) => {
+    if (isFran) return money(ars);
+    const amount = isUsd ? usd : ars;
+    if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) return "A cotizar";
+    return isUsd ? "USD " + amount.toLocaleString("es-AR") : money(amount);
+  };
 
   return (
     <main id="inicio" className="min-h-screen bg-[#f7f6f2] font-sans text-[#171717]" style={theme}>
@@ -433,7 +439,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             number="02"
             eyebrow="Opciones disponibles"
             title={isFran ? "Paquetes promocionales" : "Tarifas por cantidad"}
-            description={isFran ? "Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto." : "Valores por canción para proyectos de 4 canciones o más."}
+            description={isFran ? "Compará los servicios incluidos y elegí la alternativa que mejor se adapte a tu proyecto." : "Tarifas por canción para proyectos de 4 canciones o más, expresadas en " + (isUsd ? "dólares (USD)." : "pesos argentinos (ARS).")}
           />
 
           <div className="grid gap-4 md:grid-cols-2 md:gap-5">
@@ -456,13 +462,10 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                     </span>
                   </div>
                   <div className="min-w-0 text-right">
-                    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8d7953] sm:text-[10px]">{isFran ? "Precio promocional" : "ARS · por canción"}</p>
+                    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8d7953] sm:text-[10px]">{isFran ? "Precio promocional" : (isUsd ? "USD · por canción" : "ARS · por canción")}</p>
                     <p className="text-[27px] font-black leading-none tracking-[-0.045em] text-[#98701f] tabular-nums transition-colors duration-300 group-hover:text-[#795518] sm:text-[34px]">
-                      {money(pack.price)}
+                      {priceText(pack.price, pack.usdPrice)}
                     </p>
-                    {!isFran && pack.usdPrice != null && (
-                      <p className="mt-1 text-[12px] font-semibold text-[#74664d]">USD {pack.usdPrice}</p>
-                    )}
                     {pack.installments > 1 && (
                       <p className="mt-2 text-[12px] font-medium text-[#6d685e] tabular-nums">
                         {pack.installments} pagos de {money(pack.price / pack.installments)}
@@ -487,7 +490,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 </ul>
                 {whatsappHref && (
                   <a
-                    href={whatsappLink(isFran ? "Hola " + firstName + ", quiero contratar el paquete " + pack.name + " de producción musical." : "Hola " + firstName + ", quiero consultar por el servicio de " + pack.name + " para un proyecto de 4 canciones o más.")}
+                    href={whatsappLink(isFran ? "Hola " + firstName + ", quiero contratar el paquete " + pack.name + " de producción musical." : "Hola " + firstName + ", quiero consultar por el servicio de " + pack.name + " para un proyecto de 4 canciones o más, con precio en " + (isUsd ? "USD" : "pesos argentinos") + ".")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-6 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#d5bb84] px-4 py-2 text-xs font-bold text-[#8e6b2a] transition-[color,background-color,border-color] duration-200 hover:border-[#b99a56] hover:bg-[#f5ecd8] hover:text-[#60430f]"
@@ -506,7 +509,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
             number={sectionNumber(servicesNumber)}
             eyebrow={isFran ? "Precios detallados" : "Servicios de audio"}
             title="Servicios individuales"
-            description={isFran ? "Cada etapa del proceso, con su descripción y su valor por separado." : "Cada canción necesita decisiones propias. Elegí cómo querés trabajar tu proyecto."}
+            description={isFran ? "Cada etapa del proceso, con su descripción y su valor por separado." : "Valores por canción en " + (isUsd ? "dólares (USD)." : "pesos argentinos (ARS).") + " Cada canción necesita decisiones propias."}
           />
           <div className="overflow-hidden rounded-[24px] border border-[#242019]/10 bg-white md:overflow-visible">
             <div className="hidden grid-cols-[minmax(0,1.15fr)_minmax(0,2.3fr)_minmax(125px,0.8fr)] gap-5 rounded-t-[23px] bg-[#191918] px-7 py-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/75 md:grid">
@@ -527,7 +530,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                     <h3 className="text-[16px] font-bold leading-6 text-[#20201d] transition-colors duration-300 group-hover:text-[#986c22]">
                       {whatsappHref ? (
                         <a
-                          href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + ".")}
+                          href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + (isFran ? "." : ", con precio en " + (isUsd ? "USD" : "pesos argentinos") + "."))}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#986c22]"
@@ -539,8 +542,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                     </h3>
                   </div>
                   <div className="shrink-0 text-right md:hidden">
-                    <p className="font-bold tabular-nums text-[#916822]">{displayServicePrice(service.price)}</p>
-                    {!isFran && service.usdPrice != null && <p className="text-xs font-medium text-[#75654a]">USD {service.usdPrice}</p>}
+                    <p className="font-bold tabular-nums text-[#916822]">{priceText(service.price, service.usdPrice)}</p>
                   </div>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[#69645d] transition-colors duration-300 group-hover:text-[#35322e] md:mt-0">
@@ -549,14 +551,11 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 </p>
                 <div className="hidden text-right md:block">
                   <p className="text-[16px] font-bold tabular-nums text-[#916822]">
-                    {displayServicePrice(service.price)}
+                    {priceText(service.price, service.usdPrice)}
                   </p>
-                  {!isFran && service.usdPrice != null && (
-                    <p className="mt-1 text-[12px] font-medium text-[#75654a]">USD {service.usdPrice}</p>
-                  )}
                   {whatsappHref && (
                     <a
-                      href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + ".")}
+                      href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + (isFran ? "." : ", con precio en " + (isUsd ? "USD" : "pesos argentinos") + "."))}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#8e6b2a] underline-offset-4 hover:text-[#684c1c] hover:underline"
@@ -567,7 +566,7 @@ export function BudgetPresentation({ data, title, clientName, producer = "fran",
                 </div>
                 {whatsappHref && (
                   <a
-                    href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + ".")}
+                    href={whatsappLink("Hola " + firstName + ", quiero contratar el servicio de " + service.label + (isFran ? "." : ", con precio en " + (isUsd ? "USD" : "pesos argentinos") + "."))}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[#8e6b2a] underline-offset-4 hover:underline md:hidden"
