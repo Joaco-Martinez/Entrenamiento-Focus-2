@@ -465,3 +465,105 @@ model BudgetProposal {
   @@index([producer, updatedAt])
   @@index([updatedAt])
 }
+
+
+enum ClothingCategory {
+  TSHIRT
+  HOODIE
+  CHOMBA
+  OTHER
+}
+
+enum ClothingSize {
+  S
+  M
+  L
+  XL
+  XXL @map("2XL")
+  XXXL @map("3XL")
+  ONE_SIZE
+}
+
+enum ClothingOrderStatus {
+  ORDER_RECEIVED
+  ORDERED_TO_SUPPLIER
+  FOLLOW_UP_SENT
+  DISPATCHED
+  FINISHED
+  RETURNING
+  WAITING_YURI
+  PAYMENT_RECEIVED
+  CANCELLED
+}
+
+model ClothingProduct {
+  id                     String           @id @default(uuid())
+  name                   String           @unique
+  category               ClothingCategory
+  trackStock             Boolean          @default(true)
+  active                 Boolean          @default(true)
+  defaultUnitPrice       Int              @default(0)
+  defaultUnitDtfCost     Int              @default(0)
+  defaultUnitGarmentCost Int              @default(0)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  items ClothingOrderItem[]
+
+  @@index([active, category])
+}
+
+model ClothingOrder {
+  id             String              @id @default(uuid())
+  clientName     String
+  source         String              @default("")
+  status         ClothingOrderStatus @default(ORDER_RECEIVED)
+  receivedAmount Int                 @default(0)
+  extraExpenses  Int                 @default(0)
+  orderDate      DateTime            @default(now())
+  expectedDate   DateTime?
+  deliveredAt    DateTime?
+  notes          String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  items ClothingOrderItem[]
+
+  @@index([orderDate])
+  @@index([status])
+  @@index([clientName])
+}
+
+model ClothingOrderItem {
+  id              String           @id @default(uuid())
+  orderId         String
+  order           ClothingOrder    @relation(fields: [orderId], references: [id], onDelete: NoAction)
+  productId       String?
+  product         ClothingProduct? @relation(fields: [productId], references: [id], onDelete: NoAction)
+  productName     String
+  category        ClothingCategory
+  size            ClothingSize?
+  quantity        Int              @default(1)
+  unitPrice       Int              @default(0)
+  unitDtfCost     Int              @default(0)
+  unitGarmentCost Int              @default(0)
+  trackStock      Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([category, size])
+}
+
+model ClothingStock {
+  id           String           @id @default(uuid())
+  category     ClothingCategory
+  size         ClothingSize
+  initialQty   Int              @default(0)
+  restockedQty Int              @default(0)
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([category, size])
+}
