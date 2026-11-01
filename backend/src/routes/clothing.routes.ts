@@ -100,7 +100,7 @@ clothingRoutes.get("/", asyncHandler(async (_req, res) => {
   const [orders, products, stock] = await Promise.all([
     prisma.clothingOrder.findMany({
       orderBy: [{ orderDate: "desc" }, { createdAt: "desc" }],
-      include: includeItems, take: 500,
+      include: includeItems,
     }),
     prisma.clothingProduct.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { name: "asc" }] }),
     stockSnapshot(),
@@ -126,7 +126,7 @@ clothingRoutes.get("/", asyncHandler(async (_req, res) => {
     stats: {
       orders: active.length, units, totalSales, receivedAmount: received,
       totalCost, profit: received - totalCost,
-      pending: active.filter((o) => ![ClothingOrderStatus.FINISHED, ClothingOrderStatus.DISPATCHED].includes(o.status)).length,
+      pending: active.filter((o) => o.status !== ClothingOrderStatus.FINISHED && o.status !== ClothingOrderStatus.DISPATCHED).length,
     },
     productSales: Array.from(productMap, ([name, quantity]) => ({ name, quantity })).sort((a, b) => b.quantity - a.quantity),
     monthlyProfit: Array.from(monthMap, ([month, profit]) => ({ month, profit })).sort((a, b) => a.month.localeCompare(b.month)),

@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { AlertTriangle, Check, Loader2, Plus, RefreshCw, Search, Shirt, X } from "lucide-react";
 import {
   clothingService,
@@ -79,6 +80,7 @@ export default function BaseSoberanaClothingPage() {
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState<Draft>(newDraft);
   const [stockValues, setStockValues] = useState<Record<string, { initialQty: number; restockedQty: number }>>({});
+  const [paymentValues, setPaymentValues] = useState<Record<string, number>>({});
   const [productDraft, setProductDraft] = useState({
     name: "", category: "TSHIRT" as ClothingCategory, trackStock: true,
     defaultUnitPrice: 0, defaultUnitDtfCost: 3000, defaultUnitGarmentCost: 6800,
@@ -90,6 +92,7 @@ export default function BaseSoberanaClothingPage() {
     try {
       const result = await clothingService.dashboard();
       setData(result);
+      setPaymentValues(Object.fromEntries(result.orders.map((order) => [order.id, order.receivedAmount])));
       setStockValues(Object.fromEntries(result.stock.map((row) => [
         row.category + ":" + row.size,
         { initialQty: row.initialQty, restockedQty: row.restockedQty },
@@ -171,6 +174,21 @@ export default function BaseSoberanaClothingPage() {
       await load();
     } catch (err: any) {
       setError(err?.message || "No se pudo actualizar el pedido.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function savePayment(order: ClothingOrder) {
+    const receivedAmount = paymentValues[order.id] ?? order.receivedAmount;
+    setSaving(true);
+    setError("");
+    try {
+      await clothingService.updateOrder(order.id, { receivedAmount });
+      setMessage("Cobro actualizado.");
+      await load();
+    } catch (err: any) {
+      setError(err?.message || "No se pudo actualizar el cobro.");
     } finally {
       setSaving(false);
     }
@@ -290,6 +308,10 @@ export default function BaseSoberanaClothingPage() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><h3 className="font-bold">{order.clientName}</h3><p className="mt-1 text-xs text-white/45">{new Date(order.orderDate).toLocaleDateString("es-AR")} · {order.source || "Origen no indicado"}</p></div><select value={order.status} onChange={(e) => updateStatus(order, e.target.value as ClothingStatus)} className={field + " sm:w-56"}>{statusOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
             <div className="mt-3 space-y-1">{order.items.map((item) => <p key={item.id} className="text-sm text-white/70">{item.productName} · {item.size || "Sin talle"} · ×{item.quantity}</p>)}</div>
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/[0.07] pt-3 text-xs"><div><p className="text-white/40">Recibido</p><p className="mt-1 font-bold">{money(order.receivedAmount)}</p></div><div><p className="text-white/40">Costos</p><p className="mt-1 font-bold">{money(cost(order))}</p></div><div><p className="text-white/40">Resultado</p><p className="mt-1 font-bold">{money(order.receivedAmount - cost(order))}</p></div></div>
+            <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.07] pt-3 sm:flex-row sm:items-end">
+              <Field label="Actualizar dinero recibido ($)"><input type="number" min="0" value={paymentValues[order.id] ?? order.receivedAmount} onChange={(e) => setPaymentValues((old) => ({ ...old, [order.id]: Number(e.target.value) }))} className={field} /></Field>
+              <button onClick={() => savePayment(order)} disabled={saving} className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-semibold text-white/75 hover:bg-white/5 disabled:opacity-50">Guardar cobro</button>
+            </div>
           </article>)}
           {!orders.length && <p className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-white/40">No hay pedidos para mostrar.</p>}
         </section>}
