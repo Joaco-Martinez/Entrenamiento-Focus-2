@@ -537,7 +537,7 @@ model ClothingOrder {
 model ClothingOrderItem {
   id              String           @id @default(uuid())
   orderId         String
-  order           ClothingOrder    @relation(fields: [orderId], references: [id], onDelete: NoAction)
+  order           ClothingOrder    @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   productId       String?
   product         ClothingProduct? @relation(fields: [productId], references: [id], onDelete: NoAction)
   productName     String
