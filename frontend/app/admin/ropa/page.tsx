@@ -355,14 +355,35 @@ export default function BaseSoberanaClothingPage() {
       {error && <div className="rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-sm text-red-200"><AlertTriangle className="mr-2 inline h-4 w-4" />{error}</div>}
       {message && <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-sm text-emerald-200"><Check className="mr-2 inline h-4 w-4" />{message}</div>}
       {loading && !data ? <div className="flex items-center gap-2 py-12 text-sm text-white/50"><Loader2 className="h-5 w-5 animate-spin" />Cargando...</div> : data && <>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Stat label="Pedidos activos" value={data.stats.orders.toString()} />
+          <Stat label="Pedidos pendientes" value={data.stats.pending.toString()} />
+          <Stat label="Pedidos entregados" value={data.stats.delivered.toString()} />
           <Stat label="Unidades despachadas" value={data.stats.units.toString()} />
           <Stat label="Ventas registradas" value={money(data.stats.totalSales)} />
           <Stat label="Dinero cobrado" value={money(data.stats.receivedAmount)} />
           <Stat label="Costos registrados" value={money(data.stats.totalCost)} />
           <Stat label="Ganancia estimada" value={money(data.stats.profit)} />
-          <Stat label="Saldo pendiente de cobro" value={money(data.stats.balanceDue)} />
+          <Stat label="Saldo pendiente" value={money(data.stats.balanceDue)} />
+          <Stat label="Stock neto total" value={data.stats.stockAvailable.toString()} />
+        </div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <h2 className="font-bold">Diseños más vendidos</h2>
+            <p className="mt-1 text-xs text-white/45">Unidades de pedidos despachados, en devolución o finalizados.</p>
+            <div className="mt-4 space-y-3">
+              {data.productSales.slice(0, 6).map((item, index) => <div key={item.name} className="flex items-center justify-between gap-3 text-sm"><span className="min-w-0 truncate text-white/75">{index + 1}. {item.name}</span><b className="shrink-0">{item.quantity} u.</b></div>)}
+              {!data.productSales.length && <p className="text-xs text-white/40">Todavía no hay unidades despachadas.</p>}
+            </div>
+          </section>
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <h2 className="font-bold">Resumen mensual</h2>
+            <p className="mt-1 text-xs text-white/45">Ventas, cobros, costos y resultado por fecha del pedido.</p>
+            <div className="mt-4 space-y-3">
+              {data.monthlySummary.slice(-6).map((item) => <div key={item.month} className="rounded-xl border border-white/[0.07] bg-black/20 p-3"><div className="flex items-center justify-between gap-3"><b className="capitalize">{new Date(item.month + "-01T12:00:00").toLocaleDateString("es-AR", { month: "long", year: "numeric" })}</b><b className={item.profit < 0 ? "text-red-300" : "text-emerald-300"}>{money(item.profit)}</b></div><div className="mt-2 grid grid-cols-3 gap-2 text-xs"><div><span className="text-white/40">Ventas</span><p className="mt-1">{money(item.sales)}</p></div><div><span className="text-white/40">Cobrado</span><p className="mt-1">{money(item.received)}</p></div><div><span className="text-white/40">Costos</span><p className="mt-1">{money(item.cost)}</p></div></div></div>)}
+              {!data.monthlySummary.length && <p className="text-xs text-white/40">Todavía no hay movimientos mensuales.</p>}
+            </div>
+          </section>
         </div>
         <div className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-black/30 p-2">
           {([["orders", "Pedidos"], ["stock", "Stock y talles"], ["products", "Productos"]] as [Tab, string][]).map(([value, label]) =>
