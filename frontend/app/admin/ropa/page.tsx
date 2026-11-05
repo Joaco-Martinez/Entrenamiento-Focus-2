@@ -60,7 +60,7 @@ function newDraft(): Draft {
 }
 function cost(order: ClothingOrder) {
   return order.extraExpenses + order.items.reduce((sum, item) =>
-    sum + item.unitDtfCost + item.unitGarmentCost, 0);
+    sum + item.quantity * (item.unitDtfCost + item.unitGarmentCost), 0);
 }
 function sales(order: ClothingOrder) {
   return order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -424,8 +424,8 @@ export default function BaseSoberanaClothingPage() {
                 <Field label="Talle"><select disabled={editingOrderItemsLocked} value={item.size} onChange={(e) => changeItem(index, { size: e.target.value as ClothingSize | "" })} className={field}><option value="">No aplica</option>{sizeOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></Field>
                 <Field label="Cantidad"><input disabled={editingOrderItemsLocked} type="number" min="1" value={item.quantity} onChange={(e) => changeItem(index, { quantity: Math.max(1, Number(e.target.value)) })} className={field} /></Field>
                 <Field label="Precio unitario"><input disabled={editingOrderItemsLocked} type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => changeItem(index, { unitPrice: Number(e.target.value) })} className={field} /></Field>
-                <Field label="Costo total DTF"><input disabled={editingOrderItemsLocked} type="number" min="0" step="0.01" value={item.unitDtfCost} onChange={(e) => changeItem(index, { unitDtfCost: Number(e.target.value) })} className={field} /></Field>
-                <Field label="Costo total de prendas"><input disabled={editingOrderItemsLocked} type="number" min="0" step="0.01" value={item.unitGarmentCost} onChange={(e) => changeItem(index, { unitGarmentCost: Number(e.target.value) })} className={field} /></Field>
+                <Field label="Costo DTF por unidad"><input disabled={editingOrderItemsLocked} type="number" min="0" step="0.01" value={item.unitDtfCost} onChange={(e) => changeItem(index, { unitDtfCost: Number(e.target.value) })} className={field} /></Field>
+                <Field label="Costo de prenda por unidad"><input disabled={editingOrderItemsLocked} type="number" min="0" step="0.01" value={item.unitGarmentCost} onChange={(e) => changeItem(index, { unitGarmentCost: Number(e.target.value) })} className={field} /></Field>
                 <div className="flex items-center justify-between sm:col-span-2 xl:col-span-6"><label className="text-xs text-white/55"><input type="checkbox" disabled={editingOrderItemsLocked} checked={item.trackStock} onChange={(e) => changeItem(index, { trackStock: e.target.checked })} className="mr-2" />Descontar del stock</label><button type="button" disabled={editingOrderItemsLocked} onClick={() => setDraft({ ...draft, items: draft.items.filter((_, i) => i !== index) })} className="text-xs text-red-300 disabled:opacity-40">Quitar</button></div>
               </div>)}
               {!draft.items.length && <p className="rounded-xl border border-dashed border-white/10 p-4 text-center text-xs text-white/40">Agregá una o más prendas al pedido.</p>}
