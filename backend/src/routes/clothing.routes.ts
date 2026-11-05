@@ -249,16 +249,27 @@ clothingRoutes.get("/", asyncHandler(async (_req, res) => {
   );
 
   const productMap = new Map<string, number>();
-  const monthMap = new Map<string, number>();
+  const monthMap = new Map<string, { sales: number; cost: number; received: number }>();
   for (const order of activeOrders) {
     const month = new Date(order.orderDate).toISOString().slice(0, 7);
-    monthMap.set(month, (monthMap.get(month) || 0) + salesForOrder(order) - costsForOrder(order));
+    const current = monthMap.get(month) || { sales: 0, cost: 0, received: 0 };
+    current.sales += salesForOrder(order);
+    current.cost += costsForOrder(order);
+    current.received += order.receivedAmount;
+    monthMap.set(month, current);
   }
   for (const order of soldOrders) {
     for (const item of order.items) {
       productMap.set(item.productName, (productMap.get(item.productName) || 0) + item.quantity);
     }
   }
+  const monthlySummary = Array.from(monthMap, ([month, values]) => ({
+    month,
+    sales: values.sales,
+    cost: values.cost,
+    received: values.received,
+    profit: values.sales - values.cost,
+  })).sort((a, b) => a.month.localeCompare(b.month));
 
   res.json({
     orders,
@@ -273,6 +284,8 @@ clothingRoutes.get("/", asyncHandler(async (_req, res) => {
       totalCost,
       profit: totalSales - totalCost,
       balanceDue: totalSales - receivedAmount,
+      delivered: activeOrders.filter((order) => order.status === ClothingOrderStatus.FINISHED).length,
+      stockAvailable: stockResult.rows.reduce((sum, row) => sum + row.available, 0),
       pending: activeOrders.filter(
         (order) => !soldStatuses.includes(order.status)
       ).length,
@@ -280,9 +293,8 @@ clothingRoutes.get("/", asyncHandler(async (_req, res) => {
     productSales: Array.from(productMap, ([name, quantity]) => ({ name, quantity })).sort(
       (a, b) => b.quantity - a.quantity
     ),
-    monthlyProfit: Array.from(monthMap, ([month, profit]) => ({ month, profit })).sort(
-      (a, b) => a.month.localeCompare(b.month)
-    ),
+    monthlySummary,
+    monthlyProfit: monthlySummary.map(({ month, profit }) => ({ month, profit })),
   });
 }));
 
