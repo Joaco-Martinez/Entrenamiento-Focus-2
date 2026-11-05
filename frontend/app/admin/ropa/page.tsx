@@ -97,6 +97,7 @@ export default function BaseSoberanaClothingPage() {
   const [dateTo, setDateTo] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [editingOrderItemsLocked, setEditingOrderItemsLocked] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(newDraft);
   const [stockValues, setStockValues] = useState<Record<string, { initialQty: number; restockedQty: number }>>({});
@@ -132,6 +133,7 @@ export default function BaseSoberanaClothingPage() {
   useEffect(() => { load(); }, []);
 
   function addItem() {
+    if (editingOrderItemsLocked) return;
     const product = data?.products.find((item) => item.active);
     if (!product) return;
     setDraft((current) => ({
@@ -173,15 +175,20 @@ export default function BaseSoberanaClothingPage() {
     setError("");
     setMessage("");
     try {
+      const { items: draftItems, ...orderFields } = draft;
       const payload = {
-        ...draft, orderDate: dateValue(draft.orderDate),
+        ...orderFields,
+        orderDate: dateValue(draft.orderDate),
         expectedDate: dateValue(draft.expectedDate),
-        items: draft.items.map((item) => ({ ...item, size: item.size || null })),
+        ...(editingOrderId && editingOrderItemsLocked ? {} : {
+          items: draftItems.map((item) => ({ ...item, size: item.size || null })),
+        }),
       };
       if (editingOrderId) await clothingService.updateOrder(editingOrderId, payload);
       else await clothingService.createOrder(payload);
       setDraft(newDraft());
       setEditingOrderId(null);
+      setEditingOrderItemsLocked(false);
       setShowForm(false);
       setMessage(editingOrderId ? "Pedido actualizado correctamente." : "Pedido guardado correctamente.");
       await load();
@@ -193,10 +200,7 @@ export default function BaseSoberanaClothingPage() {
   }
 
   function startEditOrder(order: ClothingOrder) {
-    if (isSoldStatus(order.status)) {
-      setError("Para cambiar las prendas de un pedido despachado o finalizado, primero revisá el stock.");
-      return;
-    }
+    setEditingOrderItemsLocked(isSoldStatus(order.status));
     setDraft({
       clientName: order.clientName, source: order.source, status: order.status,
       orderDate: new Date(order.orderDate).toISOString().slice(0, 10),
@@ -343,7 +347,7 @@ export default function BaseSoberanaClothingPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={load} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-white/75 hover:bg-white/5"><RefreshCw className="h-4 w-4" />Actualizar</button>
-            <button onClick={() => { setTab("orders"); setEditingOrderId(null); setDraft(newDraft()); setShowForm(true); }} className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-3 text-sm font-bold text-black hover:bg-yellow-300"><Plus className="h-4 w-4" />Nuevo pedido</button>
+            <button onClick={() => { setTab("orders"); setEditingOrderId(null); setEditingOrderItemsLocked(false); setDraft(newDraft()); setShowForm(true); }} className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-3 text-sm font-bold text-black hover:bg-yellow-300"><Plus className="h-4 w-4" />Nuevo pedido</button>
           </div>
         </div>
       </header>
@@ -379,27 +383,28 @@ export default function BaseSoberanaClothingPage() {
           </div>
 
           {showForm && <form onSubmit={createOrder} className="space-y-4 rounded-3xl border border-yellow-400/20 bg-yellow-400/[0.04] p-5">
-            <div className="flex items-center justify-between"><h2 className="font-bold">{editingOrderId ? "Editar pedido" : "Nuevo pedido"}</h2><button type="button" onClick={() => { setShowForm(false); setEditingOrderId(null); }}><X className="h-5 w-5 text-white/50" /></button></div>
+            <div className="flex items-center justify-between"><h2 className="font-bold">{editingOrderId ? "Editar pedido" : "Nuevo pedido"}</h2><button type="button" onClick={() => { setShowForm(false); setEditingOrderId(null); setEditingOrderItemsLocked(false); }}><X className="h-5 w-5 text-white/50" /></button></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <Field label="Cliente"><input required value={draft.clientName} onChange={(e) => setDraft({ ...draft, clientName: e.target.value })} className={field} placeholder="Nombre del cliente" /></Field>
               <Field label="Origen"><select value={draft.source} onChange={(e) => setDraft({ ...draft, source: e.target.value })} className={field}>{channels.map((v) => <option key={v}>{v}</option>)}</select></Field>
-              <Field label="Estado"><select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value as ClothingStatus })} className={field}>{statusOptions.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}</select></Field>
+              <Field label="Estado"><select disabled={editingOrderItemsLocked} value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value as ClothingStatus })} className={field}>{statusOptions.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}</select></Field>
               <Field label="Fecha de ingreso"><input type="date" value={draft.orderDate} onChange={(e) => setDraft({ ...draft, orderDate: e.target.value })} className={field} /></Field>
               <Field label="Fecha estimada"><input type="date" value={draft.expectedDate} onChange={(e) => setDraft({ ...draft, expectedDate: e.target.value })} className={field} /></Field>
-              <Field label="Dinero recibido ($)"><input type="number" min="0" value={draft.receivedAmount} onChange={(e) => setDraft({ ...draft, receivedAmount: Number(e.target.value) })} className={field} /></Field>
-              <Field label="Gastos adicionales ($)"><input type="number" min="0" value={draft.extraExpenses} onChange={(e) => setDraft({ ...draft, extraExpenses: Number(e.target.value) })} className={field} /></Field>
+              <Field label="Dinero recibido ($)"><input type="number" min="0" step="0.01" value={draft.receivedAmount} onChange={(e) => setDraft({ ...draft, receivedAmount: Number(e.target.value) })} className={field} /></Field>
+              <Field label="Gastos adicionales ($)"><input type="number" min="0" step="0.01" value={draft.extraExpenses} onChange={(e) => setDraft({ ...draft, extraExpenses: Number(e.target.value) })} className={field} /></Field>
               <Field label="Notas"><input value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className={field} /></Field>
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between"><h3 className="text-sm font-bold">Prendas y talles</h3><button type="button" onClick={addItem} className="rounded-lg border border-yellow-400/20 px-3 py-2 text-xs font-semibold text-yellow-200"><Plus className="mr-1 inline h-3.5 w-3.5" />Agregar producto</button></div>
+              {editingOrderItemsLocked && <p className="rounded-xl border border-yellow-400/20 bg-yellow-400/[0.06] p-3 text-xs text-yellow-100/80">Este pedido ya fue despachado o finalizado. Podés corregir sus datos y cobros, pero las prendas quedan bloqueadas para no alterar el stock automáticamente.</p>}
+              <div className="flex items-center justify-between"><h3 className="text-sm font-bold">Prendas y talles</h3><button type="button" disabled={editingOrderItemsLocked} onClick={addItem} className="rounded-lg border border-yellow-400/20 px-3 py-2 text-xs font-semibold text-yellow-200 disabled:opacity-40"><Plus className="mr-1 inline h-3.5 w-3.5" />Agregar producto</button></div>
               {draft.items.map((item, index) => <div key={index} className="grid gap-2 rounded-2xl border border-white/10 bg-black/30 p-3 sm:grid-cols-2 xl:grid-cols-6">
-                <Field label="Producto"><select value={item.productId} onChange={(e) => chooseProduct(index, e.target.value)} className={field}>{data.products.filter((p) => p.active).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
-                <Field label="Talle"><select value={item.size} onChange={(e) => changeItem(index, { size: e.target.value as ClothingSize | "" })} className={field}><option value="">No aplica</option>{sizeOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></Field>
-                <Field label="Cantidad"><input type="number" min="1" value={item.quantity} onChange={(e) => changeItem(index, { quantity: Math.max(1, Number(e.target.value)) })} className={field} /></Field>
-                <Field label="Precio unitario"><input type="number" min="0" value={item.unitPrice} onChange={(e) => changeItem(index, { unitPrice: Number(e.target.value) })} className={field} /></Field>
-                <Field label="Costo DTF"><input type="number" min="0" value={item.unitDtfCost} onChange={(e) => changeItem(index, { unitDtfCost: Number(e.target.value) })} className={field} /></Field>
-                <Field label="Costo prenda"><input type="number" min="0" value={item.unitGarmentCost} onChange={(e) => changeItem(index, { unitGarmentCost: Number(e.target.value) })} className={field} /></Field>
-                <div className="flex items-center justify-between sm:col-span-2 xl:col-span-6"><label className="text-xs text-white/55"><input type="checkbox" checked={item.trackStock} onChange={(e) => changeItem(index, { trackStock: e.target.checked })} className="mr-2" />Descontar del stock</label><button type="button" onClick={() => setDraft({ ...draft, items: draft.items.filter((_, i) => i !== index) })} className="text-xs text-red-300">Quitar</button></div>
+                <Field label="Producto"><select disabled={editingOrderItemsLocked} value={item.productId} onChange={(e) => chooseProduct(index, e.target.value)} className={field}>{data.products.filter((p) => p.active || p.id === item.productId).map((p) => <option key={p.id} value={p.id}>{p.name}{p.active ? "" : " (desactivado)"}</option>)}</select></Field>
+                <Field label="Talle"><select disabled={editingOrderItemsLocked} value={item.size} onChange={(e) => changeItem(index, { size: e.target.value as ClothingSize | "" })} className={field}><option value="">No aplica</option>{sizeOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></Field>
+                <Field label="Cantidad"><input disabled={editingOrderItemsLocked} type="number" min="1" value={item.quantity} onChange={(e) => changeItem(index, { quantity: Math.max(1, Number(e.target.value)) })} className={field} /></Field>
+                <Field label="Precio unitario"><input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => changeItem(index, { unitPrice: Number(e.target.value) })} className={field} /></Field>
+                <Field label="Costo DTF"><input type="number" min="0" step="0.01" value={item.unitDtfCost} onChange={(e) => changeItem(index, { unitDtfCost: Number(e.target.value) })} className={field} /></Field>
+                <Field label="Costo prenda"><input type="number" min="0" step="0.01" value={item.unitGarmentCost} onChange={(e) => changeItem(index, { unitGarmentCost: Number(e.target.value) })} className={field} /></Field>
+                <div className="flex items-center justify-between sm:col-span-2 xl:col-span-6"><label className="text-xs text-white/55"><input type="checkbox" disabled={editingOrderItemsLocked} checked={item.trackStock} onChange={(e) => changeItem(index, { trackStock: e.target.checked })} className="mr-2" />Descontar del stock</label><button type="button" disabled={editingOrderItemsLocked} onClick={() => setDraft({ ...draft, items: draft.items.filter((_, i) => i !== index) })} className="text-xs text-red-300 disabled:opacity-40">Quitar</button></div>
               </div>)}
               {!draft.items.length && <p className="rounded-xl border border-dashed border-white/10 p-4 text-center text-xs text-white/40">Agregá una o más prendas al pedido.</p>}
             </div>
@@ -407,7 +412,7 @@ export default function BaseSoberanaClothingPage() {
           </form>}
 
           {orders.map((order) => <article key={order.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><h3 className="font-bold">{order.clientName}</h3><p className="mt-1 text-xs text-white/45">{new Date(order.orderDate).toLocaleDateString("es-AR")} · {order.source || "Origen no indicado"}</p><span className={"mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold " + statusTone(order.status)}>{statusLabel(order.status)}</span></div><div className="flex flex-col gap-2 sm:w-56"><select value={order.status} onChange={(e) => updateStatus(order, e.target.value as ClothingStatus)} className={field}>{statusOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select>{!isSoldStatus(order.status) && <button onClick={() => startEditOrder(order)} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5">Editar pedido</button>}</div></div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><h3 className="font-bold">{order.clientName}</h3><p className="mt-1 text-xs text-white/45">{new Date(order.orderDate).toLocaleDateString("es-AR")} · {order.source || "Origen no indicado"}</p><span className={"mt-2 inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold " + statusTone(order.status)}>{statusLabel(order.status)}</span></div><div className="flex flex-col gap-2 sm:w-56"><select value={order.status} onChange={(e) => updateStatus(order, e.target.value as ClothingStatus)} className={field}>{statusOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select><button onClick={() => startEditOrder(order)} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/70 hover:bg-white/5">Editar pedido</button></div></div>
             <div className="mt-3 space-y-1">{order.items.map((item) => <p key={item.id} className="text-sm text-white/70">{item.productName} · {item.size || "Sin talle"} · ×{item.quantity}</p>)}</div>
             <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/[0.07] pt-3 text-xs sm:grid-cols-4"><div><p className="text-white/40">Venta</p><p className="mt-1 font-bold">{money(sales(order))}</p></div><div><p className="text-white/40">Cobrado</p><p className="mt-1 font-bold">{money(order.receivedAmount)}</p></div><div><p className="text-white/40">Costos</p><p className="mt-1 font-bold">{money(cost(order))}</p></div><div><p className="text-white/40">Ganancia estimada</p><p className="mt-1 font-bold">{money(sales(order) - cost(order))}</p></div></div>
             <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.07] pt-3 sm:flex-row sm:items-end">
