@@ -139,16 +139,14 @@ async function ensureProducts() {
 }
 
 async function stockSnapshot() {
-  const [rows, orders, movements] = await Promise.all([
+  const [rows, orders, allMovements, recentMovements] = await Promise.all([
     prisma.clothingStock.findMany(),
     prisma.clothingOrder.findMany({
       where: { status: { not: ClothingOrderStatus.CANCELLED } },
       include: { items: true },
     }),
-    prisma.clothingStockMovement.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
+    prisma.clothingStockMovement.findMany(),
+    prisma.clothingStockMovement.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
   ]);
 
   const saved = new Map(rows.map((row) => [row.category + ":" + row.size, row]));
@@ -166,7 +164,7 @@ async function stockSnapshot() {
     }
   }
 
-  for (const movement of movements) {
+  for (const movement of allMovements) {
     const key = movement.category + ":" + movement.size;
     const delta =
       movement.type === ClothingStockMovementType.IN
@@ -198,7 +196,7 @@ async function stockSnapshot() {
         };
       })
     ),
-    movements,
+    movements: recentMovements,
   };
 }
 
@@ -369,6 +367,9 @@ clothingRoutes.patch("/orders/:id", asyncHandler(async (req, res) => {
 
   const hasItems = body.items !== undefined;
   const nextStatus = data.status || existing.status;
+  if (soldStatuses.includes(existing.status) && !soldStatuses.includes(nextStatus)) {
+    throw new ApiError(409, "Un pedido despachado o finalizado no puede volver a un estado anterior. Si hubo una devolución, registrá el ingreso correspondiente en el stock.");
+  }
   if (hasItems && soldStatuses.includes(nextStatus)) {
     throw new ApiError(
       409,
