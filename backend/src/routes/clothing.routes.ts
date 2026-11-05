@@ -17,7 +17,7 @@ const categories = Object.values(ClothingCategory);
 const sizes = Object.values(ClothingSize);
 const statuses = Object.values(ClothingOrderStatus);
 const movementTypes = Object.values(ClothingStockMovementType);
-const soldStatuses = [ClothingOrderStatus.DISPATCHED, ClothingOrderStatus.FINISHED];
+const soldStatuses: ClothingOrderStatus[] = [ClothingOrderStatus.DISPATCHED, ClothingOrderStatus.FINISHED];
 const includeItems = { items: { orderBy: { createdAt: "asc" as const } } };
 
 const defaults = [
