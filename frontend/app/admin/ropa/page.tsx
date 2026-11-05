@@ -48,7 +48,7 @@ const sizeOptions: { value: ClothingSize; label: string }[] = [
   { value: "XL", label: "XL" }, { value: "XXL", label: "2XL" },
   { value: "XXXL", label: "3XL" }, { value: "ONE_SIZE", label: "Único" },
 ];
-const channels = ["Wsp", "Tienda Nube", "Tiktok", "Instagram", "YouTube", "Otro"];
+const channels = ["Wsp", "Tienda Nube", "TikTok", "Instagram", "YouTube", "Otro"];
 const field = "w-full rounded-xl border border-white/10 bg-[#111] px-3 py-2.5 text-sm text-white outline-none focus:border-yellow-400/50";
 const today = new Date().toISOString().slice(0, 10);
 
@@ -70,6 +70,7 @@ function isSoldStatus(status: ClothingStatus) {
 }
 function statusTone(status: ClothingStatus) {
   if (status === "DISPATCHED" || status === "FINISHED") return "border-emerald-400/25 bg-emerald-400/10 text-emerald-200";
+  if (status === "RETURNING") return "border-orange-400/25 bg-orange-400/10 text-orange-200";
   if (status === "CANCELLED") return "border-red-400/25 bg-red-400/10 text-red-200";
   if (status === "PAYMENT_RECEIVED") return "border-yellow-400/25 bg-yellow-400/10 text-yellow-200";
   return "border-white/10 bg-white/[0.04] text-white/65";
