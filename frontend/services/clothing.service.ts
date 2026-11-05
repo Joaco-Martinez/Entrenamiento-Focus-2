@@ -75,9 +75,12 @@ export type ClothingDashboard = {
     profit: number;
     balanceDue: number;
     pending: number;
+    delivered: number;
+    stockAvailable: number;
   };
   productSales: { name: string; quantity: number }[];
   monthlyProfit: { month: string; profit: number }[];
+  monthlySummary: { month: string; sales: number; cost: number; received: number; profit: number }[];
   movements: ClothingStockMovement[];
 };
 
