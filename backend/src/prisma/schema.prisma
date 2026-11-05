@@ -475,6 +475,8 @@ enum ClothingCategory {
 }
 
 enum ClothingSize {
+  SIZE_1 @map("1")
+  SIZE_2 @map("2")
   S
   M
   L
@@ -482,6 +484,12 @@ enum ClothingSize {
   XXL @map("2XL")
   XXXL @map("3XL")
   ONE_SIZE
+}
+
+enum ClothingStockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
 }
 
 enum ClothingOrderStatus {
@@ -502,9 +510,9 @@ model ClothingProduct {
   category               ClothingCategory
   trackStock             Boolean          @default(true)
   active                 Boolean          @default(true)
-  defaultUnitPrice       Int              @default(0)
-  defaultUnitDtfCost     Int              @default(0)
-  defaultUnitGarmentCost Int              @default(0)
+  defaultUnitPrice       Decimal          @default(0) @db.Decimal(14, 2)
+  defaultUnitDtfCost     Decimal          @default(0) @db.Decimal(14, 2)
+  defaultUnitGarmentCost Decimal          @default(0) @db.Decimal(14, 2)
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
 
@@ -518,8 +526,8 @@ model ClothingOrder {
   clientName     String
   source         String              @default("")
   status         ClothingOrderStatus @default(ORDER_RECEIVED)
-  receivedAmount Int                 @default(0)
-  extraExpenses  Int                 @default(0)
+  receivedAmount Decimal             @default(0) @db.Decimal(14, 2)
+  extraExpenses  Decimal             @default(0) @db.Decimal(14, 2)
   orderDate      DateTime            @default(now())
   expectedDate   DateTime?
   deliveredAt    DateTime?
@@ -544,9 +552,9 @@ model ClothingOrderItem {
   category        ClothingCategory
   size            ClothingSize?
   quantity        Int              @default(1)
-  unitPrice       Int              @default(0)
-  unitDtfCost     Int              @default(0)
-  unitGarmentCost Int              @default(0)
+  unitPrice       Decimal          @default(0) @db.Decimal(14, 2)
+  unitDtfCost     Decimal          @default(0) @db.Decimal(14, 2)
+  unitGarmentCost Decimal          @default(0) @db.Decimal(14, 2)
   trackStock      Boolean          @default(true)
   createdAt       DateTime         @default(now())
 
@@ -566,4 +574,18 @@ model ClothingStock {
   updatedAt    DateTime         @updatedAt
 
   @@unique([category, size])
+}
+
+
+model ClothingStockMovement {
+  id        String                   @id @default(uuid())
+  category  ClothingCategory
+  size      ClothingSize
+  type      ClothingStockMovementType
+  // IN/OUT use positive quantities. ADJUSTMENT uses a signed quantity.
+  quantity  Int
+  notes     String?
+  createdAt DateTime                 @default(now())
+
+  @@index([category, size, createdAt])
 }
