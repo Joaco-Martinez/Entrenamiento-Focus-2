@@ -465,3 +465,127 @@ model BudgetProposal {
   @@index([producer, updatedAt])
   @@index([updatedAt])
 }
+
+
+enum ClothingCategory {
+  TSHIRT
+  HOODIE
+  CHOMBA
+  OTHER
+}
+
+enum ClothingSize {
+  SIZE_1 @map("1")
+  SIZE_2 @map("2")
+  S
+  M
+  L
+  XL
+  XXL @map("2XL")
+  XXXL @map("3XL")
+  ONE_SIZE
+}
+
+enum ClothingStockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+enum ClothingOrderStatus {
+  ORDER_RECEIVED
+  ORDERED_TO_SUPPLIER
+  FOLLOW_UP_SENT
+  DISPATCHED
+  FINISHED
+  RETURNING
+  WAITING_YURI
+  PAYMENT_RECEIVED
+  CANCELLED
+}
+
+model ClothingProduct {
+  id                     String           @id @default(uuid())
+  name                   String           @unique
+  category               ClothingCategory
+  trackStock             Boolean          @default(true)
+  active                 Boolean          @default(true)
+  defaultUnitPrice       Decimal          @default(0) @db.Decimal(14, 2)
+  defaultUnitDtfCost     Decimal          @default(0) @db.Decimal(14, 2)
+  defaultUnitGarmentCost Decimal          @default(0) @db.Decimal(14, 2)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  items ClothingOrderItem[]
+
+  @@index([active, category])
+}
+
+model ClothingOrder {
+  id             String              @id @default(uuid())
+  clientName     String
+  source         String              @default("")
+  status         ClothingOrderStatus @default(ORDER_RECEIVED)
+  receivedAmount Decimal             @default(0) @db.Decimal(14, 2)
+  extraExpenses  Decimal             @default(0) @db.Decimal(14, 2)
+  orderDate      DateTime            @default(now())
+  expectedDate   DateTime?
+  deliveredAt    DateTime?
+  notes          String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  items ClothingOrderItem[]
+
+  @@index([orderDate])
+  @@index([status])
+  @@index([clientName])
+}
+
+model ClothingOrderItem {
+  id              String           @id @default(uuid())
+  orderId         String
+  order           ClothingOrder    @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  productId       String?
+  product         ClothingProduct? @relation(fields: [productId], references: [id], onDelete: NoAction)
+  productName     String
+  category        ClothingCategory
+  size            ClothingSize?
+  quantity        Int              @default(1)
+  unitPrice       Decimal          @default(0) @db.Decimal(14, 2)
+  unitDtfCost     Decimal          @default(0) @db.Decimal(14, 2)
+  unitGarmentCost Decimal          @default(0) @db.Decimal(14, 2)
+  trackStock      Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([category, size])
+}
+
+model ClothingStock {
+  id           String           @id @default(uuid())
+  category     ClothingCategory
+  size         ClothingSize
+  initialQty   Int              @default(0)
+  restockedQty Int              @default(0)
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@unique([category, size])
+}
+
+
+model ClothingStockMovement {
+  id        String                   @id @default(uuid())
+  category  ClothingCategory
+  size      ClothingSize
+  type      ClothingStockMovementType
+  // IN/OUT use positive quantities. ADJUSTMENT uses a signed quantity.
+  quantity  Int
+  notes     String?
+  createdAt DateTime                 @default(now())
+
+  @@index([category, size, createdAt])
+}

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
@@ -18,6 +19,7 @@ import {
   Clapperboard,
   FileText,
   Globe,
+  Shirt,
 } from "lucide-react";
 
 const links = [
@@ -38,12 +40,14 @@ function SidebarInner({
   email,
   onLogout,
   onNavigate,
+  links,
 }: {
   pathname: string;
   fullName?: string | null;
   email?: string | null;
   onLogout: () => void;
   onNavigate?: () => void;
+  links: typeof links;
 }) {
   return (
     <div className="flex h-full flex-col bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.08),transparent_30%),linear-gradient(180deg,#0B0B0B_0%,#050505_100%)] text-white">
@@ -156,6 +160,23 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [canAccessClothing, setCanAccessClothing] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!user?.id) {
+      setCanAccessClothing(false);
+      return () => { active = false; };
+    }
+    apiFetch("/clothing/access")
+      .then(() => { if (active) setCanAccessClothing(true); })
+      .catch(() => { if (active) setCanAccessClothing(false); });
+    return () => { active = false; };
+  }, [user?.id]);
+
+  const visibleLinks = canAccessClothing
+    ? [...links, { label: "Base Soberana", href: "/admin/ropa", icon: Shirt }]
+    : links;
 
   const fullName =
     user?.firstName && user?.lastName
@@ -193,6 +214,7 @@ export default function AdminSidebar() {
         <div className="w-full">
           <SidebarInner
             pathname={pathname}
+            links={visibleLinks}
             fullName={fullName}
             email={user?.email}
             onLogout={logout}
@@ -233,6 +255,7 @@ export default function AdminSidebar() {
 
           <SidebarInner
             pathname={pathname}
+            links={visibleLinks}
             fullName={fullName}
             email={user?.email}
             onLogout={() => {
