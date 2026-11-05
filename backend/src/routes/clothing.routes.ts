@@ -237,7 +237,7 @@ clothingRoutes.get("/", asyncHandler(async (_req, res) => {
   const costsForOrder = (order: any) =>
     order.extraExpenses + order.items.reduce(
       (sum: number, item: any) =>
-        sum + item.quantity * (item.unitDtfCost + item.unitGarmentCost),
+        sum + item.unitDtfCost + item.unitGarmentCost,
       0
     );
 
