@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/api";
 
 export type ClothingCategory = "TSHIRT" | "HOODIE" | "CHOMBA" | "OTHER";
-export type ClothingSize = "1" | "2" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | "ONE_SIZE";
+export type ClothingSize = "SIZE_1" | "SIZE_2" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | "ONE_SIZE";
 export type ClothingStatus =
   | "ORDER_RECEIVED"
   | "ORDERED_TO_SUPPLIER"
