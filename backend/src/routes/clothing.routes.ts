@@ -104,6 +104,7 @@ function normalizeItems(rawItems: unknown) {
     }
     if (!valid(item.category, categories)) throw new ApiError(400, "La categoría no es válida.");
     if (item.size && !valid(item.size, sizes)) throw new ApiError(400, "El talle no es válido.");
+    if (item.trackStock !== false && !item.size) throw new ApiError(400, "Seleccioná un talle para cada artículo que controla stock.");
     const quantity = Number(item.quantity);
     if (!Number.isSafeInteger(quantity) || quantity < 1) {
       throw new ApiError(400, "La cantidad debe ser un entero mayor a cero.");
