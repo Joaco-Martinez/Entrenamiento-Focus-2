@@ -66,7 +66,7 @@ function sales(order: ClothingOrder) {
   return order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 }
 function isSoldStatus(status: ClothingStatus) {
-  return status === "DISPATCHED" || status === "FINISHED";
+  return status === "DISPATCHED" || status === "FINISHED" || status === "RETURNING";
 }
 function statusTone(status: ClothingStatus) {
   if (status === "DISPATCHED" || status === "FINISHED") return "border-emerald-400/25 bg-emerald-400/10 text-emerald-200";
@@ -424,7 +424,7 @@ export default function BaseSoberanaClothingPage() {
         </section>}
 
         {tab === "stock" && <section className="space-y-4">
-          <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-xs text-white/55">El stock se descuenta únicamente cuando el pedido pasa a Despachado o Finalizado. Los pedidos recibidos, pagados o en preparación no se cuentan como vendidos. Las entradas, salidas y ajustes manuales quedan registrados en el historial.</p>
+          <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-xs text-white/55">El stock se descuenta cuando el pedido sale del depósito (Despachado, Volviendo o Finalizado). Los pedidos recibidos, pagados o en preparación no se cuentan como vendidos. Las entradas, salidas y ajustes manuales quedan registrados en el historial.</p>
           <form onSubmit={createStockMovement} className="grid gap-3 rounded-2xl border border-yellow-400/20 bg-yellow-400/[0.04] p-4 sm:grid-cols-2 xl:grid-cols-5">
             <Field label="Prenda"><select value={movementDraft.category} onChange={(e) => setMovementDraft({ ...movementDraft, category: e.target.value as ClothingCategory })} className={field}>{categoryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></Field>
             <Field label="Talle"><select value={movementDraft.size} onChange={(e) => setMovementDraft({ ...movementDraft, size: e.target.value as ClothingSize })} className={field}>{sizeOptions.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}</select></Field>
