@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/api";
 
 export type ClothingCategory = "TSHIRT" | "HOODIE" | "CHOMBA" | "OTHER";
-export type ClothingSize = "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | "ONE_SIZE";
+export type ClothingSize = "1" | "2" | "S" | "M" | "L" | "XL" | "XXL" | "XXXL" | "ONE_SIZE";
 export type ClothingStatus =
   | "ORDER_RECEIVED"
   | "ORDERED_TO_SUPPLIER"
@@ -56,6 +56,7 @@ export type ClothingStockRow = {
   size: ClothingSize;
   initialQty: number;
   restockedQty: number;
+  movementNet: number;
   sold: number;
   available: number;
   notes: string;
@@ -72,10 +73,22 @@ export type ClothingDashboard = {
     receivedAmount: number;
     totalCost: number;
     profit: number;
+    balanceDue: number;
     pending: number;
   };
   productSales: { name: string; quantity: number }[];
   monthlyProfit: { month: string; profit: number }[];
+  movements: ClothingStockMovement[];
+};
+
+export type ClothingStockMovement = {
+  id: string;
+  category: ClothingCategory;
+  size: ClothingSize;
+  type: "IN" | "OUT" | "ADJUSTMENT";
+  quantity: number;
+  notes: string | null;
+  createdAt: string;
 };
 
 export const clothingService = {
@@ -105,6 +118,18 @@ export const clothingService = {
 
   createProduct: (payload: Record<string, unknown>) =>
     apiFetch("/clothing/products", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  updateProduct: (id: string, payload: Record<string, unknown>) =>
+    apiFetch("/clothing/products/" + encodeURIComponent(id), {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  createStockMovement: (payload: Record<string, unknown>) =>
+    apiFetch("/clothing/stock/movements", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
