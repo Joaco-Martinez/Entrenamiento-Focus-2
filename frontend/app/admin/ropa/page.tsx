@@ -43,7 +43,7 @@ const categoryOptions: { value: ClothingCategory; label: string }[] = [
   { value: "OTHER", label: "Otro" },
 ];
 const sizeOptions: { value: ClothingSize; label: string }[] = [
-  { value: "1", label: "1" }, { value: "2", label: "2" },
+  { value: "SIZE_1", label: "1" }, { value: "SIZE_2", label: "2" },
   { value: "S", label: "S" }, { value: "M", label: "M" }, { value: "L", label: "L" },
   { value: "XL", label: "XL" }, { value: "XXL", label: "2XL" },
   { value: "XXXL", label: "3XL" }, { value: "ONE_SIZE", label: "Único" },
